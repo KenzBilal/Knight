@@ -67,11 +67,12 @@ async function sendMessage(client, chatId, message) {
   }
 }
 
-// ─── Get All Orgs with Telegram Sessions ──────────────────────────────────────
+// ─── Get All Orgs with Userbot Sessions ─────────────────────────────────────
 async function getOrgsWithSessions() {
   const { data } = await supabase
     .from('org_config')
-    .select('org_id, telegram_session')
+    .select('org_id, telegram_session, telegram_mode')
+    .eq('telegram_mode', 'userbot')
     .not('telegram_session', 'is', null);
   return (data || []).filter(r => r.telegram_session);
 }
