@@ -1,6 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+interface EmailDomain {
+  id: string;
+  domain: string;
+  status: string;
+  created_at: string;
+}
 
 export default function SettingsPage() {
   const [companyName, setCompanyName] = useState("");
@@ -10,10 +17,42 @@ export default function SettingsPage() {
   const [telegramBotToken, setTelegramBotToken] = useState("");
   const [telegramAdminChatId, setTelegramAdminChatId] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Email domain states
+  const [domains, setDomains] = useState<EmailDomain[]>([]);
+  const [newDomain, setNewDomain] = useState("");
+  const [dnsRecords, setDnsRecords] = useState<any>(null);
+  const [domainLoading, setDomainLoading] = useState(false);
+  const [domainError, setDomainError] = useState("");
+
+  useEffect(() => {
+    // Load current config
+    fetch("/api/config")
+      .then(r => r.json())
+      .then(data => {
+        if (data.company_name) setCompanyName(data.company_name);
+        if (data.company_website) setCompanyWebsite(data.company_website);
+        if (data.services_offered) setServices(data.services_offered.join(", "));
+        if (data.calendly_link) setCalendlyLink(data.calendly_link);
+        if (data.telegram_bot_token) setTelegramBotToken(data.telegram_bot_token);
+        if (data.telegram_admin_chat_id) setTelegramAdminChatId(data.telegram_admin_chat_id);
+      })
+      .catch(() => {});
+
+    // Load email domains
+    fetch("/api/settings/domain")
+      .then(r => r.json())
+      .then(data => {
+        if (data.domains) setDomains(data.domains);
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setSaved(false);
     try {
       await fetch("/api/config", {
         method: "POST",
@@ -27,8 +66,55 @@ export default function SettingsPage() {
           telegram_admin_chat_id: telegramAdminChatId || null,
         }),
       });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
     } catch {}
     setSaving(false);
+  }
+
+  async function handleAddDomain(e: React.FormEvent) {
+    e.preventDefault();
+    setDomainLoading(true);
+    setDomainError("");
+    setDnsRecords(null);
+
+    try {
+      const res = await fetch("/api/settings/domain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domain: newDomain }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to add domain");
+      }
+
+      setDomains(prev => [data.domain, ...prev]);
+      setDnsRecords(data.dnsRecords);
+      setNewDomain("");
+    } catch (err: any) {
+      setDomainError(err.message);
+    } finally {
+      setDomainLoading(false);
+    }
+  }
+
+  async function handleVerifyDomain(domainId: string) {
+    try {
+      const res = await fetch("/api/settings/domain", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ domainId }),
+      });
+
+      if (res.ok) {
+        setDomains(prev =>
+          prev.map(d => d.id === domainId ? { ...d, status: "verified" } : d)
+        );
+      }
+    } catch {}
   }
 
   return (
@@ -36,6 +122,7 @@ export default function SettingsPage() {
       <h1 className="font-display text-2xl text-paper-100 mb-6">Settings</h1>
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Company Profile */}
         <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
           <h2 className="font-display text-lg text-paper-100">Company Profile</h2>
 
@@ -84,6 +171,88 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Email Domain */}
+        <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <h2 className="font-display text-lg text-paper-100">Email Domain</h2>
+          <p className="text-sm text-paper-400">
+            Verify your own domain to send emails from your business email address.
+          </p>
+
+          {/* Existing domains */}
+          {domains.length > 0 && (
+            <div className="space-y-2">
+              {domains.map((domain) => (
+                <div
+                  key={domain.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-ink-950 border border-line"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${
+                      domain.status === "verified" ? "bg-green-500" : "bg-yellow-500"
+                    }`} />
+                    <span className="text-sm text-paper-100">{domain.domain}</span>
+                    <span className="text-xs text-paper-400 capitalize">{domain.status}</span>
+                  </div>
+                  {domain.status === "pending" && (
+                    <button
+                      type="button"
+                      onClick={() => handleVerifyDomain(domain.id)}
+                      className="text-xs text-flash-500 hover:text-flash-400"
+                    >
+                      Verify
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add new domain */}
+          <form onSubmit={handleAddDomain} className="flex gap-2">
+            <input
+              type="text"
+              value={newDomain}
+              onChange={(e) => setNewDomain(e.target.value)}
+              placeholder="yourdomain.com"
+              className="flex-1 rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+            />
+            <button
+              type="submit"
+              disabled={domainLoading || !newDomain}
+              className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
+            >
+              {domainLoading ? "Adding..." : "Add Domain"}
+            </button>
+          </form>
+
+          {domainError && (
+            <p className="text-xs text-red-500">{domainError}</p>
+          )}
+
+          {/* DNS Records */}
+          {dnsRecords && (
+            <div className="rounded-lg bg-ink-950 border border-line p-4 space-y-3">
+              <p className="text-xs text-paper-400 mb-2">
+                Add these DNS records to your domain registrar:
+              </p>
+              {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
+                <div key={key} className="text-xs">
+                  <p className="text-paper-300 font-medium mb-1">{record.note}</p>
+                  <div className="flex gap-4 text-paper-400">
+                    <span>Type: {record.type}</span>
+                    <span>Host: {record.host}</span>
+                    <span className="text-paper-300 break-all">Value: {record.value}</span>
+                  </div>
+                </div>
+              ))}
+              <p className="text-xs text-paper-500 mt-2">
+                DNS propagation may take 5-30 minutes. Click &quot;Verify&quot; after adding records.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Telegram Notifications */}
         <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
           <h2 className="font-display text-lg text-paper-100">Telegram Notifications</h2>
           <p className="text-sm text-paper-400">
@@ -116,13 +285,19 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-        >
-          {saving ? "Saving..." : "Save changes"}
-        </button>
+        {/* Save Button */}
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save changes"}
+          </button>
+          {saved && (
+            <span className="text-sm text-green-500">✓ Saved</span>
+          )}
+        </div>
       </form>
     </div>
   );
