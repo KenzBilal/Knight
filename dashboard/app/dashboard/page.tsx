@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { HelpModal } from "@/components/HelpModal";
+import { EmptyState } from "@/components/EmptyState";
 
 export default function DashboardOverviewPage() {
   const [keyword, setKeyword] = useState("");
@@ -39,7 +41,16 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="p-8">
-      <h1 className="font-display text-2xl text-paper-100 mb-6">Dashboard</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <h1 className="font-display text-2xl text-paper-100">Dashboard</h1>
+        <HelpModal title="Dashboard">
+          <p>The Dashboard gives you an overview of your Knight account and quick access to core features.</p>
+          <p><strong>Auto-discover leads:</strong> Enter your niche and location to find businesses that need your services.</p>
+          <p><strong>Audit a website:</strong> Run a 30+ point audit on any website to identify issues and generate pitches.</p>
+          <p><strong>Stats:</strong> View your total prospects, active audits, pitches sent, and replies at a glance.</p>
+          <p><strong>Recent activity:</strong> See the latest actions taken by Knight across all your campaigns.</p>
+        </HelpModal>
+      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-4 mb-8">

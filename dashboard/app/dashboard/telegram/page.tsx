@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { HelpModal } from "@/components/HelpModal";
+import { EmptyState } from "@/components/EmptyState";
 
 interface TelegramLead {
   id: string;
@@ -58,7 +60,23 @@ export default function TelegramPage() {
 
   return (
     <div className="p-8 max-w-4xl">
-      <h1 className="font-display text-2xl text-paper-100 mb-6">Telegram</h1>
+      <div className="flex items-center gap-2 mb-6">
+        <h1 className="font-display text-2xl text-paper-100">Telegram</h1>
+        <HelpModal title="Telegram Integration">
+          <p>Telegram integration lets Knight find leads directly in Telegram groups.</p>
+          <p><strong>How it works:</strong></p>
+          <p>• Connect your Telegram account (phone number)</p>
+          <p>• Knight joins relevant groups based on your niche</p>
+          <p>• AI identifies business owners who need your services</p>
+          <p>• Sends personalized DMs and handles conversations</p>
+          <p>• You get notified to approve/decline deals</p>
+          <p><strong>Setup:</strong></p>
+          <p>1. Click &quot;Connect Telegram&quot; and enter your phone number</p>
+          <p>2. Enter the SMS verification code</p>
+          <p>3. Create a bot via @BotFather for notifications</p>
+          <p>4. Enter the bot token in settings</p>
+        </HelpModal>
+      </div>
 
       {/* Connection Status */}
       <div className={`rounded-xl border p-6 mb-6 ${

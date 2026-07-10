@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
 import { Resend } from "resend";
+import { checkLimits, incrementUsage } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,15 @@ export async function POST(req: Request) {
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    // Check email limits
+    const limits = await checkLimits(org.id, "email");
+    if (!limits.allowed) {
+      return NextResponse.json(
+        { error: limits.reason, usage: limits.usage, limit: limits.limit },
+        { status: 403 }
+      );
+    }
 
     const supabase = createServiceClient();
     const { company_id, text } = await req.json();
@@ -69,6 +79,9 @@ export async function POST(req: Request) {
       subject: `Following up from ${senderName}`,
       body_text: text,
     });
+
+    // Increment email usage
+    await incrementUsage(org.id, "email");
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
