@@ -27,6 +27,14 @@ import {
 import { initAdminRemote } from './telegram_admin.js';
 
 import ws from 'ws';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const SESSION_FILE = path.join(__dirname, 'session.txt');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
@@ -35,23 +43,22 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const API_ID = parseInt(process.env.TELEGRAM_API_ID || '2040');
 const API_HASH = process.env.TELEGRAM_API_HASH || 'b18441a1ff607e10a989891a5462e627';
 
-// ─── Load Session from DB ─────────────────────────────────────────────────────
-async function loadSession(orgId) {
-  const { data } = await supabase
-    .from('org_config')
-    .select('telegram_session')
-    .eq('org_id', orgId)
-    .single();
-  return data?.telegram_session || '';
+// ─── Load Session from File ───────────────────────────────────────────────────
+function loadSession() {
+  try {
+    if (fs.existsSync(SESSION_FILE)) {
+      return fs.readFileSync(SESSION_FILE, 'utf8').trim();
+    }
+  } catch (e) {
+    console.warn('[USERBOT] Could not read session file:', e.message);
+  }
+  return '';
 }
 
-// ─── Save Session to DB ───────────────────────────────────────────────────────
-async function saveSession(sessionString, orgId) {
-  await supabase.from('org_config').update({
-    telegram_session: sessionString,
-    updated_at: new Date().toISOString(),
-  }).eq('org_id', orgId);
-  console.log('[USERBOT] Session string saved to database ✓');
+// ─── Save Session to File ─────────────────────────────────────────────────────
+function saveSession(sessionString) {
+  fs.writeFileSync(SESSION_FILE, sessionString, 'utf8');
+  console.log('[USERBOT] Session string saved to session.txt ✓');
 }
 
 // ─── Send Message Wrapper ─────────────────────────────────────────────────────
@@ -67,34 +74,17 @@ async function sendMessage(client, chatId, message) {
   }
 }
 
-// ─── Get Org ID from config ───────────────────────────────────────────────────
-async function getOrgIdBySession(sessionString) {
-  const { data } = await supabase
-    .from('org_config')
-    .select('org_id')
-    .eq('telegram_session', sessionString)
-    .single();
-  return data?.org_id;
+// ─── Get All Org IDs ──────────────────────────────────────────────────────────
+async function getAllOrgIds() {
+  const { data } = await supabase.from('org_config').select('org_id');
+  return (data || []).map(r => r.org_id);
 }
 
 // ─── Main Boot ────────────────────────────────────────────────────────────────
 async function main() {
   const isSetup = process.argv.includes('--setup');
-  const orgIdArg = process.argv.find(a => a.startsWith('--org='))?.split('=')[1];
 
-  // For setup, we need the org_id
-  if (!orgIdArg && isSetup) {
-    console.error('[USERBOT] ERROR: --org=<org_id> is required for setup');
-    process.exit(1);
-  }
-
-  // Get org_id from arg or try to detect from session
-  let orgId = orgIdArg;
-  let sessionString = '';
-
-  if (orgId) {
-    sessionString = await loadSession(orgId);
-  }
+  let sessionString = loadSession();
 
   const session = new StringSession(sessionString);
 
@@ -110,12 +100,8 @@ async function main() {
 
   // ─── First-time Setup ──────────────────────────────────────────────────────
   if (isSetup || !sessionString) {
-    if (!orgId) {
-      console.error('[USERBOT] ERROR: Cannot detect org. Please specify --org=<org_id>');
-      process.exit(1);
-    }
-
     console.log('[USERBOT] First-time setup. You will receive an SMS code.');
+    console.log('[USERBOT] This is the GLOBAL userbot — runs for ALL users.');
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
     const ask = (q) => new Promise(resolve => rl.question(q, resolve));
 
@@ -127,7 +113,7 @@ async function main() {
     });
 
     const newSessionString = client.session.save();
-    await saveSession(newSessionString, orgId);
+    saveSession(newSessionString);
     rl.close();
     console.log('[USERBOT] ✓ Setup complete! Restart without --setup flag to run normally.');
     process.exit(0);
@@ -135,22 +121,16 @@ async function main() {
 
   // ─── Normal Boot ────────────────────────────────────────────────────────────
   await client.connect();
-  console.log('[USERBOT] ✓ Connected to Telegram');
+  console.log('[USERBOT] ✓ Connected to Telegram (Global Userbot)');
 
-  // Auto-detect org_id from session if not provided
-  if (!orgId) {
-    orgId = await getOrgIdBySession(sessionString);
-    if (!orgId) {
-      console.error('[USERBOT] ERROR: Could not detect org_id from session. Set --org=<org_id>');
-      process.exit(1);
-    }
+  // Get all org IDs that have Telegram enabled
+  const orgIds = await getAllOrgIds();
+  console.log(`[USERBOT] Running for ${orgIds.length} org(s)`);
+
+  // ─── Start Drip Engine for all orgs ─────────────────────────────────────────
+  for (const orgId of orgIds) {
+    startDripCron(sendMessage, orgId);
   }
-  console.log(`[USERBOT] Running for org: ${orgId}`);
-
-  const sendFn = (chatId, msg) => sendMessage(client, chatId, msg);
-
-  // ─── Start Drip Engine ──────────────────────────────────────────────────────
-  startDripCron(sendFn, orgId);
 
   const botStartTime = Math.floor(Date.now() / 1000);
 
@@ -162,6 +142,15 @@ async function main() {
 
     const chatId = msg.chatId?.value || msg.chatId;
     const text = msg.text;
+
+    // Find which org this chat belongs to
+    const { data: lead } = await supabase
+      .from('telegram_leads')
+      .select('org_id')
+      .eq('chat_id', chatId)
+      .single();
+
+    const orgId = lead?.org_id || orgIds[0]; // fallback to first org
 
     const replyFn = async (id, replyText) => {
       const rawChunks = replyText.split(/\|\|\||\n\n/);
@@ -210,7 +199,10 @@ async function main() {
     const groupName = event.message.chat?.title || 'Unknown Group';
     const text = msg.text;
 
-    await processSniperMessage(chatId, username, text, groupName, sendFn, orgId);
+    // Run sniper for all orgs
+    for (const orgId of orgIds) {
+      await processSniperMessage(chatId, username, text, groupName, sendMessage, orgId);
+    }
   }, new NewMessage({}));
 
   // ─── Daily Hunter ───────────────────────────────────────────────────────────
@@ -231,7 +223,10 @@ async function main() {
         for (const chat of (results?.chats || [])) {
           try {
             const participants = await client.getParticipants(chat, { limit: 100 });
-            await processTelegramChannel(chat, participants, sendFn, orgId);
+            // Process for all orgs
+            for (const orgId of orgIds) {
+              await processTelegramChannel(chat, participants, sendMessage, orgId);
+            }
           } catch (err) {
             console.warn(`[HUNTER] Could not get participants for ${chat.title}:`, err.message);
           }
@@ -243,13 +238,19 @@ async function main() {
   };
 
   // ─── Cleanup Cron (every 6 hours) ───────────────────────────────────────────
-  setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
+  setInterval(async () => {
+    for (const orgId of orgIds) {
+      await runCleanup(orgId);
+    }
+  }, 6 * 60 * 60 * 1000);
 
   await runDailyHunt();
-  console.log('[USERBOT] Initializing components...');
-  await initAdminRemote(client, orgId);
+  console.log('[USERBOT] Initializing admin remote for all orgs...');
+  for (const orgId of orgIds) {
+    await initAdminRemote(client, orgId);
+  }
 
-  console.log('[USERBOT] Userbot is running and listening for commands/messages.');
+  console.log('[USERBOT] Global userbot is running and listening for commands/messages.');
 
   setInterval(runDailyHunt, 24 * 60 * 60 * 1000);
 }

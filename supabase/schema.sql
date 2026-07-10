@@ -58,9 +58,6 @@ create table if not exists public.org_config (
   sender_domain text,
   auto_send_threshold integer default 60,
   daily_email_limit integer default 90,
-  telegram_enabled boolean default false,
-  telegram_phone text,
-  telegram_session text,
   telegram_bot_token text,
   telegram_admin_chat_id text,
   created_at timestamptz not null default now()

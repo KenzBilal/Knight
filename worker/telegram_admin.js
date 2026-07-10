@@ -59,30 +59,66 @@ Fill in the FORMAT TEMPLATE using the details from the CHAT HISTORY. Output ONLY
   return completion.choices[0].message.content.trim();
 }
 
+// ─── Setup Realtime Listener (Dashboard only) ────────────────────────────────
+function setupRealtimeListener(orgId) {
+  const processedApprovals = new Set();
+  const processedRejections = new Set();
+
+  supabase
+    .channel(`admin-channel-${orgId}`)
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'telegram_leads', filter: `org_id=eq.${orgId}` },
+      async (payload) => {
+        const newStatus = payload.new.status;
+        const lead = payload.new;
+
+        // A. Lead was Approved
+        if (newStatus === 'APPROVED' && !processedApprovals.has(lead.id)) {
+          processedApprovals.add(lead.id);
+          console.log(`[ADMIN REMOTE] Lead ${lead.id} approved via dashboard`);
+        }
+
+        // B. Lead was Rejected
+        if (newStatus === 'REJECTED' && !processedRejections.has(lead.id)) {
+          processedRejections.add(lead.id);
+          console.log(`[ADMIN REMOTE] Lead ${lead.id} rejected via dashboard`);
+        }
+      }
+    )
+    .subscribe();
+}
+
 // ─── Init Admin Remote ────────────────────────────────────────────────────────
 export async function initAdminRemote(client, orgId) {
-  console.log('[ADMIN REMOTE] Initializing Supabase Realtime listeners...');
+  console.log(`[ADMIN REMOTE] Initializing for org: ${orgId}`);
   const config = await getOrgConfig(orgId);
 
   const adminUsername = config.telegram_admin_chat_id;
-  if (!adminUsername) {
-    console.warn('[ADMIN REMOTE] No admin_telegram_username configured. Inline buttons disabled.');
+  const botToken = config.telegram_bot_token;
+
+  // If no bot token, just set up Realtime for dashboard updates
+  if (!adminUsername || !botToken) {
+    console.log(`[ADMIN REMOTE] Org ${orgId}: No Telegram bot configured. Notifications will only appear in dashboard.`);
+    setupRealtimeListener(orgId);
+    return;
   }
 
+  // Connect admin bot for this org
   let adminBot = null;
-  if (config.telegram_bot_token) {
-    try {
-      const API_ID = parseInt(process.env.TELEGRAM_API_ID || '2040');
-      const API_HASH = process.env.TELEGRAM_API_HASH || 'b18441a1ff607e10a989891a5462e627';
-      const { TelegramClient } = await import('telegram');
-      const { StringSession } = await import('telegram/sessions/index.js');
-      adminBot = new TelegramClient(new StringSession(''), API_ID, API_HASH, { connectionRetries: 5 });
-      await adminBot.start({ botAuthToken: config.telegram_bot_token });
-      console.log('[ADMIN REMOTE] Admin Bot connected successfully.');
-    } catch (e) {
-      console.warn('[ADMIN REMOTE] Admin Bot failed to connect. Inline buttons disabled.', e.message);
-      adminBot = null;
-    }
+  try {
+    const API_ID = parseInt(process.env.TELEGRAM_API_ID || '2040');
+    const API_HASH = process.env.TELEGRAM_API_HASH || 'b18441a1ff607e10a989891a5462e627';
+    const { TelegramClient } = await import('telegram');
+    const { StringSession } = await import('telegram/sessions/index.js');
+    adminBot = new TelegramClient(new StringSession(''), API_ID, API_HASH, { connectionRetries: 5 });
+    await adminBot.start({ botAuthToken: botToken });
+    console.log(`[ADMIN REMOTE] Admin Bot connected for org ${orgId}`);
+  } catch (e) {
+    console.warn(`[ADMIN REMOTE] Admin Bot failed to connect for org ${orgId}. Inline buttons disabled.`, e.message);
+    adminBot = null;
+    setupRealtimeListener(orgId);
+    return;
   }
 
   // Listen for Supabase DB Changes
@@ -142,13 +178,6 @@ export async function initAdminRemote(client, orgId) {
               console.warn(`[ADMIN REMOTE] Could not send handoff to ${lead.chat_id}: ${err.message}`);
             }
 
-            if (config.telegram_channel_id) {
-              const { data: fullLead } = await supabase.from('telegram_leads').select('*').eq('id', lead.id).single();
-              const summary = await generateTeamSummary(fullLead || lead);
-              await client.sendMessage(config.telegram_channel_id, { message: summary });
-              console.log(`[ADMIN REMOTE] Sent team broadcast for Client ${lead.id.substring(0, 6).toUpperCase()}`);
-            }
-
             await supabase.from('telegram_leads').update({ admin_msg_id: null }).eq('id', lead.id);
           } catch (e) {
             console.error('[ADMIN REMOTE] Error processing approval:', e.message);
@@ -173,27 +202,25 @@ export async function initAdminRemote(client, orgId) {
     .subscribe();
 
   // Listen for Telegram Inline Button Clicks via Admin Bot
-  if (adminBot) {
-    adminBot.addEventHandler(async (event) => {
-      const data = event.data.toString();
-      if (!data.startsWith('approve_') && !data.startsWith('decline_')) return;
+  adminBot.addEventHandler(async (event) => {
+    const data = event.data.toString();
+    if (!data.startsWith('approve_') && !data.startsWith('decline_')) return;
 
-      const action = data.split('_')[0];
-      const leadId = data.substring(action.length + 1);
+    const action = data.split('_')[0];
+    const leadId = data.substring(action.length + 1);
 
-      try {
-        await supabase
-          .from('telegram_leads')
-          .update({ status: action === 'approve' ? 'APPROVED' : 'REJECTED' })
-          .eq('id', leadId);
+    try {
+      await supabase
+        .from('telegram_leads')
+        .update({ status: action === 'approve' ? 'APPROVED' : 'REJECTED' })
+        .eq('id', leadId);
 
-        await event.answer({ message: `Marked as ${action.toUpperCase()}` });
-      } catch (e) {
-        console.error('[ADMIN REMOTE] Callback Error:', e.message);
-        await event.answer({ message: "Database error. Try dashboard." });
-      }
-    }, new CallbackQuery());
-  }
+      await event.answer({ message: `Marked as ${action.toUpperCase()}` });
+    } catch (e) {
+      console.error('[ADMIN REMOTE] Callback Error:', e.message);
+      await event.answer({ message: "Database error. Try dashboard." });
+    }
+  }, new CallbackQuery());
 
-  console.log('[ADMIN REMOTE] Inline button and Realtime handlers active.');
+  console.log(`[ADMIN REMOTE] Inline button and Realtime handlers active for org ${orgId}`);
 }

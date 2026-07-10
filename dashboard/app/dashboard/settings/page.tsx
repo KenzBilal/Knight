@@ -7,6 +7,8 @@ export default function SettingsPage() {
   const [companyWebsite, setCompanyWebsite] = useState("");
   const [services, setServices] = useState("");
   const [calendlyLink, setCalendlyLink] = useState("");
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [telegramAdminChatId, setTelegramAdminChatId] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function handleSave(e: React.FormEvent) {
@@ -21,6 +23,8 @@ export default function SettingsPage() {
           company_website: companyWebsite,
           services_offered: services.split(",").map((s) => s.trim()).filter(Boolean),
           calendly_link: calendlyLink,
+          telegram_bot_token: telegramBotToken || null,
+          telegram_admin_chat_id: telegramAdminChatId || null,
         }),
       });
     } catch {}
@@ -80,6 +84,38 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <h2 className="font-display text-lg text-paper-100">Telegram Notifications</h2>
+          <p className="text-sm text-paper-400">
+            Optional. Connect your own Telegram bot to receive approval requests and manage leads directly from Telegram.
+          </p>
+
+          <div>
+            <label className="block text-sm text-paper-300 mb-1.5">Bot Token (from @BotFather)</label>
+            <input
+              type="password"
+              value={telegramBotToken}
+              onChange={(e) => setTelegramBotToken(e.target.value)}
+              placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+              className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-paper-300 mb-1.5">Your Telegram Chat ID</label>
+            <input
+              type="text"
+              value={telegramAdminChatId}
+              onChange={(e) => setTelegramAdminChatId(e.target.value)}
+              placeholder="@yourusername or 123456789"
+              className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+            />
+            <p className="text-xs text-paper-500 mt-1">
+              Send /start to @userinfobot to get your chat ID
+            </p>
+          </div>
+        </div>
+
         <button
           type="submit"
           disabled={saving}
@@ -88,25 +124,6 @@ export default function SettingsPage() {
           {saving ? "Saving..." : "Save changes"}
         </button>
       </form>
-
-      <div className="mt-8 rounded-xl border border-line bg-ink-900 p-6">
-        <h2 className="font-display text-lg text-paper-100 mb-3">API Keys</h2>
-        <p className="text-sm text-paper-400 mb-4">
-          Add your own API keys for AI providers. All keys are stored securely and used only by your worker.
-        </p>
-        <div className="space-y-3">
-          {["Cohere API Key", "Gemini API Key", "OpenRouter API Key", "Resend API Key"].map((provider) => (
-            <div key={provider}>
-              <label className="block text-sm text-paper-300 mb-1.5">{provider}</label>
-              <input
-                type="password"
-                placeholder={`Enter your ${provider}`}
-                className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
-              />
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }
