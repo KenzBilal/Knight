@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Tooltip } from "@/components/Tooltip";
 
 interface EmailDomain {
   id: string;
@@ -161,7 +162,10 @@ export default function SettingsPage() {
           <h2 className="font-display text-lg text-paper-100">Company Profile</h2>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Company name</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Company name
+              <Tooltip content="Your business name shown in outreach emails and pitches" />
+            </label>
             <input
               type="text"
               value={companyName}
@@ -172,7 +176,10 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Your website</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Your website
+              <Tooltip content="Your business website URL" />
+            </label>
             <input
               type="text"
               value={companyWebsite}
@@ -183,7 +190,10 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Services offered (comma separated)</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Services offered (comma separated)
+              <Tooltip content="Services you provide, used to generate relevant pitches" />
+            </label>
             <input
               type="text"
               value={services}
@@ -194,7 +204,10 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Calendly link (optional)</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Calendly link (optional)
+              <Tooltip content="Your scheduling link, included in pitches for easy booking" />
+            </label>
             <input
               type="text"
               value={calendlyLink}
@@ -288,13 +301,19 @@ export default function SettingsPage() {
 
         {/* Telegram Notifications */}
         <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
-          <h2 className="font-display text-lg text-paper-100">Telegram Notifications</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg text-paper-100">Telegram Notifications</h2>
+            <Tooltip content="Optional. Receive approval requests and manage leads via Telegram" />
+          </div>
           <p className="text-sm text-paper-400">
-            Optional. Connect your own Telegram bot to receive approval requests and manage leads directly from Telegram.
+            Connect your own Telegram bot to receive approval requests and manage leads directly from Telegram.
           </p>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Bot Token (from @BotFather)</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Bot Token (from @BotFather)
+              <Tooltip content="Create a bot via @BotFather on Telegram to get this token" />
+            </label>
             <input
               type="password"
               value={telegramBotToken}
@@ -305,7 +324,10 @@ export default function SettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-paper-300 mb-1.5">Your Telegram Chat ID</label>
+            <label className="block text-sm text-paper-300 mb-1.5">
+              Your Telegram Chat ID
+              <Tooltip content="Send /start to @userinfobot on Telegram to get your chat ID" />
+            </label>
             <input
               type="text"
               value={telegramAdminChatId}
@@ -322,11 +344,9 @@ export default function SettingsPage() {
         {/* AI Provider Keys */}
         <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-2">
               <h2 className="font-display text-lg text-paper-100">AI Provider Keys</h2>
-              <p className="text-sm text-paper-400">
-                Optional. Use your own API keys for AI providers.
-              </p>
+              <Tooltip content="Optional. Use your own API keys instead of Knight's built-in keys" />
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
