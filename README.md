@@ -106,3 +106,4 @@ node index.js
 - **Payments:** Stripe
 - **Scraping:** Puppeteer
 - **Hosting:** Vercel (dashboard), Local via PM2 (worker)
+
