@@ -44,6 +44,8 @@ export async function POST(req: Request) {
         calendly_link: body.calendly_link,
         telegram_bot_token: body.telegram_bot_token || null,
         telegram_admin_chat_id: body.telegram_admin_chat_id || null,
+        telegram_mode: body.telegram_mode || null,
+        telegram_phone: body.telegram_phone || null,
         updated_at: new Date().toISOString(),
       })
       .select()
