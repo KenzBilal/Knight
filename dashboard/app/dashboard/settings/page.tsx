@@ -19,6 +19,13 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // BYOK states
+  const [useCustomKeys, setUseCustomKeys] = useState(false);
+  const [cohereKey, setCohereKey] = useState("");
+  const [geminiKey, setGeminiKey] = useState("");
+  const [openrouterKey, setOpenrouterKey] = useState("");
+  const [keysSaved, setKeysSaved] = useState(false);
+
   // Email domain states
   const [domains, setDomains] = useState<EmailDomain[]>([]);
   const [newDomain, setNewDomain] = useState("");
@@ -47,6 +54,16 @@ export default function SettingsPage() {
         if (data.domains) setDomains(data.domains);
       })
       .catch(() => {});
+
+    // Load API keys status
+    fetch("/api/settings/keys")
+      .then(r => r.json())
+      .then(data => {
+        if (data.hasKeys) {
+          setUseCustomKeys(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   async function handleSave(e: React.FormEvent) {
@@ -70,6 +87,23 @@ export default function SettingsPage() {
       setTimeout(() => setSaved(false), 3000);
     } catch {}
     setSaving(false);
+  }
+
+  async function handleSaveKeys() {
+    setKeysSaved(false);
+    try {
+      await fetch("/api/settings/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cohere_key: cohereKey || null,
+          gemini_key: geminiKey || null,
+          openrouter_key: openrouterKey || null,
+        }),
+      });
+      setKeysSaved(true);
+      setTimeout(() => setKeysSaved(false), 3000);
+    } catch {}
   }
 
   async function handleAddDomain(e: React.FormEvent) {
@@ -283,6 +317,88 @@ export default function SettingsPage() {
               Send /start to @userinfobot to get your chat ID
             </p>
           </div>
+        </div>
+
+        {/* AI Provider Keys */}
+        <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-display text-lg text-paper-100">AI Provider Keys</h2>
+              <p className="text-sm text-paper-400">
+                Optional. Use your own API keys for AI providers.
+              </p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useCustomKeys}
+                onChange={(e) => setUseCustomKeys(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-ink-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flash-500"></div>
+            </label>
+          </div>
+
+          {useCustomKeys && (
+            <div className="space-y-4 pt-2">
+              <p className="text-xs text-paper-500">
+                Get keys from:{" "}
+                <a href="https://cohere.com" target="_blank" rel="noopener noreferrer" className="text-flash-500 hover:underline">cohere.com</a>,{" "}
+                <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-flash-500 hover:underline">Google AI Studio</a>,{" "}
+                <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-flash-500 hover:underline">openrouter.ai</a>
+              </p>
+
+              <div>
+                <label className="block text-sm text-paper-300 mb-1.5">Cohere API Key</label>
+                <input
+                  type="password"
+                  value={cohereKey}
+                  onChange={(e) => setCohereKey(e.target.value)}
+                  placeholder="Enter your Cohere API key"
+                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-paper-300 mb-1.5">Gemini API Key</label>
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="Enter your Gemini API key"
+                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-paper-300 mb-1.5">OpenRouter API Key</label>
+                <input
+                  type="password"
+                  value={openrouterKey}
+                  onChange={(e) => setOpenrouterKey(e.target.value)}
+                  placeholder="Enter your OpenRouter API key"
+                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleSaveKeys}
+                className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2 text-sm hover:bg-flash-400 transition-colors"
+              >
+                Save API Keys
+              </button>
+              {keysSaved && (
+                <span className="text-sm text-green-500 ml-2">✓ Saved</span>
+              )}
+            </div>
+          )}
+
+          {!useCustomKeys && (
+            <p className="text-xs text-paper-500">
+              Using Knight&apos;s built-in AI keys. Enable custom keys to use your own.
+            </p>
+          )}
         </div>
 
         {/* Save Button */}
