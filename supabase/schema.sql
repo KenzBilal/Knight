@@ -107,6 +107,7 @@ create index if not exists companies_org_id_idx on public.companies(org_id);
 create table if not exists public.contacts (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies(id) on delete cascade,
+  org_id uuid not null references public.orgs(id) on delete cascade,
   email text,
   phone text,
   linkedin_url text,
@@ -115,6 +116,7 @@ create table if not exists public.contacts (
 );
 
 create index if not exists contacts_company_idx on public.contacts(company_id);
+create index if not exists contacts_org_idx on public.contacts(org_id);
 
 -- ============================================================
 -- AUDITS
@@ -291,14 +293,13 @@ create policy "companies_all_own" on public.companies
     )
   );
 
--- CONTACTS: users can see contacts for their own org's companies
+-- CONTACTS: users can see contacts for their own org
 create policy "contacts_select_own" on public.contacts
   for select using (
-    exists (
-      select 1 from public.companies
-      join public.org_members on org_members.org_id = companies.org_id
-      where companies.id = contacts.company_id
-      and org_members.user_id = auth.uid()
+    org_id in (
+      select org_members.org_id
+      from public.org_members
+      where org_members.user_id = auth.uid()
     )
   );
 
