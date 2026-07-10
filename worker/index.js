@@ -118,6 +118,28 @@ async function handleJob(job) {
   }
 }
 
+// ─── TEMPLATE HELPERS ─────────────────────────────────────────────────────────
+
+function renderTemplate(template, variables) {
+  let rendered = template;
+  for (const [key, value] of Object.entries(variables)) {
+    const placeholder = `{{${key}}}`;
+    rendered = rendered.split(placeholder).join(value || '');
+  }
+  return rendered;
+}
+
+async function getDefaultTemplate(orgId, type) {
+  const { data } = await supabase
+    .from('email_templates')
+    .select('subject, body')
+    .eq('org_id', orgId)
+    .eq('type', type)
+    .eq('is_default', true)
+    .single();
+  return data;
+}
+
 // ─── DISCOVER ─────────────────────────────────────────────────────────────────
 
 async function handleDiscover(job) {
@@ -219,6 +241,8 @@ async function handleScrape(job) {
         org_id: orgId,
         company_id: company.id,
         email: c.email || null,
+        first_name: c.firstName || null,
+        last_name: c.lastName || null,
         linkedin_url: c.linkedin || null,
         instagram_url: c.instagram || null,
         phone: c.phone || null,
@@ -261,15 +285,40 @@ async function handleScrape(job) {
       const senderName = orgConfig?.company_name || 'Knight';
       const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || 'hello@knight.ai';
 
+      // Try to use default initial template
+      const template = await getDefaultTemplate(orgId, 'initial');
+      
+      let subject, body;
+      if (template) {
+        const variables = {
+          company_name: company.name,
+          contact_name: contacts[0].first_name 
+            ? `${contacts[0].first_name} ${contacts[0].last_name || ''}`.trim()
+            : 'there',
+          sender_name: senderName,
+          sender_website: orgConfig?.company_website || '',
+          calendly_link: orgConfig?.calendly_link || '',
+          industry: company.industry || '',
+          audit_score: auditData.score.toString(),
+          issues_summary: auditData.issues?.slice(0, 3).join(', ') || 'several areas for improvement',
+        };
+        subject = renderTemplate(template.subject, variables);
+        body = renderTemplate(template.body, variables);
+      } else {
+        // Fallback to AI-generated pitch
+        subject = 'Quick question about your website';
+        body = aiAnalysis.pitch;
+      }
+
       console.log(`[Scrape] Auto-sending pitch to ${targetEmail}`);
       try {
         const resend = new Resend(process.env.RESEND_API_KEY);
         const { error } = await resend.emails.send({
           from: `${senderName} <${senderEmail}>`,
           to: targetEmail,
-          subject: 'Quick question about your website',
+          subject,
           html: `<div style="font-family: 'Inter', sans-serif; max-width: 600px; line-height: 1.6; color: #111;">
-            <p>${aiAnalysis.pitch.replace(/\n/g, '<br>')}</p>
+            <p>${body.replace(/\n/g, '<br>')}</p>
             <br>
             <hr style="border: none; border-top: 1px solid #eaeaea; margin: 24px 0;">
             <div style="font-size: 12px; color: #666;">
@@ -283,8 +332,8 @@ async function handleScrape(job) {
           org_id: orgId,
           company_id: company.id,
           direction: 'outbound',
-          subject: 'Quick question about your website',
-          body_text: aiAnalysis.pitch
+          subject,
+          body_text: body
         });
         await supabase.from('companies').update({ status: 'PITCHED' }).eq('id', company.id);
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
@@ -340,11 +389,26 @@ async function handleProcessReply(job) {
     return;
   }
 
-  // Draft reply via Gemini
-  const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  const model = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
+  // Try to use default reply template
+  const template = await getDefaultTemplate(orgId, 'reply');
+  
+  let draftText;
+  if (template) {
+    const variables = {
+      company_name: companyName,
+      contact_name: 'there',
+      sender_name: companyName,
+      sender_website: orgConfig?.company_website || '',
+      calendly_link: orgConfig?.calendly_link || '',
+      subject: '',
+    };
+    draftText = renderTemplate(template.body, variables);
+  } else {
+    // Draft reply via Gemini
+    const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-  const prompt = `You are a professional sales closer representing ${companyName}.
+    const prompt = `You are a professional sales closer representing ${companyName}.
 A potential client just replied to our cold outreach email.
 Read their reply and write a highly professional, persuasive response.
 Keep it concise, polite, and persuasive. Sign off as "${companyName} Team".
@@ -358,10 +422,16 @@ Client Reply:
 
 Respond with only the exact text of the email draft. No markdown, no preambles.`;
 
-  try {
-    const response = await model.generateContent(prompt);
-    const draftText = response.response.text().trim();
+    try {
+      const response = await model.generateContent(prompt);
+      draftText = response.response.text().trim();
+    } catch (err) {
+      console.error('[ProcessReply] Gemini draft failed:', err.message);
+      draftText = `Hi,\n\nThanks for your reply. I'd be happy to discuss further.\n\nBest,\n${companyName} Team`;
+    }
+  }
 
+  try {
     await supabase.from('drafts').insert({
       org_id: orgId,
       email_id: email_id,
@@ -370,6 +440,6 @@ Respond with only the exact text of the email draft. No markdown, no preambles.`
     });
     console.log(`[ProcessReply] Draft generated for email ${email_id}`);
   } catch (err) {
-    console.error('[ProcessReply] Gemini draft failed:', err.message);
+    console.error('[ProcessReply] Draft save failed:', err.message);
   }
 }

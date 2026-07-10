@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Tooltip } from "@/components/Tooltip";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
+import { TemplateManager } from "@/components/TemplateManager";
 
 interface EmailDomain {
   id: string;
@@ -367,6 +368,9 @@ export default function SettingsPage() {
             </div>
           </div>
         </FadeIn>
+
+        {/* Email Templates */}
+        <TemplateManager />
 
         {/* AI Provider Keys */}
         <FadeIn delay={400}>
