@@ -35,8 +35,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-6">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center px-6">
+      <div className="w-full max-w-md flex-1 flex flex-col justify-center">
         <div className="text-center mb-8">
           <Link href="/" className="font-display text-2xl text-paper-100">Knight</Link>
           <p className="text-sm text-paper-400 mt-2">Create your account</p>
@@ -105,6 +105,23 @@ export default function SignupPage() {
           </Link>
         </p>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-line py-6 w-full">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <span className="font-display text-sm text-paper-400">Knight</span>
+              <Link href="/about" className="text-xs text-paper-400 hover:text-paper-200">About</Link>
+              <Link href="/contact" className="text-xs text-paper-400 hover:text-paper-200">Contact</Link>
+              <Link href="/privacy" className="text-xs text-paper-400 hover:text-paper-200">Privacy</Link>
+              <Link href="/terms" className="text-xs text-paper-400 hover:text-paper-200">Terms</Link>
+              <Link href="/refund" className="text-xs text-paper-400 hover:text-paper-200">Refund</Link>
+            </div>
+            <span className="text-xs text-paper-400">© {new Date().getFullYear()} Knight. All rights reserved.</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

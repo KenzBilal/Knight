@@ -121,7 +121,8 @@ export default function LandingPage() {
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">Features</a>
             <a href="#pricing" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">Pricing</a>
-            <a href="#faq" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">FAQ</a>
+            <Link href="/about" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">About</Link>
+            <Link href="/contact" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">Contact</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-sm text-paper-300 hover:text-paper-100 transition-colors">Sign in</Link>
@@ -277,9 +278,18 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-line py-8">
-        <div className="mx-auto max-w-6xl px-6 flex items-center justify-between">
-          <span className="font-display text-sm text-paper-400">Knight</span>
-          <span className="text-xs text-paper-400">© {new Date().getFullYear()} Knight. All rights reserved.</span>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-6">
+              <span className="font-display text-sm text-paper-400">Knight</span>
+              <Link href="/about" className="text-xs text-paper-400 hover:text-paper-200">About</Link>
+              <Link href="/contact" className="text-xs text-paper-400 hover:text-paper-200">Contact</Link>
+              <Link href="/privacy" className="text-xs text-paper-400 hover:text-paper-200">Privacy</Link>
+              <Link href="/terms" className="text-xs text-paper-400 hover:text-paper-200">Terms</Link>
+              <Link href="/refund" className="text-xs text-paper-400 hover:text-paper-200">Refund</Link>
+            </div>
+            <span className="text-xs text-paper-400">© {new Date().getFullYear()} Knight. All rights reserved.</span>
+          </div>
         </div>
       </footer>
     </div>
