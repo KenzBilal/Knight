@@ -14,9 +14,11 @@ create table if not exists public.orgs (
   name text not null,
   slug text unique not null,
   plan text not null default 'free' check (plan in ('free','starter','pro','agency')),
-  stripe_customer_id text unique,
-  stripe_subscription_id text unique,
-  created_at timestamptz not null default now()
+  lemon_customer_id text unique,
+  lemon_subscription_id text unique,
+  lemon_subscription_ends_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 -- ============================================================
