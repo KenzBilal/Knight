@@ -1,0 +1,21 @@
+{
+  "name": "knight-worker",
+  "version": "1.0.0",
+  "description": "Knight autonomous sales agent worker",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "@supabase/supabase-js": "^2.42.0",
+    "cohere-ai": "^8.0.0",
+    "dotenv": "^16.4.5",
+    "openai": "^6.45.0",
+    "puppeteer": "^22.6.0",
+    "resend": "^6.16.0",
+    "telegram": "^2.26.22",
+    "ws": "^8.21.0"
+  }
+}

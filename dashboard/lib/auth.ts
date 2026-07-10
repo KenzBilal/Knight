@@ -1,0 +1,104 @@
+import { createServerSupabase, createServiceClient } from "./supabase";
+
+export interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export interface Org {
+  id: string;
+  name: string;
+  slug: string;
+  plan: string;
+}
+
+export interface OrgConfig {
+  id: string;
+  org_id: string;
+  company_name: string | null;
+  company_website: string | null;
+  services_offered: string[];
+  tone: string;
+  calendly_link: string | null;
+  sniper_keywords: string[];
+  sender_email: string;
+  sender_domain: string | null;
+  auto_send_threshold: number;
+  daily_email_limit: number;
+  telegram_enabled: boolean;
+  telegram_phone: string | null;
+  telegram_admin_chat_id: string | null;
+}
+
+/**
+ * Get the current user from the session cookie.
+ * Returns null if not authenticated.
+ */
+export async function getUser(): Promise<User | null> {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  return { id: user.id, email: user.email!, name: user.user_metadata?.name };
+}
+
+/**
+ * Get the user's org (from org_members).
+ * Returns null if user has no org.
+ */
+export async function getOrg(userId: string): Promise<Org | null> {
+  const serviceClient = createServiceClient();
+  const { data: member } = await serviceClient
+    .from("org_members")
+    .select("org_id, orgs(id, name, slug, plan)")
+    .eq("user_id", userId)
+    .single();
+
+  if (!member?.orgs) return null;
+  return member.orgs as unknown as Org;
+}
+
+/**
+ * Get the org config (engine settings).
+ */
+export async function getOrgConfig(orgId: string): Promise<OrgConfig | null> {
+  const serviceClient = createServiceClient();
+  const { data } = await serviceClient
+    .from("org_config")
+    .select("*")
+    .eq("org_id", orgId)
+    .single();
+
+  return data as unknown as OrgConfig | null;
+}
+
+/**
+ * Require authentication. Throws if not logged in.
+ * Returns user + org.
+ */
+export async function requireAuth(): Promise<{ user: User; org: Org }> {
+  const user = await getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const org = await getOrg(user.id);
+  if (!org) throw new Error("No organization found");
+
+  return { user, org };
+}
+
+/**
+ * Require authentication via cookie token.
+ * Used by API routes that read the session cookie directly.
+ */
+export async function requireAuthFromToken(token: string): Promise<{ user: User; org: Org }> {
+  const serviceClient = createServiceClient();
+  const { data: { user: authUser } } = await serviceClient.auth.getUser(token);
+
+  if (!authUser) throw new Error("Unauthorized");
+
+  const user: User = { id: authUser.id, email: authUser.email!, name: authUser.user_metadata?.name };
+  const org = await getOrg(user.id);
+  if (!org) throw new Error("No organization found");
+
+  return { user, org };
+}

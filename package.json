@@ -1,0 +1,12 @@
+{
+  "name": "knight",
+  "private": true,
+  "scripts": {
+    "dev": "cd dashboard && npm run dev",
+    "build": "cd dashboard && npm run build",
+    "start": "cd dashboard && npm start",
+    "worker": "cd worker && node index.js",
+    "worker:setup": "cd worker && node telegram_userbot.js --setup",
+    "install:all": "cd dashboard && npm install && cd ../worker && npm install"
+  }
+}
