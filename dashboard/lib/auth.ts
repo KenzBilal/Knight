@@ -1,4 +1,5 @@
-import { createServerSupabase, createServiceClient } from "./supabase";
+import { cookies } from "next/headers";
+import { createServiceClient } from "./supabase";
 
 export interface User {
   id: string;
@@ -32,12 +33,16 @@ export interface OrgConfig {
 }
 
 /**
- * Get the current user from the session cookie.
+ * Get the current user from the knight_token cookie.
  * Returns null if not authenticated.
  */
 export async function getUser(): Promise<User | null> {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("knight_token")?.value;
+  if (!token) return null;
+
+  const serviceClient = createServiceClient();
+  const { data: { user } } = await serviceClient.auth.getUser(token);
   if (!user) return null;
   return { id: user.id, email: user.email!, name: user.user_metadata?.name };
 }
