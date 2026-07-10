@@ -18,9 +18,15 @@ const bottomLinks = [
   { href: "/dashboard/billing", label: "Billing", icon: "💳" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  orgPlan?: string;
+  orgName?: string;
+}
+
+export function Sidebar({ orgPlan = "free", orgName = "Knight" }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const isAgency = orgPlan === "agency";
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -30,7 +36,13 @@ export function Sidebar() {
   return (
     <aside className="w-64 h-screen border-r border-line bg-ink-950 flex flex-col shrink-0">
       <div className="px-5 h-16 flex items-center border-b border-line">
-        <Link href="/dashboard" className="font-display text-lg text-paper-100">Knight</Link>
+        {isAgency ? (
+          <Link href="/dashboard" className="font-display text-lg text-paper-100">
+            {orgName}
+          </Link>
+        ) : (
+          <Link href="/dashboard" className="font-display text-lg text-paper-100">Knight</Link>
+        )}
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1">
