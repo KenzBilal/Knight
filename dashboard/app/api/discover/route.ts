@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
 import { checkLimits, incrementUsage } from "@/lib/limits";
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,15 @@ export async function POST(req: Request) {
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    // Rate limit check
+    const rateLimit = checkRateLimit(`discover:${org.id}`, RATE_LIMITS.discover);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Try again later." },
+        { status: 429, headers: getRateLimitHeaders(rateLimit) }
+      );
+    }
 
     // Check usage limits
     const limits = await checkLimits(org.id, "lead");
