@@ -107,3 +107,4 @@ node index.js
 - **Scraping:** Puppeteer
 - **Hosting:** Vercel (dashboard), Local via PM2 (worker)
 
+
