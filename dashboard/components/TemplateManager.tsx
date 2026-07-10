@@ -37,6 +37,7 @@ export function TemplateManager() {
   });
   const [saving, setSaving] = useState(false);
   const [showVariables, setShowVariables] = useState(false);
+  const [usingDefaults, setUsingDefaults] = useState(false);
 
   const variables = getAvailableVariables();
 
@@ -50,6 +51,7 @@ export function TemplateManager() {
       const data = await res.json();
       if (data.templates) {
         setTemplates(data.templates);
+        setUsingDefaults(data.defaults === true);
       }
     } catch (err) {
       toast.error("Failed to load templates");
@@ -188,13 +190,21 @@ export function TemplateManager() {
               Customize your outreach emails with templates and variables.
             </p>
           </div>
-          <button
-            onClick={handleCreate}
-            className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2 text-sm hover:bg-flash-400 transition-all active:scale-[0.98]"
-          >
-            New Template
-          </button>
+          {!usingDefaults && (
+            <button
+              onClick={handleCreate}
+              className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2 text-sm hover:bg-flash-400 transition-all active:scale-[0.98]"
+            >
+              New Template
+            </button>
+          )}
         </div>
+
+        {usingDefaults && (
+          <div className="rounded-lg bg-flash-500/10 border border-flash-500/20 p-3 text-sm text-flash-500">
+            Using built-in default templates. Run the migration in Supabase SQL Editor to enable custom templates.
+          </div>
+        )}
 
         {/* Template List */}
         {!isCreating && !editingTemplate && (
@@ -228,18 +238,22 @@ export function TemplateManager() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEdit(template)}
-                      className="text-xs text-paper-400 hover:text-paper-200 transition-colors"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(template.id)}
-                      className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                    >
-                      Delete
-                    </button>
+                    {!template.id.startsWith("default-") && (
+                      <>
+                        <button
+                          onClick={() => handleEdit(template)}
+                          className="text-xs text-paper-400 hover:text-paper-200 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(template.id)}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))
