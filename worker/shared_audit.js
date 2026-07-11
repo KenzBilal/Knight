@@ -8,15 +8,28 @@ dotenv.config();
 const cohere = new CohereClient({ token: process.env.COHERE_API_KEY });
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
-export async function fetchLighthouseData(url) {
+export async function fetchLighthouseData(url, attempt = 1) {
+  const MAX_RETRIES = 3;
+  const BACKOFF_MS = [5000, 15000, 45000];
   try {
     const encoded = encodeURIComponent(url);
     const api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encoded}&strategy=mobile`;
     const res = await fetch(api);
+    if ((res.status === 429 || res.status === 503) && attempt <= MAX_RETRIES) {
+      const wait = BACKOFF_MS[attempt - 1] || BACKOFF_MS[BACKOFF_MS.length - 1];
+      console.log(`[Lighthouse] Rate limited. Waiting ${wait / 1000}s before retry ${attempt}/${MAX_RETRIES}...`);
+      await new Promise(r => setTimeout(r, wait));
+      return fetchLighthouseData(url, attempt + 1);
+    }
+    if (!res.ok) {
+      console.log(`[Lighthouse] HTTP ${res.status} — skipping.`);
+      return null;
+    }
     const data = await res.json();
     const score = data.lighthouseResult?.categories?.performance?.score * 100;
     return typeof score === 'number' && !isNaN(score) ? Math.round(score) : null;
   } catch (e) {
+    console.error('[Lighthouse] Error:', e.message);
     return null;
   }
 }

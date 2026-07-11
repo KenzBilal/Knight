@@ -16,6 +16,10 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 let jobProcessing = false;
 const jobQueue = [];
 const JOB_DELAY_MS = 6000;
+const MAX_ATTEMPTS = 3;
+
+// Retry delays: 1 min, 5 min, 15 min
+const RETRY_DELAYS_MS = [60_000, 300_000, 900_000];
 
 console.log('[Knight Worker] Starting...');
 
@@ -34,8 +38,19 @@ supabase
     await fetchPendingJobs();
   });
 
-setInterval(runDailyCleanup, 1000 * 60 * 60 * 24);
-setTimeout(runDailyCleanup, 5000);
+// Run cleanup once daily at midnight, not on boot
+function scheduleMidnightCleanup() {
+  const now = new Date();
+  const midnight = new Date();
+  midnight.setHours(24, 0, 0, 0);
+  const msUntilMidnight = midnight.getTime() - now.getTime();
+  setTimeout(() => {
+    runDailyCleanup();
+    setInterval(runDailyCleanup, 1000 * 60 * 60 * 24);
+  }, msUntilMidnight);
+  console.log(`[Cleanup] Scheduled for ${midnight.toISOString()}`);
+}
+scheduleMidnightCleanup();
 
 async function runDailyCleanup() {
   console.log('[Cleanup] Running daily cleanup for 30-day stale leads...');
@@ -53,7 +68,6 @@ async function runDailyCleanup() {
       if (audit) {
         await supabase.from('audit_results').insert({
           audit_id: audit.id,
-          org_id: company.org_id,
           category: 'REJECTED',
           raw_data: {},
           issues_found: { rejection_reason: 'No reply after 30 days' }
@@ -99,9 +113,14 @@ async function processQueue() {
 
 async function handleJob(job) {
   if (job.status !== 'PENDING') return;
-  console.log(`[Job] ${job.type} ${job.id} | org: ${job.org_id}`);
+  const attempts = (job.attempts || 0) + 1;
+  console.log(`[Job] ${job.type} ${job.id} | org: ${job.org_id} | attempt ${attempts}/${MAX_ATTEMPTS}`);
 
-  await supabase.from('jobs').update({ status: 'RUNNING', updated_at: new Date().toISOString() }).eq('id', job.id);
+  await supabase.from('jobs').update({
+    status: 'RUNNING',
+    started_at: new Date().toISOString(),
+    attempts,
+  }).eq('id', job.id);
 
   try {
     if (job.type === 'DISCOVER') {
@@ -111,10 +130,36 @@ async function handleJob(job) {
     } else {
       await handleScrape(job);
     }
-    await supabase.from('jobs').update({ status: 'COMPLETED', updated_at: new Date().toISOString() }).eq('id', job.id);
+    await supabase.from('jobs').update({
+      status: 'COMPLETED',
+      completed_at: new Date().toISOString(),
+    }).eq('id', job.id);
   } catch (error) {
-    console.error(`[Job] ${job.id} failed:`, error.message);
-    await supabase.from('jobs').update({ status: 'FAILED', updated_at: new Date().toISOString() }).eq('id', job.id);
+    console.error(`[Job] ${job.id} failed (attempt ${attempts}):`, error.message);
+
+    if (attempts >= MAX_ATTEMPTS) {
+      // Mark permanently failed after max attempts
+      await supabase.from('jobs').update({
+        status: 'FAILED_PERMANENTLY',
+        error: error.message,
+        completed_at: new Date().toISOString(),
+      }).eq('id', job.id);
+      console.error(`[Job] ${job.id} permanently failed after ${MAX_ATTEMPTS} attempts.`);
+    } else {
+      // Schedule retry with exponential backoff
+      const retryDelay = RETRY_DELAYS_MS[attempts - 1] || RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
+      console.log(`[Job] ${job.id} will retry in ${retryDelay / 1000}s...`);
+      await supabase.from('jobs').update({
+        status: 'PENDING',
+        error: error.message,
+        attempts,
+      }).eq('id', job.id);
+      // Re-queue after delay
+      setTimeout(() => {
+        jobQueue.push({ ...job, attempts });
+        processQueue();
+      }, retryDelay);
+    }
   }
 }
 
@@ -375,7 +420,7 @@ async function handleProcessReply(job) {
 
   if (intent?.includes('REJECTED')) {
     console.log('[ProcessReply] Intent: REJECTED');
-    await supabase.from('companies').update({ status: 'REJECTED' }).eq('id', company_id);
+    await supabase.from('companies').update({ status: 'REJECTED', updated_at: new Date().toISOString() }).eq('id', company_id);
     const { data: audit } = await supabase.from('audits').select('id').eq('company_id', company_id).single();
     if (audit) {
       await supabase.from('audit_results').insert({
@@ -433,7 +478,6 @@ Respond with only the exact text of the email draft. No markdown, no preambles.`
 
   try {
     await supabase.from('drafts').insert({
-      org_id: orgId,
       email_id: email_id,
       draft_text: draftText,
       status: 'pending'
