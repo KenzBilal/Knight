@@ -67,7 +67,7 @@ export default function BillingPage() {
       {isFree && (
         <div className="bg-white rounded-2xl p-6 mb-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-semibold text-[#111]">This month's usage</p>
+            <p className="text-sm font-semibold text-[#111]">This month&apos;s usage</p>
             <p className="text-xs text-[#999]">Resets on the 1st</p>
           </div>
           <div className="grid grid-cols-2 gap-8">
