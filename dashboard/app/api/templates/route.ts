@@ -192,7 +192,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ template });
   } catch (_error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (_error as Error).message }, { status: 500 });
   }
 }
 
@@ -239,7 +239,7 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({ template });
   } catch (_error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (_error as Error).message }, { status: 500 });
   }
 }
 
@@ -273,6 +273,6 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({ success: true });
   } catch (_error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: (_error as Error).message }, { status: 500 });
   }
 }
