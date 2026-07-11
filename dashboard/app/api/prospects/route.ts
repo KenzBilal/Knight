@@ -19,7 +19,7 @@ export async function GET(req: Request) {
       .select(`
         id,
         name,
-        website,
+        website_url,
         industry,
         lead_score,
         status,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Cpu, Play, RotateCcw, Square } from 'lucide-react';
 import { PageHeader } from './PageHeader';
 import { StatCard } from './StatCard';
@@ -8,7 +8,6 @@ export function WorkerModule() {
   const [status, setStatus] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const logListeners = useRef<((msg: string) => void)[]>([]);
 
   async function loadStatus() {
     setLoading(true);
@@ -40,15 +39,14 @@ export function WorkerModule() {
     const onError = (msg: string) => setLogs(p => [...p, `[ERROR] ${msg}`].slice(-200));
     const onStatus = (msg: string) => setLogs(p => [...p, `[STATUS] ${msg}`].slice(-200));
 
-    api?.onWorkerLog?.(onLog);
-    api?.onWorkerError?.(onError);
-    api?.onWorkerStatus?.(onStatus);
-
-    logListeners.current = [onLog, onError, onStatus];
+    const unsubLog = api?.onWorkerLog?.(onLog);
+    const unsubError = api?.onWorkerError?.(onError);
+    const unsubStatus = api?.onWorkerStatus?.(onStatus);
 
     return () => {
-      // Clear listeners by setting new empty functions
-      logListeners.current = [];
+      unsubLog?.();
+      unsubError?.();
+      unsubStatus?.();
     };
   }, []);
 

@@ -88,8 +88,8 @@ export function Overview() {
                 <div className="p-4 text-center text-[#444] text-[12px]">No recent activity</div>
               ) : (
                 <div className="divide-y divide-[#141414]">
-                  {recentActivity.map((a: any) => (
-                    <div key={a.id || Math.random()} className="px-4 py-2.5 flex items-center justify-between">
+                  {recentActivity.map((a: any, i: number) => (
+                    <div key={a.id ?? i} className="px-4 py-2.5 flex items-center justify-between">
                       <span className="text-[12px] text-[#888] truncate">{a.message || 'Unknown event'}</span>
                       <span className="text-[10px] text-[#444] shrink-0 ml-3">
                         {a.created_at ? new Date(a.created_at).toLocaleTimeString() : ''}

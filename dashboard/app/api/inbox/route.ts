@@ -26,7 +26,7 @@ export async function GET(req: Request) {
         companies (
           id,
           name,
-          website
+          website_url
         )
       `)
       .eq("org_id", org.id)

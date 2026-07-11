@@ -24,7 +24,6 @@ export async function POST(req: Request) {
       .from("audits")
       .select("id")
       .eq("company_id", id)
-      .eq("org_id", org.id)
       .single();
 
     if (audit) {

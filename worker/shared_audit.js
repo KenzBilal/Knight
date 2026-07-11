@@ -168,6 +168,8 @@ export async function runAudit(url) {
         .slice(0, 2).map(a => a.href)
     );
 
+    const rawText = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
+
     await page.close();
 
     let extraContext = '';
@@ -219,7 +221,6 @@ export async function runAudit(url) {
     else if (checks.isWordPress) techStack = 'WordPress';
     else if (checks.isJQuery) techStack = 'Legacy jQuery';
 
-    const rawText = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
     let semanticData = null;
     try {
       semanticData = await extractSemanticBusinessData(rawText);

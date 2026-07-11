@@ -17,7 +17,7 @@ export async function GET(req: Request) {
       .select(`
         *,
         contacts(*),
-        audits(id, score, status, audit_results!audit_id(category, raw_data))
+        audits(id, total_score, status, audit_results!audit_id(category, raw_data))
       `)
       .eq("org_id", org.id)
       .order("created_at", { ascending: false });
