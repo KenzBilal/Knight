@@ -36,21 +36,21 @@ export default function InboxPage() {
       {loading ? (
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="rounded-xl border border-line bg-ink-900 p-4 animate-pulse">
+            <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded bg-ink-800" />
+                <div className="w-10 h-10 rounded bg-neutral-800" />
                 <div className="flex-1">
-                  <div className="h-4 w-32 bg-ink-800 rounded mb-2" />
-                  <div className="h-3 w-48 bg-ink-800 rounded" />
+                  <div className="h-4 w-32 bg-neutral-800 rounded mb-2" />
+                  <div className="h-3 w-48 bg-neutral-800 rounded" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : threads.length === 0 ? (
-        <div className="rounded-xl border border-line bg-ink-900 p-12 text-center">
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-12 text-center grain-card">
           <p className="text-4xl mb-3">📬</p>
-          <p className="text-sm text-paper-400">No email threads yet</p>
+          <p className="text-sm text-neutral-500">No email threads yet</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
@@ -61,13 +61,13 @@ export default function InboxPage() {
                 onClick={() => setSelectedThread(thread)}
                 className={`w-full text-left rounded-xl border p-4 transition-colors ${
                   selectedThread?.company.id === thread.company.id
-                    ? "border-flash-500/50 bg-ink-800"
-                    : "border-line bg-ink-900 hover:bg-ink-800/50"
+                    ? "border-neutral-600 bg-neutral-800"
+                    : "border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-ink-800 flex items-center justify-center">
-                    <span className="text-sm text-paper-400">
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
+                    <span className="text-sm text-neutral-400">
                       {thread.company.name?.[0]?.toUpperCase() || "?"}
                     </span>
                   </div>
@@ -78,7 +78,7 @@ export default function InboxPage() {
                       </span>
                       {thread.hasReply && <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />}
                     </div>
-                    <p className="text-xs text-paper-400 truncate">
+                    <p className="text-xs text-neutral-500 truncate">
                       {thread.emails[thread.emails.length - 1]?.subject || "No subject"}
                     </p>
                   </div>
@@ -89,10 +89,10 @@ export default function InboxPage() {
 
           <div className="md:col-span-2">
             {selectedThread ? (
-              <div className="rounded-xl border border-line bg-ink-900 p-6">
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 grain-card">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="font-display text-lg text-paper-100">{selectedThread.company.name}</h2>
-                  <span className="text-xs text-paper-400">{selectedThread.emails.length} messages</span>
+                  <span className="text-xs text-neutral-500">{selectedThread.emails.length} messages</span>
                 </div>
                 <div className="space-y-4 max-h-[600px] overflow-auto">
                   {selectedThread.emails.map((email) => (
@@ -100,21 +100,21 @@ export default function InboxPage() {
                       key={email.id}
                       className={`rounded-lg p-4 ${
                         email.direction === "outbound"
-                          ? "bg-flash-500/5 border border-flash-500/20 ml-8"
-                          : "bg-ink-950 border border-line mr-8"
+                          ? "bg-neutral-800/50 border border-neutral-700 ml-8"
+                          : "bg-neutral-950 border border-neutral-800 mr-8"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className={`text-xs font-medium ${
-                          email.direction === "outbound" ? "text-flash-500" : "text-green-500"
+                          email.direction === "outbound" ? "text-neutral-300" : "text-green-500"
                         }`}>
                           {email.direction === "outbound" ? "You" : "Prospect"}
                         </span>
-                        <span className="text-xs text-paper-400">
+                        <span className="text-xs text-neutral-500">
                           {new Date(email.created_at).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-sm text-paper-200 whitespace-pre-wrap">
+                      <p className="text-sm text-neutral-300 whitespace-pre-wrap">
                         {email.body_text || email.subject || "No content"}
                       </p>
                     </div>
@@ -122,8 +122,8 @@ export default function InboxPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-line bg-ink-900 p-6 flex items-center justify-center h-64">
-                <p className="text-sm text-paper-400">Select a thread</p>
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 flex items-center justify-center h-64">
+                <p className="text-sm text-neutral-500">Select a thread</p>
               </div>
             )}
           </div>

@@ -21,10 +21,10 @@ interface Company {
 }
 
 const columns = [
-  { id: "NEW", label: "New", color: "text-paper-300" },
-  { id: "PITCHED", label: "Pitched", color: "text-flash-500" },
-  { id: "REPLIED", label: "Replied", color: "text-success-500" },
-  { id: "REJECTED", label: "Rejected", color: "text-danger-500" },
+  { id: "NEW", label: "New", color: "text-neutral-300" },
+  { id: "PITCHED", label: "Pitched", color: "text-neutral-400" },
+  { id: "REPLIED", label: "Replied", color: "text-green-500" },
+  { id: "REJECTED", label: "Rejected", color: "text-red-500" },
 ];
 
 export default function ProspectsPage() {
@@ -77,10 +77,10 @@ export default function ProspectsPage() {
       {loading ? (
         <div className="grid grid-cols-4 gap-4">
           {[1,2,3,4].map(i => (
-            <div key={i} className="rounded-xl border border-line bg-ink-900/50 min-h-[400px] p-3 animate-pulse">
-              <div className="h-4 w-20 bg-ink-800 rounded mb-3" />
+            <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-900/50 min-h-[400px] p-3 animate-pulse">
+              <div className="h-4 w-20 bg-neutral-800 rounded mb-3" />
               <div className="space-y-2">
-                {[1,2,3].map(j => <div key={j} className="h-16 bg-ink-800 rounded" />)}
+                {[1,2,3].map(j => <div key={j} className="h-16 bg-neutral-800 rounded" />)}
               </div>
             </div>
           ))}
@@ -93,11 +93,11 @@ export default function ProspectsPage() {
               <div key={col.id} onDrop={(e) => handleDrop(e, col.id)} onDragOver={handleDragOver}>
                 <div className="flex items-center gap-2 mb-3">
                   <h3 className={`text-sm font-semibold ${col.color}`}>{col.label}</h3>
-                  <span className="text-xs text-paper-400 font-mono">{colCompanies.length}</span>
+                  <span className="text-xs text-neutral-500 font-mono">{colCompanies.length}</span>
                 </div>
-                <div className="rounded-xl border border-line bg-ink-900/50 min-h-[400px] p-3 space-y-2">
+                <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 min-h-[400px] p-3 space-y-2">
                   {colCompanies.length === 0 ? (
-                    <p className="text-xs text-paper-400 text-center mt-8">
+                    <p className="text-xs text-neutral-600 text-center mt-8">
                       {col.id === "NEW" ? "No new prospects" : `No ${col.label.toLowerCase()} leads`}
                     </p>
                   ) : (
@@ -106,11 +106,11 @@ export default function ProspectsPage() {
                         key={company.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, company.id)}
-                        className="rounded-lg bg-ink-950 border border-line p-3 cursor-grab active:cursor-grabbing hover:border-flash-500/30 transition-colors"
+                        className="rounded-lg bg-neutral-950 border border-neutral-800 p-3 cursor-grab active:cursor-grabbing hover:border-neutral-700 transition-colors grain-card"
                       >
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="w-6 h-6 rounded bg-ink-800 flex items-center justify-center">
-                            <span className="text-xs text-paper-400">
+                          <div className="w-6 h-6 rounded bg-neutral-800 flex items-center justify-center">
+                            <span className="text-xs text-neutral-400">
                               {company.name?.[0]?.toUpperCase() || "?"}
                             </span>
                           </div>
@@ -118,18 +118,18 @@ export default function ProspectsPage() {
                             {company.name || "Unknown"}
                           </span>
                         </div>
-                        <p className="text-xs text-paper-400 truncate mb-1">
+                        <p className="text-xs text-neutral-500 truncate mb-1">
                           {company.industry || company.website || ""}
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-paper-400">
+                          <span className="text-xs text-neutral-500">
                             {company.contacts?.[0]?.email || ""}
                           </span>
                           {company.lead_score > 0 && (
                             <span className={`text-xs px-1.5 py-0.5 rounded ${
                               company.lead_score >= 70 ? "bg-green-500/10 text-green-500" :
-                              company.lead_score >= 40 ? "bg-yellow-500/10 text-yellow-500" :
-                              "bg-paper-400/10 text-paper-400"
+                              company.lead_score >= 40 ? "bg-neutral-700 text-neutral-300" :
+                              "bg-neutral-800 text-neutral-500"
                             }`}>
                               {company.lead_score}
                             </span>

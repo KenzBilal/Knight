@@ -125,50 +125,50 @@ export default function SettingsPage() {
 
       <form onSubmit={handleSave} className="space-y-6">
         <FadeIn delay={100}>
-          <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
             <h2 className="font-display text-lg text-paper-100">Company Profile</h2>
             <div>
-              <label className="block text-sm text-paper-300 mb-1.5">Company name</label>
+              <label className="block text-sm text-neutral-400 mb-1.5">Company name</label>
               <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
                 placeholder="Your agency name"
-                className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-paper-300 mb-1.5">Website</label>
+              <label className="block text-sm text-neutral-400 mb-1.5">Website</label>
               <input type="text" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)}
                 placeholder="yoursite.com"
-                className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-paper-300 mb-1.5">Services (comma separated)</label>
+              <label className="block text-sm text-neutral-400 mb-1.5">Services (comma separated)</label>
               <input type="text" value={services} onChange={e => setServices(e.target.value)}
                 placeholder="web development, SEO, logo design"
-                className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-paper-300 mb-1.5">Calendly link</label>
+              <label className="block text-sm text-neutral-400 mb-1.5">Calendly link</label>
               <input type="text" value={calendlyLink} onChange={e => setCalendlyLink(e.target.value)}
                 placeholder="https://calendly.com/yourname"
-                className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
           </div>
         </FadeIn>
 
         <FadeIn delay={200}>
-          <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
             <h2 className="font-display text-lg text-paper-100">Email Domain</h2>
             {domains.length > 0 && (
               <div className="space-y-2">
                 {domains.map(d => (
-                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-ink-950 border border-line">
+                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-neutral-950 border border-neutral-800">
                     <div className="flex items-center gap-2">
                       <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-green-500" : "bg-yellow-500"}`} />
                       <span className="text-sm text-paper-100">{d.domain}</span>
-                      <span className="text-xs text-paper-400 capitalize">{d.status}</span>
+                      <span className="text-xs text-neutral-500 capitalize">{d.status}</span>
                     </div>
                     {d.status === "pending" && (
                       <button type="button" onClick={() => handleVerifyDomain(d.id)}
-                        className="text-xs text-flash-500 hover:text-flash-400">Verify</button>
+                        className="text-xs text-neutral-400 hover:text-paper-100">Verify</button>
                     )}
                   </div>
                 ))}
@@ -177,67 +177,66 @@ export default function SettingsPage() {
             <form onSubmit={handleAddDomain} className="flex gap-2">
               <input type="text" value={newDomain} onChange={e => setNewDomain(e.target.value)}
                 placeholder="yourdomain.com"
-                className="flex-1 rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                className="flex-1 rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
               <button type="submit" disabled={domainLoading || !newDomain}
-                className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2.5 text-sm hover:bg-flash-400 transition-all disabled:opacity-50 active:scale-[0.98]">
+                className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2.5 text-sm hover:bg-paper-200 transition-all disabled:opacity-50 active:scale-[0.98]">
                 {domainLoading ? "Adding..." : "Add Domain"}
               </button>
             </form>
             {dnsRecords && (
-              <div className="rounded-lg bg-ink-950 border border-line p-4 space-y-3">
-                <p className="text-xs text-paper-400">Add these DNS records to your domain registrar:</p>
+              <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4 space-y-3">
+                <p className="text-xs text-neutral-400">Add these DNS records:</p>
                 {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
                   <div key={key} className="text-xs">
-                    <p className="text-paper-300 font-medium mb-1">{record.note}</p>
-                    <div className="flex gap-4 text-paper-400">
+                    <p className="text-neutral-300 font-medium mb-1">{record.note}</p>
+                    <div className="flex gap-4 text-neutral-500">
                       <span>Type: {record.type}</span>
                       <span>Host: {record.host}</span>
-                      <span className="text-paper-300 break-all">Value: {record.value}</span>
+                      <span className="text-neutral-400 break-all">Value: {record.value}</span>
                     </div>
                   </div>
                 ))}
-                <p className="text-xs text-paper-500">DNS propagation takes 5-30 minutes.</p>
               </div>
             )}
           </div>
         </FadeIn>
 
         <FadeIn delay={300}>
-          <div className="rounded-xl border border-line bg-ink-900 p-6 space-y-4">
+          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg text-paper-100">API Keys</h2>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input type="checkbox" checked={useCustomKeys} onChange={e => setUseCustomKeys(e.target.checked)} className="sr-only peer" />
-                <div className="w-11 h-6 bg-ink-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-flash-500"></div>
+                <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-paper-100"></div>
               </label>
             </div>
             {useCustomKeys && (
               <div className="space-y-4 pt-2">
                 <div>
-                  <label className="block text-sm text-paper-300 mb-1.5">Cohere</label>
+                  <label className="block text-sm text-neutral-400 mb-1.5">Cohere</label>
                   <input type="password" value={cohereKey} onChange={e => setCohereKey(e.target.value)}
                     placeholder="Cohere API key"
-                    className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm text-paper-300 mb-1.5">Gemini</label>
+                  <label className="block text-sm text-neutral-400 mb-1.5">Gemini</label>
                   <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)}
                     placeholder="Gemini API key"
-                    className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
                 </div>
                 <div>
-                  <label className="block text-sm text-paper-300 mb-1.5">OpenRouter</label>
+                  <label className="block text-sm text-neutral-400 mb-1.5">OpenRouter</label>
                   <input type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)}
                     placeholder="OpenRouter API key"
-                    className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500 focus:ring-1 focus:ring-flash-500/20 transition-all" />
+                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
                 </div>
                 <button type="button" onClick={handleSaveKeys}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-4 py-2 text-sm hover:bg-flash-400 transition-all active:scale-[0.98]">
+                  className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2 text-sm hover:bg-paper-200 transition-all active:scale-[0.98]">
                   Save Keys
                 </button>
               </div>
             )}
-            {!useCustomKeys && <p className="text-xs text-paper-500">Using Knight&apos;s built-in keys.</p>}
+            {!useCustomKeys && <p className="text-xs text-neutral-500">Using Knight&apos;s built-in keys.</p>}
           </div>
         </FadeIn>
 
@@ -245,7 +244,7 @@ export default function SettingsPage() {
 
         <FadeIn delay={500}>
           <button type="submit" disabled={saving}
-            className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
+            className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-5 py-2.5 text-sm hover:bg-paper-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </FadeIn>

@@ -87,56 +87,51 @@ export function OnboardingChecklist() {
   if (allComplete) return null;
 
   return (
-    <div className="rounded-xl border border-flash-500/30 bg-flash-500/5 p-6 mb-6">
+    <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 mb-6 matte-texture">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-display text-lg text-paper-100">Get started with Knight</h3>
-          <p className="text-sm text-paper-400">
-            Complete these steps to start finding leads ({completedCount}/{steps.length})
+          <h3 className="font-display text-lg text-paper-100">Get started</h3>
+          <p className="text-sm text-neutral-400">
+            {completedCount}/{steps.length} completed
           </p>
         </div>
         <button
           onClick={dismiss}
-          className="text-xs text-paper-400 hover:text-paper-200 transition-colors"
+          className="text-xs text-neutral-500 hover:text-neutral-300 transition-colors"
         >
           Dismiss
         </button>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full h-2 bg-ink-800 rounded-full mb-4 overflow-hidden">
+      <div className="w-full h-1.5 bg-neutral-800 rounded-full mb-4 overflow-hidden">
         <div
-          className="h-full bg-flash-500 rounded-full transition-all duration-500"
+          className="h-full bg-neutral-400 rounded-full transition-all duration-500"
           style={{ width: `${(completedCount / steps.length) * 100}%` }}
         />
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {steps.map((step) => (
           <Link
             key={step.id}
             href={step.href}
-            className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+            className={`flex items-center gap-3 p-2.5 rounded-lg transition-all ${
               step.completed
-                ? "bg-green-500/5 border border-green-500/20"
-                : "bg-ink-900 border border-line hover:border-flash-500/30"
+                ? "bg-neutral-800/50 border border-neutral-700"
+                : "bg-neutral-900 border border-neutral-800 hover:border-neutral-700"
             }`}
           >
-            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
+            <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${
               step.completed
-                ? "bg-green-500 text-ink-950"
-                : "bg-ink-800 text-paper-400"
+                ? "bg-paper-100 text-neutral-950"
+                : "bg-neutral-800 text-neutral-500"
             }`}>
               {step.completed ? "✓" : "○"}
             </div>
-            <div className="flex-1">
-              <p className={`text-sm font-medium ${step.completed ? "text-green-400" : "text-paper-100"}`}>
-                {step.title}
-              </p>
-            </div>
-            {!step.completed && (
-              <span className="text-xs text-flash-500">→</span>
-            )}
+            <p className={`text-sm ${step.completed ? "text-neutral-400 line-through" : "text-paper-100"}`}>
+              {step.title}
+            </p>
+            {!step.completed && <span className="text-xs text-neutral-500 ml-auto">→</span>}
           </Link>
         ))}
       </div>
