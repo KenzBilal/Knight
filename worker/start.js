@@ -50,13 +50,14 @@ function startTelegram() {
 startTelegram();
 
 // 4. Heartbeat logging
-setInterval(() => {
+const heartbeatInterval = setInterval(() => {
   console.log(`[Heartbeat] Core: RUNNING | Telegram: ${telegramProcess && telegramProcess.exitCode === null ? 'RUNNING' : 'OFFLINE'}`);
 }, 60000);
 
 // 5. Graceful shutdown
 function shutdown() {
   console.log('[Start] Shutting down gracefully...');
+  clearInterval(heartbeatInterval);
   if (telegramProcess) telegramProcess.kill('SIGTERM');
   process.exit(0);
 }

@@ -32,6 +32,8 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   realtime: { transport: ws }
 });
 
+const orgIntervals = new Map(); // orgId -> { cleanup, reconnect, dailyHunt }
+
 if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
   console.log('[Telegram] Not connected — no API credentials');
   process.exit(0);
@@ -102,8 +104,6 @@ async function main() {
 
     if (orgsWithSessions.length === 0) {
       console.log('[USERBOT] No orgs with Telegram sessions. Waiting for connections...');
-      // Keep process alive
-      setInterval(() => {}, 60000);
       return;
     }
 
@@ -117,14 +117,6 @@ async function main() {
     }
 
     console.log('[USERBOT] All userbots connected. Listening for messages...');
-    
-    // Keep process alive
-    setInterval(async () => {
-      // Reconnect any disconnected orgs
-      const currentOrgs = await getOrgsWithSessions();
-      // TODO: Check which orgs are connected and reconnect if needed
-    }, 60 * 60 * 1000); // Check every hour
-    
     return;
   }
 
@@ -264,8 +256,14 @@ async function main() {
     }
   };
 
-  // ─── Cleanup Cron (every 6 hours) ───────────────────────────────────────────
-  setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
+  // Clear any existing intervals for this org before creating new ones
+  if (orgIntervals.has(orgId)) {
+    const old = orgIntervals.get(orgId);
+    clearInterval(old.cleanup);
+    clearInterval(old.dailyHunt);
+  }
+
+  const cleanupId = setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
 
   await runDailyHunt();
   console.log('[USERBOT] Initializing admin remote...');
@@ -273,7 +271,9 @@ async function main() {
 
   console.log('[USERBOT] Userbot is running and listening for commands/messages.');
 
-  setInterval(runDailyHunt, 24 * 60 * 60 * 1000);
+  const dailyHuntId = setInterval(runDailyHunt, 24 * 60 * 60 * 1000);
+
+  orgIntervals.set(orgId, { cleanup: cleanupId, dailyHunt: dailyHuntId });
 }
 
 // ─── Connect Single Org Userbot ──────────────────────────────────────────────

@@ -77,12 +77,14 @@ function setupRealtimeListener(orgId) {
         if (newStatus === 'APPROVED' && !processedApprovals.has(lead.id)) {
           processedApprovals.add(lead.id);
           console.log(`[ADMIN REMOTE] Lead ${lead.id} approved via dashboard`);
+          if (processedApprovals.size > 1000) processedApprovals.clear();
         }
 
         // B. Lead was Rejected
         if (newStatus === 'REJECTED' && !processedRejections.has(lead.id)) {
           processedRejections.add(lead.id);
           console.log(`[ADMIN REMOTE] Lead ${lead.id} rejected via dashboard`);
+          if (processedRejections.size > 1000) processedRejections.clear();
         }
       }
     )
@@ -161,6 +163,7 @@ export async function initAdminRemote(client, orgId) {
         // B. Lead was Approved
         if (newStatus === 'APPROVED' && !processedApprovals.has(lead.id)) {
           processedApprovals.add(lead.id);
+          if (processedApprovals.size > 1000) processedApprovals.clear();
           try {
             if (adminUsername && lead.admin_msg_id && adminBot) {
               await adminBot.editMessage(adminUsername, {
@@ -187,6 +190,7 @@ export async function initAdminRemote(client, orgId) {
         // C. Lead was Rejected
         if (newStatus === 'REJECTED' && !processedRejections.has(lead.id)) {
           processedRejections.add(lead.id);
+          if (processedRejections.size > 1000) processedRejections.clear();
           if (adminUsername && lead.admin_msg_id && adminBot) {
             await adminBot.editMessage(adminUsername, {
               message: lead.admin_msg_id,

@@ -23,8 +23,15 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   realtime: { transport: ws }
 });
 
+import OpenAI from 'openai';
+const openaiClient = new OpenAI({
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY,
+});
+
 let jobProcessing = false;
 const jobQueue = [];
+const MAX_QUEUE_SIZE = 100;
 const JOB_DELAY_MS = 6000;
 const MAX_ATTEMPTS = 3;
 
@@ -38,9 +45,13 @@ supabase
   .channel('jobs-channel')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs' }, (payload) => {
     if (payload.new.status === 'PENDING') {
-      console.log(`[Job] New job ${payload.new.id} (${payload.new.type}) for org ${payload.new.org_id}`);
-      jobQueue.push(payload.new);
-      processQueue();
+      if (jobQueue.length >= MAX_QUEUE_SIZE) {
+        console.warn(`[Worker] Queue full (${MAX_QUEUE_SIZE}). Dropping job ${payload.new.id}.`);
+      } else {
+        console.log(`[Job] New job ${payload.new.id} (${payload.new.type}) for org ${payload.new.org_id}`);
+        jobQueue.push(payload.new);
+        processQueue();
+      }
     }
   })
   .subscribe(async () => {
@@ -98,6 +109,10 @@ async function fetchPendingJobs() {
   if (data && data.length > 0) {
     console.log(`[Worker] Found ${data.length} pending jobs`);
     for (const job of data) {
+      if (jobQueue.length >= MAX_QUEUE_SIZE) {
+        console.warn(`[Worker] Queue full (${MAX_QUEUE_SIZE}). Skipping remaining pending jobs.`);
+        break;
+      }
       if (!jobQueue.find(j => j.id === job.id)) jobQueue.push(job);
     }
     processQueue();
@@ -243,8 +258,6 @@ async function handleDiscover(job) {
           return websiteLink?.href || null;
         });
 
-        await bizPage.close();
-
         if (website && !website.includes('google.com') && !website.includes('facebook.com')) {
           const cleanUrl = new URL(website).hostname.replace('www.', '');
           await supabase.from('jobs').insert({
@@ -255,7 +268,7 @@ async function handleDiscover(job) {
           });
           queued++;
         }
-      } catch {}
+      } catch { try { await bizPage.close(); } catch {} }
     }
 
     console.log(`[Discover] Queued ${queued} sites for audit`);
@@ -410,11 +423,7 @@ async function handleProcessReply(job) {
   const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
   const companyName = orgConfig?.company_name || 'Knight';
 
-  const openai = (await import('openai')).default;
-  const client = new openai({
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
+  const client = openaiClient;
 
   // Classify intent
   const intentCompletion = await client.chat.completions.create({
