@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAuthFromToken } from "@/lib/auth";
-import { createCheckoutSession, PLAN_VARIANTS } from "@/lib/lemonsqueezy";
+import { createCheckoutSession } from "@/lib/lemonsqueezy";
 
 export const dynamic = "force-dynamic";
 
@@ -11,17 +11,15 @@ export async function POST(req: Request) {
     if (!tokenMatch) throw new Error("Unauthorized");
     const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
-    const { plan } = await req.json();
+    const { variant_id } = await req.json();
 
-    // Map plan name to variant ID
-    const variantId = PLAN_VARIANTS[plan as keyof typeof PLAN_VARIANTS];
-    if (!variantId) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 });
+    if (!variant_id) {
+      return NextResponse.json({ error: "Missing variant_id" }, { status: 400 });
     }
 
     // Create checkout session
     const checkoutUrl = await createCheckoutSession(
-      variantId,
+      variant_id,
       user.id,
       user.email!,
       org.id

@@ -1,19 +1,21 @@
 import { createServiceClient } from "./supabase";
 
-// Plan limits
-const PLAN_LIMITS: Record<string, { leads: number; emails: number }> = {
-  free: { leads: 50, emails: 50 },
-  starter: { leads: Infinity, emails: Infinity },
-  pro: { leads: Infinity, emails: Infinity },
-  agency: { leads: Infinity, emails: Infinity },
-};
-
 type ActionType = "lead" | "email";
 
 // Map action type to usage field name
-const ACTION_TO_FIELD: Record<ActionType, keyof typeof PLAN_LIMITS.free> = {
-  lead: "leads",
-  email: "emails",
+const ACTION_TO_FIELD: Record<ActionType, string> = {
+  lead: "lead_limit",
+  email: "email_limit",
+};
+
+const ACTION_TO_USAGE_FIELD: Record<ActionType, string> = {
+  lead: "leads_searched",
+  email: "emails_sent",
+};
+
+// Fallback if plans table is empty
+const FALLBACK_LIMITS: Record<string, { lead_limit: number; email_limit: number }> = {
+  free: { lead_limit: 50, email_limit: 50 },
 };
 
 export async function checkLimits(
@@ -30,11 +32,20 @@ export async function checkLimits(
     .single();
 
   const plan = org?.plan || "free";
-  const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
-  const field = ACTION_TO_FIELD[action];
 
-  // Paid plans have unlimited
-  if (limits[field] === Infinity) {
+  // Get plan limits from plans table
+  const { data: planData } = await supabase
+    .from("plans")
+    .select("lead_limit, email_limit")
+    .eq("id", plan)
+    .single();
+
+  const limits = planData || FALLBACK_LIMITS[plan] || FALLBACK_LIMITS.free;
+  const limitField = ACTION_TO_FIELD[action] as keyof typeof limits;
+  const limit = limits[limitField] ?? 50;
+
+  // Unlimited
+  if (limit === -1) {
     return { allowed: true };
   }
 
@@ -43,23 +54,20 @@ export async function checkLimits(
   periodStart.setDate(1);
   periodStart.setHours(0, 0, 0, 0);
 
+  const usageField = ACTION_TO_USAGE_FIELD[action];
   const { data: usage } = await supabase
     .from("usage_tracking")
-    .select("leads_searched, emails_sent")
+    .select(usageField)
     .eq("org_id", orgId)
     .eq("period_start", periodStart.toISOString().split("T")[0])
     .single();
 
-  const currentUsage = field === "leads" 
-    ? (usage?.leads_searched || 0) 
-    : (usage?.emails_sent || 0);
-
-  const limit = limits[field];
+  const currentUsage = (usage as unknown as Record<string, number>)?.[usageField] || 0;
 
   if (currentUsage >= limit) {
     return {
       allowed: false,
-      reason: `Free plan limit: ${limit} ${field}/month. Upgrade to Pro for unlimited.`,
+      reason: `Free plan limit: ${limit} ${action}s/month. Upgrade for unlimited.`,
       usage: currentUsage,
       limit,
     };
@@ -70,11 +78,6 @@ export async function checkLimits(
 
 export async function incrementUsage(orgId: string, action: ActionType): Promise<void> {
   const supabase = createServiceClient();
-
-  const periodStart = new Date();
-  periodStart.setDate(1);
-  periodStart.setHours(0, 0, 0, 0);
-  // Use RPC to atomically increment usage
   await supabase.rpc("increment_usage", {
     p_org_id: orgId,
     p_action: action,

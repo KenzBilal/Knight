@@ -13,7 +13,7 @@ export async function GET(req: Request) {
 
     const supabase = createServiceClient();
 
-    // Get current plan
+    // Get current plan from org
     const { data: orgData } = await supabase
       .from("orgs")
       .select("plan")
@@ -21,6 +21,18 @@ export async function GET(req: Request) {
       .single();
 
     const plan = orgData?.plan || "free";
+
+    // Get plan limits from plans table
+    const { data: planData } = await supabase
+      .from("plans")
+      .select("lead_limit, email_limit")
+      .eq("id", plan)
+      .single();
+
+    const planLimits = {
+      leads: planData?.lead_limit ?? 50,
+      emails: planData?.email_limit ?? 50,
+    };
 
     // Get current month usage
     const periodStart = new Date();
@@ -33,14 +45,6 @@ export async function GET(req: Request) {
       .eq("org_id", org.id)
       .eq("period_start", periodStart.toISOString().split("T")[0])
       .single();
-
-    const limits: Record<string, { leads: number; emails: number }> = {
-      free: { leads: 50, emails: 50 },
-      starter: { leads: -1, emails: -1 },
-      pro: { leads: -1, emails: -1 },
-    };
-
-    const planLimits = limits[plan] || limits.free;
 
     return NextResponse.json({
       plan,

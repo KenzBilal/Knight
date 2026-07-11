@@ -1,53 +1,201 @@
-import { useState } from 'react';
-import { Save } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Save, Plus, Trash2, GripVertical } from 'lucide-react';
 import { PageHeader } from './PageHeader';
+import type { Plan } from '../lib/types';
 
-interface Plan {
-  id: string;
-  name: string;
-  price: number;
-  leadLimit: number;
-  emailLimit: number;
-  features: string[];
+const EMPTY_PLAN: Omit<Plan, 'id' | 'created_at' | 'updated_at'> = {
+  name: '',
+  price: 0,
+  period: 'month',
+  description: '',
+  features: [],
+  lead_limit: -1,
+  email_limit: -1,
+  telegram_limit: 0,
+  lemon_product_id: '',
+  lemon_variant_id: '',
+  sort_order: 0,
+  highlighted: false,
+  active: true,
+};
+
+function formatPrice(cents: number) {
+  if (cents === 0) return '$0';
+  return `$${(cents / 100).toFixed(0)}`;
 }
 
-const DEFAULT_PLANS: Plan[] = [
-  { id: 'free', name: 'Free', price: 0, leadLimit: 50, emailLimit: 50, features: ['50 leads/month', '50 emails/month', 'Basic audit', 'Dashboard'] },
-  { id: 'starter', name: 'Starter', price: 49, leadLimit: 600, emailLimit: 900, features: ['20 leads/day', 'Full audit', '30 emails/day', 'AI pitches', 'CRM'] },
-  { id: 'pro', name: 'Pro', price: 149, leadLimit: 3000, emailLimit: 6000, features: ['100 leads/day', '200 emails/day', 'Telegram agent', 'Drip sequences', 'Smart inbox', 'Full CRM'] },
-];
-
 export function PlansModule() {
-  const [plans, setPlans] = useState<Plan[]>(DEFAULT_PLANS);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  async function loadPlans() {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await window.electron.ipcRenderer.invoke('db-query', {
+        table: 'plans',
+        action: 'select',
+        order: { column: 'sort_order', ascending: true },
+      });
+      if (result.error) throw new Error(result.error);
+      setPlans(result.data || []);
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setLoading(false);
+  }
 
   const updatePlan = (id: string, field: keyof Plan, value: any) => {
     setPlans(prev => prev.map(p => p.id === id ? { ...p, [field]: value } : p));
+    setDirty(true);
   };
 
-  const handleSave = () => {
-    setSaving(true);
-    // Plans would be saved to a config table or local storage
-    setTimeout(() => setSaving(false), 500);
+  const addPlan = async () => {
+    const newId = `plan_${Date.now()}`;
+    const newPlan = {
+      ...EMPTY_PLAN,
+      id: newId,
+      name: 'New Plan',
+      sort_order: plans.length,
+    };
+    try {
+      const result = await window.electron.ipcRenderer.invoke('db-query', {
+        table: 'plans',
+        action: 'insert',
+        data: newPlan,
+      });
+      if (result.error) throw new Error(result.error);
+      if (result.data?.[0]) {
+        setPlans(prev => [...prev, result.data[0]]);
+      }
+    } catch (err: any) {
+      setError(err.message);
+    }
   };
+
+  const deletePlan = async (id: string) => {
+    if (!confirm('Delete this plan? Orgs on this plan will lose it.')) return;
+    try {
+      const result = await window.electron.ipcRenderer.invoke('db-query', {
+        table: 'plans',
+        action: 'delete',
+        match: { id },
+      });
+      if (result.error) throw new Error(result.error);
+      setPlans(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      for (const plan of plans) {
+        const result = await window.electron.ipcRenderer.invoke('db-query', {
+          table: 'plans',
+          action: 'update',
+          match: { id: plan.id },
+          data: {
+            name: plan.name,
+            price: plan.price,
+            period: plan.period,
+            description: plan.description,
+            features: plan.features,
+            lead_limit: plan.lead_limit,
+            email_limit: plan.email_limit,
+            telegram_limit: plan.telegram_limit,
+            lemon_product_id: plan.lemon_product_id || null,
+            lemon_variant_id: plan.lemon_variant_id || null,
+            sort_order: plan.sort_order,
+            highlighted: plan.highlighted,
+            active: plan.active,
+          },
+        });
+        if (result.error) throw new Error(`Failed to save ${plan.name}: ${result.error}`);
+      }
+      setDirty(false);
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center text-[#555]">
+        <div className="w-5 h-5 border-2 border-[#333] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-[12px]">Loading plans...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      <PageHeader title="Plans" subtitle="Manage subscription tiers">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[#e0e0e0] text-[#121212] text-[12px] font-medium hover:bg-[#fff] transition-colors disabled:opacity-50"
-        >
-          <Save size={12} />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+      <PageHeader title="Plans" subtitle="Manage subscription tiers and pricing">
+        <div className="flex items-center gap-2">
+          {dirty && (
+            <span className="text-[11px] text-yellow-500">Unsaved changes</span>
+          )}
+          <button
+            onClick={addPlan}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-[#1a1a1a] text-[#aaa] text-[12px] font-medium hover:bg-[#222] hover:text-[#fff] transition-colors"
+          >
+            <Plus size={12} />
+            Add Plan
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !dirty}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[#e0e0e0] text-[#121212] text-[12px] font-medium hover:bg-[#fff] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save size={12} />
+            {saving ? 'Saving...' : 'Save All'}
+          </button>
+        </div>
       </PageHeader>
+
+      {error && (
+        <div className="mx-6 mt-3 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded text-[12px] text-red-400">
+          {error}
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-6">
         <div className="grid grid-cols-3 gap-6 max-w-5xl">
           {plans.map(plan => (
-            <div key={plan.id} className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 space-y-5 hover:border-[#2a2a2a] transition-colors">
+            <div
+              key={plan.id}
+              className={`bg-[#0d0d0d] border rounded-xl p-6 space-y-4 transition-colors ${
+                plan.highlighted
+                  ? 'border-[#e0e0e0] shadow-[0_0_12px_rgba(224,224,224,0.05)]'
+                  : 'border-[#1a1a1a] hover:border-[#2a2a2a]'
+              }`}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <GripVertical size={14} className="text-[#333]" />
+                  <span className="text-[10px] uppercase tracking-wider text-[#555] font-mono">{plan.id}</span>
+                </div>
+                <button
+                  onClick={() => deletePlan(plan.id)}
+                  className="text-[#333] hover:text-red-400 transition-colors p-1"
+                  title="Delete plan"
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+
+              {/* Name */}
               <div>
                 <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Name</label>
                 <input
@@ -56,35 +204,97 @@ export function PlansModule() {
                   className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
                 />
               </div>
+
+              {/* Description */}
               <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Price ($/month)</label>
+                <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Tagline</label>
                 <input
-                  type="number"
-                  value={plan.price}
-                  onChange={e => updatePlan(plan.id, 'price', Number(e.target.value))}
+                  value={plan.description || ''}
+                  onChange={e => updatePlan(plan.id, 'description', e.target.value)}
                   className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
+                  placeholder="Short description..."
                 />
               </div>
+
+              {/* Price */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Lead Limit/mo</label>
+                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Price (cents)</label>
                   <input
                     type="number"
-                    value={plan.leadLimit}
-                    onChange={e => updatePlan(plan.id, 'leadLimit', Number(e.target.value))}
+                    value={plan.price}
+                    onChange={e => updatePlan(plan.id, 'price', Number(e.target.value))}
                     className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
                   />
+                  <span className="text-[10px] text-[#444] mt-1">{formatPrice(plan.price)}/{plan.period}</span>
                 </div>
                 <div>
-                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Email Limit/mo</label>
-                  <input
-                    type="number"
-                    value={plan.emailLimit}
-                    onChange={e => updatePlan(plan.id, 'emailLimit', Number(e.target.value))}
+                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Period</label>
+                  <select
+                    value={plan.period}
+                    onChange={e => updatePlan(plan.id, 'period', e.target.value)}
                     className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
-                  />
+                  >
+                    <option value="month">month</option>
+                    <option value="year">year</option>
+                    <option value="once">once</option>
+                    <option value="forever">forever</option>
+                  </select>
                 </div>
               </div>
+
+              {/* Limits */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Leads/mo</label>
+                  <input
+                    type="number"
+                    value={plan.lead_limit}
+                    onChange={e => updatePlan(plan.id, 'lead_limit', Number(e.target.value))}
+                    className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
+                  />
+                  <span className="text-[10px] text-[#444]">{plan.lead_limit === -1 ? 'unlimited' : plan.lead_limit}</span>
+                </div>
+                <div>
+                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Emails/mo</label>
+                  <input
+                    type="number"
+                    value={plan.email_limit}
+                    onChange={e => updatePlan(plan.id, 'email_limit', Number(e.target.value))}
+                    className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
+                  />
+                  <span className="text-[10px] text-[#444]">{plan.email_limit === -1 ? 'unlimited' : plan.email_limit}</span>
+                </div>
+                <div>
+                  <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Telegram</label>
+                  <input
+                    type="number"
+                    value={plan.telegram_limit}
+                    onChange={e => updatePlan(plan.id, 'telegram_limit', Number(e.target.value))}
+                    className="w-full mt-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-2 text-[#e0e0e0] text-sm focus:border-[#333] outline-none"
+                  />
+                  <span className="text-[10px] text-[#444]">{plan.telegram_limit === -1 ? 'unlimited' : plan.telegram_limit}</span>
+                </div>
+              </div>
+
+              {/* LemonSqueezy IDs */}
+              <div className="space-y-2">
+                <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">LemonSqueezy</label>
+                <input
+                  value={plan.lemon_product_id || ''}
+                  onChange={e => updatePlan(plan.id, 'lemon_product_id', e.target.value)}
+                  className="w-full bg-[#080808] border border-[#1a1a1a] rounded px-3 py-1.5 text-[#e0e0e0] text-[11px] font-mono focus:border-[#333] outline-none"
+                  placeholder="Product ID"
+                />
+                <input
+                  value={plan.lemon_variant_id || ''}
+                  onChange={e => updatePlan(plan.id, 'lemon_variant_id', e.target.value)}
+                  className="w-full bg-[#080808] border border-[#1a1a1a] rounded px-3 py-1.5 text-[#e0e0e0] text-[11px] font-mono focus:border-[#333] outline-none"
+                  placeholder="Variant ID (for checkout)"
+                />
+              </div>
+
+              {/* Features */}
               <div>
                 <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Features</label>
                 <div className="mt-2 space-y-1.5">
@@ -114,6 +324,28 @@ export function PlansModule() {
                     + Add feature
                   </button>
                 </div>
+              </div>
+
+              {/* Toggles */}
+              <div className="flex items-center gap-4 pt-2 border-t border-[#1a1a1a]">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={plan.highlighted}
+                    onChange={e => updatePlan(plan.id, 'highlighted', e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-[#333] bg-[#080808] text-[#e0e0e0] focus:ring-0"
+                  />
+                  <span className="text-[11px] text-[#888]">Highlighted</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={plan.active}
+                    onChange={e => updatePlan(plan.id, 'active', e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-[#333] bg-[#080808] text-[#e0e0e0] focus:ring-0"
+                  />
+                  <span className="text-[11px] text-[#888]">Active</span>
+                </label>
               </div>
             </div>
           ))}

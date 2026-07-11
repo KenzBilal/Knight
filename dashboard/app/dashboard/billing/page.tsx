@@ -2,24 +2,46 @@
 
 import { useState, useEffect } from "react";
 
+interface PlanData {
+  id: string;
+  name: string;
+  price: number;
+  period: string;
+  description: string | null;
+  features: string[];
+  lead_limit: number;
+  email_limit: number;
+  highlighted: boolean;
+  lemon_variant_id: string | null;
+}
+
 interface UsageData {
   plan: string;
   usage: { leads: number; emails: number };
   limits: { leads: number; emails: number };
 }
 
-const plans = [
-  { name: "Free", price: "$0", period: "forever", features: ["50 leads/mo", "50 emails/mo", "Basic audit", "Dashboard"], variant: null, highlighted: false },
-  { name: "Starter", price: "$49", period: "/mo", features: ["Unlimited leads", "Unlimited emails", "Full audit", "AI pitches", "CRM pipeline"], variant: "starter", highlighted: false },
-  { name: "Pro", price: "$149", period: "/mo", features: ["Everything in Starter", "Telegram agent", "Drip sequences", "Smart inbox", "Custom domain", "BYOK"], variant: "pro", highlighted: true },
-];
+function formatPrice(cents: number) {
+  if (cents === 0) return "$0";
+  return `$${(cents / 100).toFixed(0)}`;
+}
+
+function formatPeriod(period: string) {
+  if (period === "forever") return "";
+  if (period === "month") return "/mo";
+  if (period === "year") return "/yr";
+  if (period === "once") return " one-time";
+  return "";
+}
 
 export default function BillingPage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [currentPlan, setCurrentPlan] = useState("free");
   const [usage, setUsage] = useState<UsageData | null>(null);
+  const [plans, setPlans] = useState<PlanData[]>([]);
 
   useEffect(() => {
+    // Fetch usage
     fetch("/api/usage")
       .then(r => r.json())
       .then(data => {
@@ -27,15 +49,23 @@ export default function BillingPage() {
         setUsage(data);
       })
       .catch(() => {});
+
+    // Fetch plans from DB
+    fetch("/api/plans")
+      .then(r => r.json())
+      .then(data => {
+        if (data.plans) setPlans(data.plans);
+      })
+      .catch(() => {});
   }, []);
 
-  async function handleCheckout(variant: string) {
-    setLoading(variant);
+  async function handleCheckout(variantId: string) {
+    setLoading(variantId);
     try {
       const res = await fetch("/api/billing/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: variant }),
+        body: JSON.stringify({ variant_id: variantId }),
       });
       const data = await res.json();
       if (data.url) window.location.href = data.url;
@@ -58,7 +88,7 @@ export default function BillingPage() {
   const emailsUsed = usage?.usage.emails || 0;
   const leadsLimit = usage?.limits.leads || 50;
   const emailsLimit = usage?.limits.emails || 50;
-  
+
   return (
     <div className="p-6 md:p-8 max-w-5xl">
       <h1 className="font-display text-2xl font-bold text-[#111] mb-6 tracking-tight">Billing</h1>
@@ -128,12 +158,12 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Plan Cards */}
+      {/* Plan Cards — from DB */}
       <div className="grid md:grid-cols-3 gap-4">
         {plans.map((plan) => {
-          const isCurrent = currentPlan === plan.name.toLowerCase();
+          const isCurrent = currentPlan === plan.id;
           return (
-            <div key={plan.name} className={`rounded-2xl p-6 flex flex-col transition-all ${
+            <div key={plan.id} className={`rounded-2xl p-6 flex flex-col transition-all ${
               plan.highlighted
                 ? "bg-[#111] text-white"
                 : "bg-white text-[#111]"
@@ -143,9 +173,12 @@ export default function BillingPage() {
                 <span className="text-[10px] font-mono text-yellow-400 mb-3 tracking-wider bg-white/10 px-2 py-0.5 rounded-full self-start">RECOMMENDED</span>
               )}
               <h3 className="font-display text-lg font-bold">{plan.name}</h3>
+              {plan.description && (
+                <p className={`text-xs mt-1 ${plan.highlighted ? "text-white/50" : "text-[#999]"}`}>{plan.description}</p>
+              )}
               <div className="mb-4 mt-2">
-                <span className="text-3xl font-bold">{plan.price}</span>
-                <span className={`text-sm ml-1 ${plan.highlighted ? "text-white/60" : "text-[#999]"}`}>{plan.period}</span>
+                <span className="text-3xl font-bold">{formatPrice(plan.price)}</span>
+                <span className={`text-sm ml-1 ${plan.highlighted ? "text-white/60" : "text-[#999]"}`}>{formatPeriod(plan.period)}</span>
               </div>
               <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((f) => (
@@ -157,8 +190,9 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
-              <button onClick={() => plan.variant && handleCheckout(plan.variant)}
-                disabled={isCurrent || !plan.variant || loading === plan.variant}
+              <button
+                onClick={() => plan.lemon_variant_id && handleCheckout(plan.lemon_variant_id)}
+                disabled={isCurrent || !plan.lemon_variant_id || loading === plan.lemon_variant_id}
                 className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${
                   isCurrent
                     ? "bg-[#f5f5f5] text-[#aaa] cursor-not-allowed border border-[#ebebeb]"
@@ -166,7 +200,7 @@ export default function BillingPage() {
                     ? "bg-white text-[#111] hover:bg-[#f0f0f0]"
                     : "border border-[#ebebeb] text-[#111] hover:bg-[#f7f7f7]"
                 } disabled:opacity-50`}>
-                {isCurrent ? "Current plan" : loading === plan.variant ? "Redirecting..." : plan.variant ? "Upgrade" : "Get started"}
+                {isCurrent ? "Current plan" : loading === plan.lemon_variant_id ? "Redirecting..." : plan.lemon_variant_id ? "Upgrade" : "Coming soon"}
               </button>
             </div>
           );

@@ -228,13 +228,22 @@ export interface WorkerStatus {
   isRunning: boolean;
 }
 
-// Plan definition
-export interface PlanDefinition {
+// Plan definition (from plans table in Supabase)
+export interface Plan {
   id: string;
   name: string;
-  price: number;
+  price: number;                    // cents
   period: string;
-  leadLimit: number;
-  emailLimit: number;
+  description: string | null;
   features: string[];
+  lead_limit: number;               // -1 = unlimited
+  email_limit: number;              // -1 = unlimited
+  telegram_limit: number;           // -1 = unlimited
+  lemon_product_id: string | null;
+  lemon_variant_id: string | null;
+  sort_order: number;
+  highlighted: boolean;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
 }

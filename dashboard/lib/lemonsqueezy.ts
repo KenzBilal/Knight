@@ -1,4 +1,5 @@
 import { lemonSqueezySetup, createCheckout, getSubscription, cancelSubscription, updateSubscription } from "@lemonsqueezy/lemonsqueezy.js";
+import { createServiceClient } from "./supabase";
 
 // Configure LemonSqueezy
 lemonSqueezySetup({
@@ -6,19 +7,15 @@ lemonSqueezySetup({
   onError: (error) => console.error("LemonSqueezy error:", error),
 });
 
-// Plan variant IDs (you'll set these after creating products in LemonSqueezy)
-export const PLAN_VARIANTS = {
-  starter: process.env.LEMONSQUEEZY_VARIANT_STARTER!,
-  pro: process.env.LEMONSQUEEZY_VARIANT_PRO!,
-  agency: process.env.LEMONSQUEEZY_VARIANT_AGENCY!,
-};
-
-// Map variant ID to plan name
-export function getPlanFromVariant(variantId: string): string {
-  for (const [plan, id] of Object.entries(PLAN_VARIANTS)) {
-    if (id === variantId) return plan;
-  }
-  return "free";
+// Map variant ID to plan name by querying the plans table
+export async function getPlanFromVariant(variantId: string): Promise<string> {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("plans")
+    .select("id")
+    .eq("lemon_variant_id", variantId)
+    .single();
+  return data?.id || "free";
 }
 
 // Create checkout session

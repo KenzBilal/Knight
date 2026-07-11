@@ -58,7 +58,7 @@ export async function POST(req: Request) {
     switch (eventName) {
       case "subscription_created":
       case "subscription_updated": {
-        const plan = variantId ? getPlanFromVariant(variantId) : "free";
+        const plan = variantId ? await getPlanFromVariant(variantId) : "free";
         
         // Update org with subscription details
         await supabase
