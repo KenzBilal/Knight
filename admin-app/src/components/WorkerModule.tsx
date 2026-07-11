@@ -68,8 +68,8 @@ export function WorkerModule() {
     }
   };
 
-  const memMB = status?.memory?.heapUsed
-    ? (status.memory.heapUsed / 1024 / 1024).toFixed(1)
+  const memMB = status?.memory?.rss
+    ? (status.memory.rss / 1024 / 1024).toFixed(1)
     : '0';
 
   return (

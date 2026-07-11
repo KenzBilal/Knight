@@ -227,8 +227,7 @@ ipcMain.handle('worker-status', () => {
       const fs = require('fs');
       const stat = fs.readFileSync(`/proc/${workerProcess.pid}/status`, 'utf8');
       const rss = stat.match(/VmRSS:\s+(\d+)\s+kB/);
-      const vsz = stat.match(/VmSize:\s+(\d+)\s+kB/);
-      if (rss) status.memory = { rss: parseInt(rss[1]) * 1024, heapUsed: parseInt(vsz ? vsz[1] : rss[1]) * 1024 };
+      if (rss) status.memory = { rss: parseInt(rss[1]) * 1024 };
     } catch {}
   }
 
