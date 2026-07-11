@@ -52,8 +52,9 @@ export function Overview() {
   async function loadLogs() {
     try {
       if (window.electronAPI?.getLogs) {
-        const cached = await window.electronAPI.getLogs();
-        if (cached) setLogs(cached.slice(-50));
+        const result = await window.electronAPI.getLogs();
+        const cached = (result as any)?.data || result;
+        if (Array.isArray(cached)) setLogs(cached.slice(-50));
       }
     } catch {
       // Logs unavailable

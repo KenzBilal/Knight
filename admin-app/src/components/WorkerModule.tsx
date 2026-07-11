@@ -18,8 +18,9 @@ export function WorkerModule() {
         setStatus(s);
       }
       if (window.electronAPI?.getLogs) {
-        const cached = await window.electronAPI.getLogs();
-        if (cached) setLogs(cached.slice(-100));
+        const result = await window.electronAPI.getLogs();
+        const cached = (result as any)?.data || result;
+        if (Array.isArray(cached)) setLogs(cached.slice(-100));
       }
     } catch {
       // Worker unavailable

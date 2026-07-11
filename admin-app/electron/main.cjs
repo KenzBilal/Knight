@@ -208,7 +208,7 @@ ipcMain.handle('db-query', async (event, query) => {
 // ─── IPC: WORKER LOGS ────────────────────────────────────────────────────────
 ipcMain.handle('get-logs', () => {
   LOG.ipc('get-logs', logCache.length, 'lines');
-  return logCache;
+  return { data: logCache, error: null };
 });
 
 // ─── IPC: WORKER STATUS ──────────────────────────────────────────────────────
