@@ -54,13 +54,13 @@ export default function KeysWizardPage() {
       {step === 0 && (
         <WizardCard title="Bring Your Own Keys" description="Optional" icon={<span className="text-2xl">🔑</span>}>
           <div className="space-y-4">
-            <p className="text-sm text-neutral-400">Knight has built-in keys. Add your own for full control over usage and costs.</p>
-            <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4 space-y-2">
-              <div className="text-xs text-neutral-400"><strong className="text-paper-100">Cohere</strong> — Website audits</div>
-              <div className="text-xs text-neutral-400"><strong className="text-paper-100">Gemini</strong> — Pitch generation</div>
-              <div className="text-xs text-neutral-400"><strong className="text-paper-100">OpenRouter</strong> — AI suggestions</div>
+            <p className="text-sm text-[#666]">Knight has built-in keys. Add your own for full control over usage and costs.</p>
+            <div className="rounded-lg bg-white border border-[#ebebeb] p-4 space-y-2">
+              <div className="text-xs text-[#666]"><strong className="text-[#111]">Cohere</strong> — Website audits</div>
+              <div className="text-xs text-[#666]"><strong className="text-[#111]">Gemini</strong> — Pitch generation</div>
+              <div className="text-xs text-[#666]"><strong className="text-[#111]">OpenRouter</strong> — AI suggestions</div>
             </div>
-            <button onClick={() => { setCompleted(true); setStep(2); }} className="text-xs text-neutral-400 hover:text-paper-100">Skip this step →</button>
+            <button onClick={() => { setCompleted(true); setStep(2); }} className="text-xs text-[#666] hover:text-[#111]">Skip this step →</button>
           </div>
         </WizardCard>
       )}
@@ -68,29 +68,29 @@ export default function KeysWizardPage() {
       {step === 1 && (
         <WizardCard title="Your API Keys" description="Enter keys for providers you use" icon={<span className="text-2xl">⚙️</span>}>
           <div className="space-y-4">
-            <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-3">
-              <p className="text-xs text-neutral-500">
-                Get keys from: <a href="https://cohere.com" target="_blank" rel="noopener noreferrer" className="text-paper-100 hover:underline">cohere.com</a>,{" "}
-                <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-paper-100 hover:underline">Google AI Studio</a>,{" "}
-                <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-paper-100 hover:underline">openrouter.ai</a>
+            <div className="rounded-lg bg-white border border-[#ebebeb] p-3">
+              <p className="text-xs text-[#888]">
+                Get keys from: <a href="https://cohere.com" target="_blank" rel="noopener noreferrer" className="text-[#111] hover:underline">cohere.com</a>,{" "}
+                <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-[#111] hover:underline">Google AI Studio</a>,{" "}
+                <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-[#111] hover:underline">openrouter.ai</a>
               </p>
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Cohere</label>
+              <label className="block text-sm text-[#666] mb-1.5">Cohere</label>
               <input type="password" value={cohereKey} onChange={e => setCohereKey(e.target.value)} placeholder="Cohere API key"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Gemini</label>
+              <label className="block text-sm text-[#666] mb-1.5">Gemini</label>
               <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)} placeholder="Gemini API key"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">OpenRouter</label>
+              <label className="block text-sm text-[#666] mb-1.5">OpenRouter</label>
               <input type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)} placeholder="OpenRouter API key"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
-            <p className="text-xs text-neutral-500">Leave blank to use Knight&apos;s built-in key.</p>
+            <p className="text-xs text-[#888]">Leave blank to use Knight&apos;s built-in key.</p>
           </div>
         </WizardCard>
       )}

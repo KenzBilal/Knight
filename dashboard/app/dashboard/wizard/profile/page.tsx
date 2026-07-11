@@ -79,10 +79,10 @@ export default function ProfileWizardPage() {
       {step === 0 && (
         <WizardCard title="Welcome" description="Let's set up your company" icon={<span className="text-2xl">🚀</span>}>
           <div className="space-y-4">
-            <p className="text-sm text-neutral-400">Knight uses your company info to generate personalized pitches.</p>
-            <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4 space-y-2">
-              <p className="text-xs text-neutral-500 font-medium">We&apos;ll ask for:</p>
-              <div className="text-xs text-neutral-400 space-y-1">
+            <p className="text-sm text-[#666]">Knight uses your company info to generate personalized pitches.</p>
+            <div className="rounded-lg bg-white border border-[#ebebeb] p-4 space-y-2">
+              <p className="text-xs text-[#888] font-medium">We&apos;ll ask for:</p>
+              <div className="text-xs text-[#666] space-y-1">
                 <p>1. Company name & website</p>
                 <p>2. Services you offer</p>
                 <p>3. Preview</p>
@@ -96,14 +96,14 @@ export default function ProfileWizardPage() {
         <WizardCard title="Company Information" description="Your business details" icon={<span className="text-2xl">🏢</span>}>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Company Name <span className="text-red-500">*</span></label>
+              <label className="block text-sm text-[#666] mb-1.5">Company Name <span className="text-red-500">*</span></label>
               <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Your agency name"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Website</label>
+              <label className="block text-sm text-[#666] mb-1.5">Website</label>
               <input type="url" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)} placeholder="https://yoursite.com"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
             </div>
           </div>
         </WizardCard>
@@ -116,7 +116,7 @@ export default function ProfileWizardPage() {
               {SERVICE_SUGGESTIONS.map(service => (
                 <button key={service} onClick={() => toggleService(service)}
                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    services.includes(service) ? "bg-paper-100 text-neutral-950" : "bg-neutral-800 text-neutral-400 hover:bg-neutral-700 border border-neutral-700"
+                    services.includes(service) ? "bg-[#111] text-white" : "bg-[#f0f0f0] text-[#666] hover:bg-[#e5e5e5] border border-[#ddd]"
                   }`}>
                   {services.includes(service) ? "✓ " : ""}{service}
                 </button>
@@ -126,17 +126,17 @@ export default function ProfileWizardPage() {
               <input type="text" value={customService} onChange={e => setCustomService(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustomService())}
                 placeholder="Add custom service..."
-                className="flex-1 rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="flex-1 rounded-lg bg-white border border-[#ebebeb] px-4 py-2 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
               <button type="button" onClick={addCustomService} disabled={!customService}
-                className="rounded-lg bg-neutral-800 text-neutral-300 font-medium px-4 py-2 text-sm hover:bg-neutral-700 transition-colors disabled:opacity-50 border border-neutral-700">Add</button>
+                className="rounded-lg bg-[#f0f0f0] text-[#444] font-medium px-4 py-2 text-sm hover:bg-[#e5e5e5] transition-colors disabled:opacity-50 border border-[#ddd]">Add</button>
             </div>
             {services.length > 0 && (
-              <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-3">
-                <p className="text-xs text-neutral-500 mb-2">Selected ({services.length}):</p>
+              <div className="rounded-lg bg-white border border-[#ebebeb] p-3">
+                <p className="text-xs text-[#888] mb-2">Selected ({services.length}):</p>
                 <div className="flex flex-wrap gap-1.5">
                   {services.map(s => (
-                    <span key={s} className="flex items-center gap-1 px-2 py-1 rounded-full bg-neutral-800 text-neutral-300 text-xs">
-                      {s}<button onClick={() => toggleService(s)} className="hover:text-paper-100">×</button>
+                    <span key={s} className="flex items-center gap-1 px-2 py-1 rounded-full bg-[#f0f0f0] text-[#444] text-xs">
+                      {s}<button onClick={() => toggleService(s)} className="hover:text-[#111]">×</button>
                     </span>
                   ))}
                 </div>
@@ -149,16 +149,16 @@ export default function ProfileWizardPage() {
       {step === 3 && (
         <WizardCard title="Preview" description="How Knight will introduce your business" icon={<span className="text-2xl">👁</span>}>
           <div className="space-y-4">
-            <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-6">
-              <div className="text-xs text-neutral-600 mb-3">Email preview:</div>
-              <div className="space-y-3 text-sm text-neutral-400">
+            <div className="rounded-lg bg-white border border-[#ebebeb] p-6">
+              <div className="text-xs text-[#999] mb-3">Email preview:</div>
+              <div className="space-y-3 text-sm text-[#666]">
                 <p>Hi {"{{contact_name}}"},</p>
-                <p>I&apos;m from <strong className="text-paper-100">{companyName || "Your Company"}</strong>.
+                <p>I&apos;m from <strong className="text-[#111]">{companyName || "Your Company"}</strong>.
                   {services.length > 0 && <> We specialize in {services.slice(0, 3).join(", ")}.</>}
                 </p>
                 <p>I noticed your website could use improvements. Would you be open to a quick chat?</p>
                 <p>Best,<br />Your Name</p>
-                {companyWebsite && <p className="text-xs text-neutral-500">{companyWebsite}</p>}
+                {companyWebsite && <p className="text-xs text-[#888]">{companyWebsite}</p>}
               </div>
             </div>
           </div>
