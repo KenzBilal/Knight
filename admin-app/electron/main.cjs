@@ -26,10 +26,16 @@ function writeEnv(filePath, envObj) {
   fs.writeFileSync(filePath, lines.join('\n') + '\n');
 }
 
+let _supabase = null;
 function getSupabase() {
+  if (_supabase) return _supabase;
   const env = parseEnv(envPath);
   if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
-  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+  const WebSocket = require('ws');
+  _supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
+    realtime: { transport: WebSocket }
+  });
+  return _supabase;
 }
 
 // ─── ENV ─────────────────────────────────────────────────────────────────────
@@ -42,12 +48,8 @@ ipcMain.handle('save-env', (event, envData) => {
 // ─── USERS ───────────────────────────────────────────────────────────────────
 ipcMain.handle('get-users', async () => {
   try {
-    const env = parseEnv(envPath);
-    if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) throw new Error('Missing Supabase keys');
-    const WebSocket = require('ws');
-    const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-      realtime: { transport: WebSocket }
-    });
+    const supabase = getSupabase();
+    if (!supabase) throw new Error('Supabase not configured');
     const { data, error } = await supabase.auth.admin.listUsers();
     if (error) throw error;
     return { data: data.users, error: null };
