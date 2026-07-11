@@ -413,6 +413,8 @@ app.whenReady().then(() => {
   createWindow();
   createTray();
   startWorker();
+  startDebugServer();
+  writeDebugFile();
 
   app.on('activate', () => {
     LOG.info('App activated');
@@ -427,6 +429,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   LOG.info('App quitting...');
   isQuitting = true;
+  writeDebugFile();
   stopWorker();
 });
 
@@ -435,13 +438,115 @@ app.on('window-all-closed', () => {
   LOG.info('All windows closed, app stays in tray');
 });
 
+// ─── DEBUG LOG FILE ──────────────────────────────────────────────────────────
+const debugLogPath = path.join(__dirname, '../../admin-debug.log');
+const errorLog = [];
+const MAX_ERROR_LOG = 500;
+
+function writeDebugFile() {
+  try {
+    const lines = [
+      `=== Knight Admin Debug Dump ===`,
+      `Time: ${new Date().toISOString()}`,
+      `Uptime: ${Math.floor(process.uptime())}s`,
+      `Window: ${mainWindow ? (mainWindow.isDestroyed() ? 'destroyed' : 'exists') : 'null'}`,
+      `Worker: ${workerProcess ? (workerProcess.exitCode === null ? `running (pid ${workerProcess.pid})` : `dead (code ${workerProcess.exitCode})`) : 'null'}`,
+      `Supabase: ${_supabase ? 'connected' : 'null'}`,
+      `Errors: ${errorLog.length}`,
+      ``,
+      `--- ERRORS ---`,
+      ...errorLog.map(e => e),
+      ``,
+      `--- RECENT LOGS (last 100) ---`,
+      ...logCache.slice(-100),
+      ``,
+      `--- ENV KEYS ---`,
+      ...Object.keys(parseEnv(envPath)),
+    ];
+    fs.writeFileSync(debugLogPath, lines.join('\n'));
+  } catch {}
+}
+
 // ─── GLOBAL ERROR HANDLERS ───────────────────────────────────────────────────
 process.on('uncaughtException', (err) => {
-  LOG.error('UNCAUGHT EXCEPTION:', err.message, err.stack);
+  const msg = `[${new Date().toISOString()}] UNCAUGHT: ${err.message}\n${err.stack}`;
+  LOG.error('UNCAUGHT EXCEPTION:', err.message);
+  errorLog.push(msg);
+  if (errorLog.length > MAX_ERROR_LOG) errorLog.shift();
+  writeDebugFile();
 });
 
 process.on('unhandledRejection', (reason) => {
+  const msg = `[${new Date().toISOString()}] UNHANDLED REJECTION: ${reason}`;
   LOG.error('UNHANDLED REJECTION:', reason);
+  errorLog.push(msg);
+  if (errorLog.length > MAX_ERROR_LOG) errorLog.shift();
+  writeDebugFile();
 });
+
+// ─── DEBUG HTTP SERVER ───────────────────────────────────────────────────────
+function startDebugServer() {
+  try {
+    const http = require('http');
+    const PORT = 19822;
+
+    const server = http.createServer((req, res) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Content-Type', 'application/json');
+
+      if (req.url === '/state') {
+        res.end(JSON.stringify({
+          window: mainWindow ? !mainWindow.isDestroyed() : false,
+          worker: workerProcess ? { pid: workerProcess.pid, running: workerProcess.exitCode === null } : null,
+          supabase: !!_supabase,
+          uptime: Math.floor(process.uptime()),
+          memory: process.memoryUsage(),
+          logCount: logCache.length,
+          errorCount: errorLog.length,
+        }, null, 2));
+      } else if (req.url === '/logs') {
+        res.end(JSON.stringify({ logs: logCache.slice(-200) }, null, 2));
+      } else if (req.url === '/errors') {
+        res.end(JSON.stringify({ errors: errorLog.slice(-50) }, null, 2));
+      } else if (req.url === '/dump') {
+        writeDebugFile();
+        res.end(JSON.stringify({ ok: true, path: debugLogPath }));
+      } else if (req.url === '/screenshot') {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.capturePage().then(image => {
+            res.setHeader('Content-Type', 'image/png');
+            res.end(image.toPNG());
+          }).catch(err => {
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message }));
+          });
+        } else {
+          res.statusCode = 404;
+          res.end(JSON.stringify({ error: 'No window' }));
+        }
+      } else {
+        res.end(JSON.stringify({
+          endpoints: ['/state', '/logs', '/errors', '/dump', '/screenshot'],
+          usage: 'GET http://localhost:19822/state',
+        }));
+      }
+    });
+
+    server.listen(PORT, '127.0.0.1', () => {
+      LOG.ok(`Debug server: http://localhost:${PORT}`);
+    });
+
+    server.on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        LOG.warn(`Debug port ${PORT} in use, trying ${PORT + 1}`);
+        server.listen(PORT + 1, '127.0.0.1');
+      } else {
+        LOG.error('Debug server error:', err.message);
+      }
+    });
+  } catch (err) {
+    LOG.error('Failed to start debug server:', err.message);
+  }
+}
 
 LOG.info('IPC handlers registered, waiting for app ready...');
