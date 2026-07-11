@@ -32,8 +32,13 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   realtime: { transport: ws }
 });
 
-const API_ID = parseInt(process.env.TELEGRAM_API_ID || '2040');
-const API_HASH = process.env.TELEGRAM_API_HASH || 'b18441a1ff607e10a989891a5462e627';
+if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
+  console.log('[Telegram] Not connected — no API credentials');
+  process.exit(0);
+}
+
+const API_ID = parseInt(process.env.TELEGRAM_API_ID);
+const API_HASH = process.env.TELEGRAM_API_HASH;
 
 // ─── Load Session from DB ─────────────────────────────────────────────────────
 async function loadSession(orgId) {
@@ -131,7 +136,7 @@ async function main() {
 
   if (!API_ID || !API_HASH) {
     console.error('[USERBOT] ERROR: TELEGRAM_API_ID and TELEGRAM_API_HASH missing');
-    process.exit(1);
+    process.exit(0);
   }
 
   const client = new TelegramClient(session, API_ID, API_HASH, {

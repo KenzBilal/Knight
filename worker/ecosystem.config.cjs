@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'knight-worker',
-      script: 'index.js',
+      script: 'start.js',
       cwd: __dirname,
       node_args: '--experimental-vm-modules',
       env: {
@@ -10,6 +10,7 @@ module.exports = {
       },
       max_restarts: 10,
       restart_delay: 5000,
+      exp_backoff_restart_delay: 100,
     },
   ],
 };

@@ -9,6 +9,16 @@ import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js'
 
 dotenv.config();
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('[Worker] Fatal Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required');
+  process.exit(1);
+}
+
+if (!process.env.COHERE_API_KEY || !process.env.OPENROUTER_API_KEY) {
+  console.error('[Worker] Fatal Error: COHERE_API_KEY and OPENROUTER_API_KEY are required');
+  process.exit(1);
+}
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
 });
