@@ -48,8 +48,8 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: var(--color-ink-950);
-  color: var(--color-paper-100);
+  background-color: #ffffff;
+  color: #111111;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -68,8 +68,8 @@ body {
 
 /* ─── Selection ────────────────────────────────────────────────────────────── */
 ::selection {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background-color: rgba(0, 0, 0, 0.08);
+  color: #111;
 }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────────── */
@@ -78,19 +78,19 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--color-ink-900);
+  background: #f5f5f5;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-ink-600);
+  background: #d4d4d4;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-500);
+  background: #aaa;
 }
 
 /* ─── Focus Ring ───────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid rgba(255,255,255,0.4);
+  outline: 2px solid rgba(0,0,0,0.18);
   outline-offset: 2px;
   border-radius: 4px;
 }

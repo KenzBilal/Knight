@@ -2,11 +2,13 @@
 
 export default function PitchesPage() {
   return (
-    <div className="p-8">
-      <h1 className="font-display text-2xl text-paper-100 mb-6">Pitches</h1>
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-12 text-center grain-card">
+    <div className="p-6 md:p-8">
+      <div
+        className="bg-white rounded-2xl p-12 text-center"
+        style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}
+      >
         <p className="text-4xl mb-3">✨</p>
-        <p className="text-sm text-neutral-500">No pitches yet. Run a discovery to generate pitches.</p>
+        <p className="text-sm text-[#999]">No pitches yet. Run a discovery to generate pitches.</p>
       </div>
     </div>
   );

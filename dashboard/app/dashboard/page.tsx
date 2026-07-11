@@ -135,10 +135,13 @@ function StatCard({
     <div
       className={`rounded-2xl p-5 cursor-pointer transition-all duration-200 hover:shadow-md ${
         dark
-          ? "bg-[#111] text-white"
-          : "bg-white border border-[#ebebeb] text-[#111]"
+          ? "text-white"
+          : "bg-white text-[#111]"
       }`}
-    >
+      style={dark
+        ? { background: 'radial-gradient(circle at top right, #1a1a1a 0%, #0a0a0a 100%)', boxShadow: '0 1px 4px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08)' }
+        : { boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }
+      }>
       <p className={`text-xs mb-3 ${dark ? "text-white/50" : "text-[#999]"}`}>
         {label}
       </p>
@@ -237,7 +240,7 @@ export default function DashboardPage() {
       {/* ── Period filter + date ── */}
       <div className="flex items-center gap-3 mb-6 flex-wrap">
         {/* Period tabs */}
-        <div className="flex items-center bg-white border border-[#ebebeb] rounded-full p-1 gap-0.5">
+        <div className="flex items-center bg-white rounded-full p-1 gap-0.5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
           {PERIODS.map((p) => (
             <button
               key={p}
@@ -254,7 +257,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Date range */}
-        <div className="flex items-center gap-2 bg-white border border-[#ebebeb] rounded-xl px-4 py-2 text-sm text-[#666]">
+        <div className="flex items-center gap-2 bg-white rounded-xl px-4 py-2 text-sm text-[#666]" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
             <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
           </svg>
@@ -273,7 +276,7 @@ export default function DashboardPage() {
       <div className="grid lg:grid-cols-[1fr_320px] gap-4 mb-6">
 
         {/* Bar chart card */}
-        <div className="bg-white rounded-2xl border border-[#ebebeb] p-6">
+        <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="font-display text-base font-semibold text-[#111]">
               Leads Discovered
@@ -295,7 +298,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4">
 
           {/* Quick discover form */}
-          <div className="bg-white rounded-2xl border border-[#ebebeb] p-5 flex-1">
+          <div className="bg-white rounded-2xl p-5 flex-1" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
             <h2 className="font-display text-sm font-semibold text-[#111] mb-1">
               Find Leads
             </h2>
@@ -341,7 +344,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Pipeline health */}
-          <div className="bg-white rounded-2xl border border-[#ebebeb] p-5">
+          <div className="bg-white rounded-2xl p-5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
             <h2 className="font-display text-sm font-semibold text-[#111] mb-4">
               Pipeline Health
             </h2>
@@ -368,7 +371,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Activity table ── */}
-      <div className="bg-white rounded-2xl border border-[#ebebeb] overflow-hidden">
+      <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
         {/* Table header */}
         <div className="px-6 py-4 border-b border-[#ebebeb] flex items-center justify-between">
           <h2 className="font-display text-base font-semibold text-[#111]">

@@ -58,52 +58,53 @@ export default function BillingPage() {
   const emailsUsed = usage?.usage.emails || 0;
   const leadsLimit = usage?.limits.leads || 50;
   const emailsLimit = usage?.limits.emails || 50;
+  
   return (
-    <div className="p-8 max-w-5xl">
-      <h1 className="font-display text-2xl text-paper-100 mb-6">Billing</h1>
+    <div className="p-6 md:p-8 max-w-5xl">
+      <h1 className="font-display text-2xl font-bold text-[#111] mb-6 tracking-tight">Billing</h1>
 
       {/* Usage Counter */}
       {isFree && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 mb-6">
+        <div className="bg-white rounded-2xl p-6 mb-6" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-neutral-400">This month&apos;s usage</p>
-            <p className="text-xs text-neutral-500">Resets on the 1st</p>
+            <p className="text-sm font-semibold text-[#111]">This month's usage</p>
+            <p className="text-xs text-[#999]">Resets on the 1st</p>
           </div>
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-2 gap-8">
             <div>
               <div className="flex items-baseline justify-between mb-2">
-                <span className="text-sm text-neutral-300">Leads</span>
-                <span className="text-sm font-mono text-neutral-400">
-                  <span className="text-paper-100">{leadsUsed}</span> / {leadsLimit}
+                <span className="text-sm text-[#555]">Leads</span>
+                <span className="text-sm font-mono text-[#888]">
+                  <span className="text-[#111] font-semibold">{leadsUsed}</span> / {leadsLimit}
                 </span>
               </div>
-              <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-neutral-400 rounded-full transition-all duration-500"
+                  className="h-full bg-[#111] rounded-full transition-all duration-500"
                   style={{ width: `${Math.min((leadsUsed / leadsLimit) * 100, 100)}%` }}
                 />
               </div>
               {leadsUsed >= leadsLimit * 0.8 && (
-                <p className="text-xs text-red-400 mt-1">
+                <p className="text-xs text-red-500 mt-2">
                   {leadsUsed >= leadsLimit ? "Limit reached" : `${leadsLimit - leadsUsed} remaining`}
                 </p>
               )}
             </div>
             <div>
               <div className="flex items-baseline justify-between mb-2">
-                <span className="text-sm text-neutral-300">Emails</span>
-                <span className="text-sm font-mono text-neutral-400">
-                  <span className="text-paper-100">{emailsUsed}</span> / {emailsLimit}
+                <span className="text-sm text-[#555]">Emails</span>
+                <span className="text-sm font-mono text-[#888]">
+                  <span className="text-[#111] font-semibold">{emailsUsed}</span> / {emailsLimit}
                 </span>
               </div>
-              <div className="w-full h-2 bg-neutral-800 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-[#f0f0f0] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-neutral-400 rounded-full transition-all duration-500"
+                  className="h-full bg-[#111] rounded-full transition-all duration-500"
                   style={{ width: `${Math.min((emailsUsed / emailsLimit) * 100, 100)}%` }}
                 />
               </div>
               {emailsUsed >= emailsLimit * 0.8 && (
-                <p className="text-xs text-red-400 mt-1">
+                <p className="text-xs text-red-500 mt-2">
                   {emailsUsed >= emailsLimit ? "Limit reached" : `${emailsLimit - emailsUsed} remaining`}
                 </p>
               )}
@@ -113,19 +114,17 @@ export default function BillingPage() {
       )}
 
       {!isFree && usage && (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-neutral-400">
-                Current plan: <span className="text-paper-100 font-medium capitalize">{currentPlan}</span>
-              </p>
-              <p className="text-xs text-neutral-500 mt-1">Unlimited leads and emails</p>
-            </div>
-            <button onClick={handleManageSubscription} disabled={loading === "portal"}
-              className="text-sm text-neutral-400 hover:text-paper-100 transition-colors border border-neutral-700 rounded-lg px-4 py-2 hover:bg-neutral-800">
-              {loading === "portal" ? "Loading..." : "Manage"}
-            </button>
+        <div className="bg-white rounded-2xl p-6 mb-6 flex items-center justify-between" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
+          <div>
+            <p className="text-sm text-[#555]">
+              Current plan: <span className="text-[#111] font-bold capitalize">{currentPlan}</span>
+            </p>
+            <p className="text-xs text-[#999] mt-1">Unlimited leads and emails</p>
           </div>
+          <button onClick={handleManageSubscription} disabled={loading === "portal"}
+            className="text-sm text-[#555] hover:text-[#111] transition-colors border border-[#ebebeb] rounded-xl px-4 py-2 hover:bg-[#f7f7f7]">
+            {loading === "portal" ? "Loading..." : "Manage"}
+          </button>
         </div>
       )}
 
@@ -134,36 +133,40 @@ export default function BillingPage() {
         {plans.map((plan) => {
           const isCurrent = currentPlan === plan.name.toLowerCase();
           return (
-            <div key={plan.name} className={`rounded-xl border p-6 flex flex-col ${
+            <div key={plan.name} className={`rounded-2xl p-6 flex flex-col transition-all ${
               plan.highlighted
-                ? "border-neutral-600 bg-neutral-900/80"
-                : "border-neutral-800 bg-neutral-900/50"
-            }`}>
+                ? "bg-[#111] text-white"
+                : "bg-white text-[#111]"
+            }`}
+            style={plan.highlighted ? { boxShadow: "0 4px 12px rgba(0,0,0,0.1)" } : { boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" }}>
               {plan.highlighted && (
-                <span className="text-xs font-mono text-red-400 mb-2 tracking-wider">RECOMMENDED</span>
+                <span className="text-[10px] font-mono text-yellow-400 mb-3 tracking-wider bg-white/10 px-2 py-0.5 rounded-full self-start">RECOMMENDED</span>
               )}
-              <h3 className="font-display text-lg text-paper-100">{plan.name}</h3>
+              <h3 className="font-display text-lg font-bold">{plan.name}</h3>
               <div className="mb-4 mt-2">
-                <span className="text-3xl font-bold text-paper-100">{plan.price}</span>
-                <span className="text-sm text-neutral-500 ml-1">{plan.period}</span>
+                <span className="text-3xl font-bold">{plan.price}</span>
+                <span className={`text-sm ml-1 ${plan.highlighted ? "text-white/60" : "text-[#999]"}`}>{plan.period}</span>
               </div>
-              <ul className="space-y-2 mb-6 flex-1">
+              <ul className="space-y-3 mb-8 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="text-sm text-neutral-400 flex items-start gap-2">
-                    <span className="text-neutral-500 mt-0.5">✓</span>{f}
+                  <li key={f} className={`text-sm flex items-start gap-2.5 ${plan.highlighted ? "text-white/80" : "text-[#555]"}`}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className={`mt-0.5 flex-shrink-0 ${plan.highlighted ? "text-white/40" : "text-[#bbb]"}`}>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {f}
                   </li>
                 ))}
               </ul>
               <button onClick={() => plan.variant && handleCheckout(plan.variant)}
                 disabled={isCurrent || !plan.variant || loading === plan.variant}
-                className={`w-full rounded-lg py-2.5 text-sm font-medium transition-all ${
+                className={`w-full rounded-xl py-2.5 text-sm font-semibold transition-all ${
                   isCurrent
-                    ? "bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700"
+                    ? "bg-[#f5f5f5] text-[#aaa] cursor-not-allowed border border-[#ebebeb]"
                     : plan.highlighted
-                    ? "bg-paper-100 text-neutral-950 hover:bg-paper-200"
-                    : "border border-neutral-700 text-neutral-300 hover:bg-neutral-800 hover:border-neutral-600"
+                    ? "bg-white text-[#111] hover:bg-[#f0f0f0]"
+                    : "border border-[#ebebeb] text-[#111] hover:bg-[#f7f7f7]"
                 } disabled:opacity-50`}>
-                {isCurrent ? "Current" : loading === plan.variant ? "Redirecting..." : plan.variant ? "Upgrade" : "Get started"}
+                {isCurrent ? "Current plan" : loading === plan.variant ? "Redirecting..." : plan.variant ? "Upgrade" : "Get started"}
               </button>
             </div>
           );

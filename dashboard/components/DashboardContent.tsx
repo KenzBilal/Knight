@@ -37,9 +37,9 @@ export function DashboardContent({
     : userEmail ? userEmail[0].toUpperCase() : "K";
 
   return (
-    <main className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden bg-[#f4f4f4]">
+    <main className="flex-1 flex flex-col min-h-screen min-w-0 overflow-hidden bg-[#f5f5f5]">
       {/* Top bar */}
-      <header className="h-[70px] bg-white border-b border-[#ebebeb] flex items-center px-6 gap-4 flex-shrink-0">
+      <header className="h-[70px] bg-white border-b border-[#f0f0f0] flex items-center px-6 gap-4 flex-shrink-0">
         {/* Page title */}
         <h1 className="font-display text-2xl font-bold text-[#111] flex-1 tracking-tight">
           {title}
@@ -57,7 +57,7 @@ export function DashboardContent({
           <input
             type="text"
             placeholder="Search..."
-            className="w-52 bg-[#f4f4f4] border border-[#e8e8e8] rounded-full pl-9 pr-4 py-2 text-sm text-[#333] placeholder:text-[#aaa] focus:outline-none focus:border-[#ccc] focus:bg-white transition-all"
+            className="w-52 bg-[#f5f5f5] border border-[#ebebeb] rounded-full pl-9 pr-4 py-2 text-sm text-[#333] placeholder:text-[#aaa] focus:outline-none focus:border-[#ccc] focus:bg-white transition-all"
           />
         </div>
 

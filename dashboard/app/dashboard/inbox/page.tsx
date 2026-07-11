@@ -17,6 +17,8 @@ interface Thread {
   hasReply: boolean;
 }
 
+const cardShadow = { boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" };
+
 export default function InboxPage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,55 +32,55 @@ export default function InboxPage() {
   }, []);
 
   return (
-    <div className="p-8">
-      <h1 className="font-display text-2xl text-paper-100 mb-6">Inbox</h1>
-
+    <div className="p-6 md:p-8">
       {loading ? (
         <div className="space-y-2">
           {[1,2,3,4,5].map(i => (
-            <div key={i} className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 animate-pulse">
+            <div key={i} className="bg-white rounded-2xl p-4 animate-pulse" style={cardShadow}>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded bg-neutral-800" />
+                <div className="w-10 h-10 rounded-full bg-[#f0f0f0]" />
                 <div className="flex-1">
-                  <div className="h-4 w-32 bg-neutral-800 rounded mb-2" />
-                  <div className="h-3 w-48 bg-neutral-800 rounded" />
+                  <div className="h-4 w-32 bg-[#f0f0f0] rounded mb-2" />
+                  <div className="h-3 w-48 bg-[#f0f0f0] rounded" />
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : threads.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-12 text-center grain-card">
+        <div className="bg-white rounded-2xl p-12 text-center" style={cardShadow}>
           <p className="text-4xl mb-3">📬</p>
-          <p className="text-sm text-neutral-500">No email threads yet</p>
+          <p className="text-sm text-[#999]">No email threads yet</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
+          {/* Thread list */}
           <div className="md:col-span-1 space-y-2">
             {threads.map((thread) => (
               <button
                 key={thread.company.id}
                 onClick={() => setSelectedThread(thread)}
-                className={`w-full text-left rounded-xl border p-4 transition-colors ${
+                className={`w-full text-left rounded-2xl p-4 transition-all duration-150 ${
                   selectedThread?.company.id === thread.company.id
-                    ? "border-neutral-600 bg-neutral-800"
-                    : "border-neutral-800 bg-neutral-900/50 hover:bg-neutral-900"
+                    ? "bg-[#f5f5f5] ring-1 ring-[#e0e0e0]"
+                    : "bg-white hover:bg-[#fafafa]"
                 }`}
+                style={cardShadow}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-neutral-800 flex items-center justify-center">
-                    <span className="text-sm text-neutral-400">
+                  <div className="w-10 h-10 rounded-full bg-[#f0f0f0] flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-semibold text-[#555]">
                       {thread.company.name?.[0]?.toUpperCase() || "?"}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-paper-100 truncate">
+                      <span className="text-sm font-semibold text-[#111] truncate">
                         {thread.company.name || "Unknown"}
                       </span>
                       {thread.hasReply && <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />}
                     </div>
-                    <p className="text-xs text-neutral-500 truncate">
+                    <p className="text-xs text-[#999] truncate mt-0.5">
                       {thread.emails[thread.emails.length - 1]?.subject || "No subject"}
                     </p>
                   </div>
@@ -87,34 +89,37 @@ export default function InboxPage() {
             ))}
           </div>
 
+          {/* Thread detail */}
           <div className="md:col-span-2">
             {selectedThread ? (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 grain-card">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="font-display text-lg text-paper-100">{selectedThread.company.name}</h2>
-                  <span className="text-xs text-neutral-500">{selectedThread.emails.length} messages</span>
+              <div className="bg-white rounded-2xl p-6" style={cardShadow}>
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="font-display text-lg font-bold text-[#111]">{selectedThread.company.name}</h2>
+                  <span className="text-xs text-[#aaa] bg-[#f5f5f5] px-3 py-1 rounded-full">
+                    {selectedThread.emails.length} messages
+                  </span>
                 </div>
-                <div className="space-y-4 max-h-[600px] overflow-auto">
+                <div className="space-y-3 max-h-[560px] overflow-auto pr-1">
                   {selectedThread.emails.map((email) => (
                     <div
                       key={email.id}
-                      className={`rounded-lg p-4 ${
+                      className={`rounded-xl p-4 ${
                         email.direction === "outbound"
-                          ? "bg-neutral-800/50 border border-neutral-700 ml-8"
-                          : "bg-neutral-950 border border-neutral-800 mr-8"
+                          ? "bg-[#f5f5f5] ml-8"
+                          : "bg-white border border-[#f0f0f0] mr-8"
                       }`}
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <span className={`text-xs font-medium ${
-                          email.direction === "outbound" ? "text-neutral-300" : "text-green-500"
+                        <span className={`text-xs font-semibold ${
+                          email.direction === "outbound" ? "text-[#555]" : "text-green-600"
                         }`}>
                           {email.direction === "outbound" ? "You" : "Prospect"}
                         </span>
-                        <span className="text-xs text-neutral-500">
+                        <span className="text-xs text-[#bbb]">
                           {new Date(email.created_at).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-sm text-neutral-300 whitespace-pre-wrap">
+                      <p className="text-sm text-[#444] whitespace-pre-wrap leading-relaxed">
                         {email.body_text || email.subject || "No content"}
                       </p>
                     </div>
@@ -122,8 +127,9 @@ export default function InboxPage() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 flex items-center justify-center h-64">
-                <p className="text-sm text-neutral-500">Select a thread</p>
+              <div className="bg-white rounded-2xl p-6 flex flex-col items-center justify-center h-64" style={cardShadow}>
+                <p className="text-2xl mb-2">👈</p>
+                <p className="text-sm text-[#aaa]">Select a thread to read</p>
               </div>
             )}
           </div>

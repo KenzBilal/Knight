@@ -87,10 +87,10 @@ export default function ProspectsPage() {
             placeholder="Search prospects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full bg-white border border-[#ebebeb] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#333] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all"
+            className="w-full bg-[#f5f5f5] rounded-full pl-9 pr-4 py-2.5 text-sm text-[#333] placeholder:text-[#aaa] focus:outline-none focus:bg-white focus:shadow-sm transition-all"
           />
         </div>
-        <div className="flex items-center gap-1.5 text-xs text-[#aaa] bg-white border border-[#ebebeb] rounded-xl px-3 py-2.5">
+        <div className="flex items-center gap-1.5 text-xs text-[#aaa] bg-white rounded-full px-4 py-2.5" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
           <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
           Score &lt; 40 = hot lead
         </div>
@@ -146,9 +146,10 @@ export default function ProspectsPage() {
                       draggable
                       onDragStart={(e) => handleDragStart(e, company.id)}
                       onDragEnd={handleDragEnd}
-                      className={`bg-white rounded-xl border border-[#ebebeb] p-3.5 cursor-grab active:cursor-grabbing hover:shadow-sm hover:border-[#ddd] transition-all duration-150 select-none ${
+                      className={`bg-white rounded-xl p-3.5 cursor-grab active:cursor-grabbing hover:shadow-md transition-all duration-150 select-none ${
                         draggedId === company.id ? "opacity-40 scale-95" : ""
                       }`}
+                      style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)' }}
                     >
                       {/* Company name */}
                       <div className="flex items-center gap-2 mb-2">

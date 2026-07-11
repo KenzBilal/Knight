@@ -11,6 +11,11 @@ interface EmailDomain {
   status: string;
 }
 
+const cardShadow = { boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" };
+
+const inputCls =
+  "w-full rounded-xl bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] focus:bg-white transition-all";
+
 export default function SettingsPage() {
   const [companyName, setCompanyName] = useState("");
   const [companyWebsite, setCompanyWebsite] = useState("");
@@ -118,137 +123,131 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-6 md:p-8 max-w-2xl">
       <FadeIn>
-        <h1 className="font-display text-2xl text-paper-100 mb-6">Settings</h1>
-      </FadeIn>
-
-      <form onSubmit={handleSave} className="space-y-6">
-        <FadeIn delay={100}>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
-            <h2 className="font-display text-lg text-paper-100">Company Profile</h2>
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Company name</label>
-              <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
-                placeholder="Your agency name"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Website</label>
-              <input type="text" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)}
-                placeholder="yoursite.com"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Services (comma separated)</label>
-              <input type="text" value={services} onChange={e => setServices(e.target.value)}
-                placeholder="web development, SEO, logo design"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-            </div>
-            <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Calendly link</label>
-              <input type="text" value={calendlyLink} onChange={e => setCalendlyLink(e.target.value)}
-                placeholder="https://calendly.com/yourname"
-                className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-            </div>
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={200}>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
-            <h2 className="font-display text-lg text-paper-100">Email Domain</h2>
-            {domains.length > 0 && (
-              <div className="space-y-2">
-                {domains.map(d => (
-                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-neutral-950 border border-neutral-800">
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-green-500" : "bg-yellow-500"}`} />
-                      <span className="text-sm text-paper-100">{d.domain}</span>
-                      <span className="text-xs text-neutral-500 capitalize">{d.status}</span>
-                    </div>
-                    {d.status === "pending" && (
-                      <button type="button" onClick={() => handleVerifyDomain(d.id)}
-                        className="text-xs text-neutral-400 hover:text-paper-100">Verify</button>
-                    )}
-                  </div>
-                ))}
+        <form onSubmit={handleSave} className="space-y-5">
+          {/* Company Profile */}
+          <FadeIn delay={100}>
+            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
+              <h2 className="font-display text-base font-semibold text-[#111]">Company Profile</h2>
+              <div>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Company name</label>
+                <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
+                  placeholder="Your agency name" className={inputCls} />
               </div>
-            )}
-            <form onSubmit={handleAddDomain} className="flex gap-2">
-              <input type="text" value={newDomain} onChange={e => setNewDomain(e.target.value)}
-                placeholder="yourdomain.com"
-                className="flex-1 rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-              <button type="submit" disabled={domainLoading || !newDomain}
-                className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2.5 text-sm hover:bg-paper-200 transition-all disabled:opacity-50 active:scale-[0.98]">
-                {domainLoading ? "Adding..." : "Add Domain"}
-              </button>
-            </form>
-            {dnsRecords && (
-              <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4 space-y-3">
-                <p className="text-xs text-neutral-400">Add these DNS records:</p>
-                {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
-                  <div key={key} className="text-xs">
-                    <p className="text-neutral-300 font-medium mb-1">{record.note}</p>
-                    <div className="flex gap-4 text-neutral-500">
-                      <span>Type: {record.type}</span>
-                      <span>Host: {record.host}</span>
-                      <span className="text-neutral-400 break-all">Value: {record.value}</span>
-                    </div>
-                  </div>
-                ))}
+              <div>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Website</label>
+                <input type="text" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)}
+                  placeholder="yoursite.com" className={inputCls} />
               </div>
-            )}
-          </div>
-        </FadeIn>
-
-        <FadeIn delay={300}>
-          <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg text-paper-100">API Keys</h2>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={useCustomKeys} onChange={e => setUseCustomKeys(e.target.checked)} className="sr-only peer" />
-                <div className="w-11 h-6 bg-neutral-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-paper-100"></div>
-              </label>
+              <div>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Services (comma separated)</label>
+                <input type="text" value={services} onChange={e => setServices(e.target.value)}
+                  placeholder="web development, SEO, logo design" className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Calendly link</label>
+                <input type="text" value={calendlyLink} onChange={e => setCalendlyLink(e.target.value)}
+                  placeholder="https://calendly.com/yourname" className={inputCls} />
+              </div>
             </div>
-            {useCustomKeys && (
-              <div className="space-y-4 pt-2">
-                <div>
-                  <label className="block text-sm text-neutral-400 mb-1.5">Cohere</label>
-                  <input type="password" value={cohereKey} onChange={e => setCohereKey(e.target.value)}
-                    placeholder="Cohere API key"
-                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+          </FadeIn>
+
+          {/* Email Domain */}
+          <FadeIn delay={200}>
+            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
+              <h2 className="font-display text-base font-semibold text-[#111]">Email Domain</h2>
+              {domains.length > 0 && (
+                <div className="space-y-2">
+                  {domains.map(d => (
+                    <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-[#f7f7f7] border border-[#f0f0f0]">
+                      <div className="flex items-center gap-2">
+                        <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-green-500" : "bg-yellow-400"}`} />
+                        <span className="text-sm text-[#111]">{d.domain}</span>
+                        <span className="text-xs text-[#aaa] capitalize">{d.status}</span>
+                      </div>
+                      {d.status === "pending" && (
+                        <button type="button" onClick={() => handleVerifyDomain(d.id)}
+                          className="text-xs text-[#555] hover:text-[#111] font-medium transition-colors">Verify</button>
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-sm text-neutral-400 mb-1.5">Gemini</label>
-                  <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)}
-                    placeholder="Gemini API key"
-                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-                </div>
-                <div>
-                  <label className="block text-sm text-neutral-400 mb-1.5">OpenRouter</label>
-                  <input type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)}
-                    placeholder="OpenRouter API key"
-                    className="w-full rounded-lg bg-neutral-950 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
-                </div>
-                <button type="button" onClick={handleSaveKeys}
-                  className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2 text-sm hover:bg-paper-200 transition-all active:scale-[0.98]">
-                  Save Keys
+              )}
+              <form onSubmit={handleAddDomain} className="flex gap-2">
+                <input type="text" value={newDomain} onChange={e => setNewDomain(e.target.value)}
+                  placeholder="yourdomain.com"
+                  className="flex-1 rounded-xl bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all" />
+                <button type="submit" disabled={domainLoading || !newDomain}
+                  className="rounded-xl bg-[#111] text-white font-medium px-4 py-2.5 text-sm hover:bg-[#222] transition-all disabled:opacity-40 active:scale-[0.98]">
+                  {domainLoading ? "Adding..." : "Add"}
                 </button>
+              </form>
+              {dnsRecords && (
+                <div className="rounded-xl bg-[#f7f7f7] border border-[#f0f0f0] p-4 space-y-3">
+                  <p className="text-xs font-medium text-[#555]">Add these DNS records:</p>
+                  {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
+                    <div key={key} className="text-xs">
+                      <p className="text-[#333] font-medium mb-1">{record.note}</p>
+                      <div className="flex gap-4 text-[#999]">
+                        <span>Type: {record.type}</span>
+                        <span>Host: {record.host}</span>
+                        <span className="text-[#666] break-all">Value: {record.value}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </FadeIn>
+
+          {/* API Keys */}
+          <FadeIn delay={300}>
+            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-base font-semibold text-[#111]">API Keys</h2>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked={useCustomKeys} onChange={e => setUseCustomKeys(e.target.checked)} className="sr-only peer" />
+                  <div className="w-11 h-6 bg-[#e5e5e5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#111]"></div>
+                </label>
               </div>
-            )}
-            {!useCustomKeys && <p className="text-xs text-neutral-500">Using Knight&apos;s built-in keys.</p>}
-          </div>
-        </FadeIn>
+              {useCustomKeys && (
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="block text-xs font-medium text-[#555] mb-1.5">Cohere</label>
+                    <input type="password" value={cohereKey} onChange={e => setCohereKey(e.target.value)}
+                      placeholder="Cohere API key" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#555] mb-1.5">Gemini</label>
+                    <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)}
+                      placeholder="Gemini API key" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-[#555] mb-1.5">OpenRouter</label>
+                    <input type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)}
+                      placeholder="OpenRouter API key" className={inputCls} />
+                  </div>
+                  <button type="button" onClick={handleSaveKeys}
+                    className="rounded-xl bg-[#111] text-white font-medium px-4 py-2 text-sm hover:bg-[#222] transition-all active:scale-[0.98]">
+                    Save Keys
+                  </button>
+                </div>
+              )}
+              {!useCustomKeys && <p className="text-xs text-[#aaa]">Using Knight&apos;s built-in keys.</p>}
+            </div>
+          </FadeIn>
 
-        <TemplateManager />
+          <TemplateManager />
 
-        <FadeIn delay={500}>
-          <button type="submit" disabled={saving}
-            className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-5 py-2.5 text-sm hover:bg-paper-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        </FadeIn>
-      </form>
+          <FadeIn delay={500}>
+            <button type="submit" disabled={saving}
+              className="rounded-xl bg-[#111] text-white font-medium px-5 py-2.5 text-sm hover:bg-[#222] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]">
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+          </FadeIn>
+        </form>
+      </FadeIn>
     </div>
   );
 }

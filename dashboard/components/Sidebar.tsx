@@ -97,10 +97,10 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
     : userEmail ? userEmail[0].toUpperCase() : "K";
 
   return (
-    <aside className="w-[220px] h-screen bg-white border-r border-[#ebebeb] flex flex-col shrink-0">
+    <aside className="w-[220px] h-screen bg-white flex flex-col shrink-0" style={{ boxShadow: '1px 0 0 0 #f0f0f0' }}>
       {/* Logo */}
-      <div className="px-5 h-[70px] flex items-center border-b border-[#ebebeb]">
-        <Link href="/dashboard" className="font-display text-xl font-bold text-[#111]">
+      <div className="px-5 h-[70px] flex items-center border-b border-[#f0f0f0]">
+        <Link href="/dashboard" className="font-display text-[22px] font-bold text-[#0a0a0a] tracking-tight">
           Knight
         </Link>
       </div>
@@ -115,8 +115,8 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 group ${
                 active
-                  ? "bg-[#f0f0f0] text-[#111] font-semibold"
-                  : "text-[#777] hover:text-[#111] hover:bg-[#f7f7f7]"
+                  ? "bg-[#f5f5f5] text-[#111] font-semibold"
+                  : "text-[#888] hover:text-[#111] hover:bg-[#f7f7f7]"
               }`}
             >
               <Icon className={active ? "text-[#111]" : "text-[#999] group-hover:text-[#555]"} />
@@ -148,7 +148,7 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
       )}
 
       {/* Bottom links */}
-      <div className="px-3 pb-2 border-t border-[#ebebeb] pt-3 space-y-0.5">
+      <div className="px-3 pb-2 border-t border-[#f0f0f0] pt-3 space-y-0.5">
         {bottomLinks.map(({ href, label, Icon }) => {
           const active = isActive(href);
           return (
@@ -157,8 +157,8 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
               href={href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-150 group ${
                 active
-                  ? "bg-[#f0f0f0] text-[#111] font-semibold"
-                  : "text-[#777] hover:text-[#111] hover:bg-[#f7f7f7]"
+                  ? "bg-[#f5f5f5] text-[#111] font-semibold"
+                  : "text-[#888] hover:text-[#111] hover:bg-[#f7f7f7]"
               }`}
             >
               <Icon className={active ? "text-[#111]" : "text-[#999] group-hover:text-[#555]"} />
@@ -177,7 +177,7 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
       </div>
 
       {/* User row */}
-      <div className="px-4 py-4 border-t border-[#ebebeb] flex items-center gap-2.5">
+      <div className="px-4 py-4 border-t border-[#f0f0f0] flex items-center gap-2.5">
         <div className="w-8 h-8 rounded-full bg-[#111] flex items-center justify-center flex-shrink-0">
           <span className="text-[11px] font-bold text-white">{initials}</span>
         </div>
