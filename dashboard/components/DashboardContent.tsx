@@ -61,15 +61,6 @@ export function DashboardContent({
           />
         </div>
 
-        {/* Notification bell */}
-        <button
-          aria-label="Notifications"
-          className="w-9 h-9 rounded-full flex items-center justify-center border border-[#e8e8e8] bg-white hover:bg-[#f4f4f4] transition-colors relative"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#555" strokeWidth="1.8" strokeLinecap="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-          </svg>
-        </button>
 
         {/* Avatar */}
         <div className="w-9 h-9 rounded-full bg-[#111] flex items-center justify-center flex-shrink-0 cursor-pointer">

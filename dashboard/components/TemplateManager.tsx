@@ -23,6 +23,8 @@ const TEMPLATE_TYPES = [
   { value: "reply", label: "Interested Reply", description: "Response to positive replies" },
 ];
 
+const cardShadow = { boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" };
+
 export function TemplateManager() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,10 +92,10 @@ export function TemplateManager() {
 
   if (loading) {
     return (
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6">
+      <div className="rounded-2xl border border-[#ebebeb] bg-white p-6" style={cardShadow}>
         <div className="animate-pulse space-y-4">
-          <div className="h-6 bg-neutral-800 rounded w-1/3" />
-          <div className="h-32 bg-neutral-800 rounded" />
+          <div className="h-6 bg-[#f0f0f0] rounded w-1/3" />
+          <div className="h-32 bg-[#f0f0f0] rounded" />
         </div>
       </div>
     );
@@ -101,19 +103,19 @@ export function TemplateManager() {
 
   return (
     <FadeIn delay={600}>
-      <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-6 space-y-4 grain-card">
+      <div className="rounded-2xl border border-[#ebebeb] bg-white p-6 space-y-4" style={cardShadow}>
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg text-paper-100">Email Templates</h2>
+          <h2 className="font-display text-base font-semibold text-[#111]">Email Templates</h2>
           {!usingDefaults && (
             <button onClick={handleCreate}
-              className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2 text-sm hover:bg-paper-200 transition-all active:scale-[0.98]">
+              className="rounded-xl bg-[#111] text-white font-medium px-4 py-2 text-sm hover:bg-[#222] transition-all active:scale-[0.98]">
               New Template
             </button>
           )}
         </div>
 
         {usingDefaults && (
-          <div className="rounded-lg bg-neutral-800 border border-neutral-700 p-3 text-sm text-neutral-400">
+          <div className="rounded-xl bg-[#f7f7f7] border border-[#f0f0f0] p-3 text-sm text-[#555]">
             Using default templates. Run migration to enable custom templates.
           </div>
         )}
@@ -121,23 +123,23 @@ export function TemplateManager() {
         {!isCreating && !editingTemplate && (
           <div className="space-y-2">
             {templates.length === 0 ? (
-              <p className="text-sm text-neutral-500 py-4 text-center">No templates yet.</p>
+              <p className="text-sm text-[#999] py-4 text-center">No templates yet.</p>
             ) : (
               templates.map(template => (
-                <div key={template.id} className="flex items-center justify-between p-4 rounded-lg bg-neutral-950 border border-neutral-800 hover:border-neutral-700 transition-all">
+                <div key={template.id} className="flex items-center justify-between p-4 rounded-xl bg-white border border-[#ebebeb] hover:border-[#ddd] hover:shadow-sm transition-all">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-sm text-paper-100">{template.name}</span>
-                      {template.is_default && <span className="text-xs bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded">Default</span>}
-                      <span className="text-xs text-neutral-500">{TEMPLATE_TYPES.find(t => t.value === template.type)?.label}</span>
+                      <span className="font-medium text-sm text-[#111]">{template.name}</span>
+                      {template.is_default && <span className="text-[10px] bg-[#f0f0f0] text-[#555] px-2 py-0.5 rounded-full font-medium">Default</span>}
+                      <span className="text-[11px] text-[#999] uppercase tracking-wider font-semibold">{TEMPLATE_TYPES.find(t => t.value === template.type)?.label}</span>
                     </div>
-                    <p className="text-xs text-neutral-500 mt-1 line-clamp-1">{template.subject}</p>
+                    <p className="text-xs text-[#555] mt-1 line-clamp-1">{template.subject}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {!template.id.startsWith("default-") && (
                       <>
-                        <button onClick={() => handleEdit(template)} className="text-xs text-neutral-400 hover:text-paper-100 transition-colors">Edit</button>
-                        <button onClick={() => handleDelete(template.id)} className="text-xs text-red-400 hover:text-red-300 transition-colors">Delete</button>
+                        <button onClick={() => handleEdit(template)} className="text-xs text-[#888] hover:text-[#111] font-medium transition-colors">Edit</button>
+                        <button onClick={() => handleDelete(template.id)} className="text-xs text-red-400 hover:text-red-600 font-medium transition-colors">Delete</button>
                       </>
                     )}
                   </div>
@@ -148,47 +150,47 @@ export function TemplateManager() {
         )}
 
         {(isCreating || editingTemplate) && (
-          <div className="space-y-4 p-4 rounded-lg bg-neutral-950 border border-neutral-800">
+          <div className="space-y-4 p-5 rounded-2xl bg-[#f9f9f9] border border-[#ebebeb]">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-paper-100">{editingTemplate ? "Edit Template" : "New Template"}</h3>
-              <button onClick={() => { setIsCreating(false); setEditingTemplate(null); }} className="text-xs text-neutral-400 hover:text-paper-100 transition-colors">Cancel</button>
+              <h3 className="font-semibold text-sm text-[#111]">{editingTemplate ? "Edit Template" : "New Template"}</h3>
+              <button onClick={() => { setIsCreating(false); setEditingTemplate(null); }} className="text-xs font-medium text-[#888] hover:text-[#111] transition-colors">Cancel</button>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm text-neutral-400 mb-1.5">Name</label>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Name</label>
                 <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} placeholder="Cold Outreach"
-                  className="w-full rounded-lg bg-neutral-900 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                  className="w-full rounded-xl bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all" />
               </div>
               <div>
-                <label className="block text-sm text-neutral-400 mb-1.5">Type</label>
+                <label className="block text-xs font-medium text-[#555] mb-1.5">Type</label>
                 <select value={formData.type} onChange={e => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full rounded-lg bg-neutral-900 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 focus:outline-none focus:border-neutral-600 transition-all">
+                  className="w-full rounded-xl bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] focus:outline-none focus:border-[#ccc] transition-all">
                   {TEMPLATE_TYPES.map(type => <option key={type.value} value={type.value}>{type.label}</option>)}
                 </select>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm text-neutral-400 mb-1.5">Subject</label>
+              <label className="block text-xs font-medium text-[#555] mb-1.5">Subject</label>
               <input type="text" value={formData.subject} onChange={e => setFormData(prev => ({ ...prev, subject: e.target.value }))} placeholder="Quick question about {{company_name}}"
-                className="w-full rounded-lg bg-neutral-900 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-xl bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all" />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm text-neutral-400">Body</label>
-                <button type="button" onClick={() => setShowVariables(!showVariables)} className="text-xs text-neutral-400 hover:text-paper-100 transition-colors">
+                <label className="text-xs font-medium text-[#555]">Body</label>
+                <button type="button" onClick={() => setShowVariables(!showVariables)} className="text-xs font-medium text-[#888] hover:text-[#111] transition-colors">
                   {showVariables ? "Hide Variables" : "Show Variables"}
                 </button>
               </div>
               {showVariables && (
-                <div className="mb-2 p-3 rounded-lg bg-neutral-900 border border-neutral-800">
-                  <p className="text-xs text-neutral-500 mb-2">Click to insert:</p>
+                <div className="mb-2 p-3 rounded-xl bg-white border border-[#ebebeb]">
+                  <p className="text-xs text-[#999] mb-2">Click to insert:</p>
                   <div className="flex flex-wrap gap-2">
                     {variables.map(v => (
                       <button key={v.name} onClick={() => insertVariable(v.name)} title={v.description}
-                        className="text-xs bg-neutral-800 text-neutral-300 px-2 py-1 rounded hover:bg-neutral-700 transition-colors">
+                        className="text-[10px] font-mono bg-[#f0f0f0] text-[#555] px-2 py-1 rounded-md hover:bg-[#e0e0e0] hover:text-[#111] transition-colors">
                         {`{{${v.name}}}`}
                       </button>
                     ))}
@@ -198,28 +200,28 @@ export function TemplateManager() {
               <textarea value={formData.body} onChange={e => setFormData(prev => ({ ...prev, body: e.target.value }))}
                 placeholder="Write your email template. Use {{variable}} for dynamic content."
                 rows={10}
-                className="w-full rounded-lg bg-neutral-900 border border-neutral-800 px-4 py-2.5 text-sm text-paper-100 placeholder:text-neutral-500 focus:outline-none focus:border-neutral-600 transition-all font-mono" />
+                className="w-full rounded-xl bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all font-mono" />
             </div>
 
             <div className="flex items-center gap-2">
               <input type="checkbox" id="is_default" checked={formData.is_default} onChange={e => setFormData(prev => ({ ...prev, is_default: e.target.checked }))}
-                className="rounded border-neutral-700 bg-neutral-900 text-paper-100 focus:ring-neutral-600" />
-              <label htmlFor="is_default" className="text-sm text-neutral-400">Set as default</label>
+                className="rounded border-[#ebebeb] text-[#111] focus:ring-[#ccc]" />
+              <label htmlFor="is_default" className="text-sm font-medium text-[#555]">Set as default template</label>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#ebebeb]">
               <button onClick={() => { setIsCreating(false); setEditingTemplate(null); }}
-                className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 transition-all">Cancel</button>
+                className="rounded-xl border border-[#ebebeb] bg-white px-4 py-2 text-sm font-medium text-[#555] hover:text-[#111] hover:bg-[#f7f7f7] transition-all">Cancel</button>
               <button onClick={editingTemplate ? handleUpdate : handleSave} disabled={saving}
-                className="rounded-lg bg-paper-100 text-neutral-950 font-medium px-4 py-2 text-sm hover:bg-paper-200 transition-all disabled:opacity-50 active:scale-[0.98]">
-                {saving ? "Saving..." : editingTemplate ? "Update" : "Create"}
+                className="rounded-xl bg-[#111] text-white font-medium px-4 py-2 text-sm hover:bg-[#222] transition-all disabled:opacity-50 active:scale-[0.98]">
+                {saving ? "Saving..." : editingTemplate ? "Update Template" : "Create Template"}
               </button>
             </div>
           </div>
         )}
 
-        <div className="text-xs text-neutral-500">
-          <p>Use {"{{variable}}"} syntax. Available: {variables.map(v => v.name).join(", ")}</p>
+        <div className="text-xs text-[#999]">
+          <p>Use <span className="font-mono text-[#777]">{"{{variable}}"}</span> syntax. Available: {variables.map(v => v.name).join(", ")}</p>
         </div>
       </div>
     </FadeIn>

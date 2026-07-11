@@ -129,10 +129,10 @@ export default function ProspectsPage() {
                 </div>
 
                 {/* Column body */}
-                <div className={`min-h-[520px] rounded-2xl p-2 space-y-2 transition-all duration-150 ${
+                <div className={`min-h-[520px] rounded-2xl p-3 space-y-3 transition-all duration-150 ${
                   isOver
-                    ? "bg-[#111]/[0.04] border-2 border-dashed border-[#ccc]"
-                    : "bg-[#f4f4f4] border-2 border-transparent"
+                    ? "bg-[#e8e8e8] border-2 border-dashed border-[#ccc]"
+                    : "bg-[#ececec] border-2 border-transparent"
                 }`}>
                   {items.length === 0 ? (
                     <div className="text-center mt-14">
