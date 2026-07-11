@@ -4,32 +4,38 @@ import { PageHeader } from './PageHeader';
 import { dbSelect, dbInsert, dbUpdate, dbDelete } from '../lib/supabase';
 import type { Plan } from '../lib/types';
 
-const EMPTY_PLAN: Omit<Plan, 'id' | 'created_at' | 'updated_at'> = {
-  name: '',
-  price: 0,
-  period: 'month',
-  description: '',
-  features: [],
-  lead_limit: -1,
-  email_limit: -1,
-  telegram_limit: 0,
-  lemon_product_id: '',
-  lemon_variant_id: '',
-  sort_order: 0,
-  highlighted: false,
-  active: true,
-};
-
-function formatPrice(cents: number) {
-  if (cents === 0) return '$0';
-  return `$${(cents / 100).toFixed(0)}`;
+function formatPrice(cents: number | null | undefined) {
+  const c = Number(cents) || 0;
+  if (c === 0) return '$0';
+  return `$${(c / 100).toFixed(0)}`;
 }
 
-function formatPeriod(period: string) {
-  if (period === 'forever' || period === 'once') return '';
+function formatPeriod(period: string | null | undefined) {
+  if (!period || period === 'forever' || period === 'once') return '';
   if (period === 'month') return '/mo';
   if (period === 'year') return '/yr';
   return '';
+}
+
+function sanitizePlan(raw: any): Plan {
+  return {
+    id: raw.id || '',
+    name: raw.name || '',
+    price: Number(raw.price) || 0,
+    period: raw.period || 'month',
+    description: raw.description || '',
+    features: Array.isArray(raw.features) ? raw.features : [],
+    lead_limit: Number(raw.lead_limit) ?? -1,
+    email_limit: Number(raw.email_limit) ?? -1,
+    telegram_limit: Number(raw.telegram_limit) ?? 0,
+    lemon_product_id: raw.lemon_product_id || null,
+    lemon_variant_id: raw.lemon_variant_id || null,
+    sort_order: Number(raw.sort_order) || 0,
+    highlighted: Boolean(raw.highlighted),
+    active: raw.active !== false,
+    created_at: raw.created_at || '',
+    updated_at: raw.updated_at || '',
+  };
 }
 
 export function PlansModule() {
@@ -47,13 +53,14 @@ export function PlansModule() {
     setLoading(true);
     setError(null);
     try {
-      const result = await dbSelect<Plan>('plans', {
+      const result = await dbSelect('plans', {
         order: { column: 'sort_order', ascending: true },
       });
       if (result.error) throw new Error(result.error);
-      setPlans(result.data || []);
+      const raw: any[] = result.data || [];
+      setPlans(raw.map(sanitizePlan));
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to load plans');
     }
     setLoading(false);
   }
@@ -65,30 +72,42 @@ export function PlansModule() {
 
   const addPlan = async () => {
     const newId = `plan_${Date.now()}`;
+    setError(null);
     try {
       const result = await dbInsert('plans', {
-        ...EMPTY_PLAN,
         id: newId,
         name: 'New Plan',
+        price: 0,
+        period: 'month',
+        description: '',
+        features: [],
+        lead_limit: 50,
+        email_limit: 50,
+        telegram_limit: 0,
+        lemon_product_id: null,
+        lemon_variant_id: null,
         sort_order: plans.length,
+        highlighted: false,
+        active: true,
       });
       if (result.error) throw new Error(result.error);
       if (result.data?.[0]) {
-        setPlans(prev => [...prev, result.data[0]]);
+        setPlans(prev => [...prev, sanitizePlan(result.data[0])]);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to add plan');
     }
   };
 
   const deletePlan = async (id: string) => {
     if (!confirm('Delete this plan? Orgs on this plan will lose it.')) return;
+    setError(null);
     try {
       const result = await dbDelete('plans', { id });
       if (result.error) throw new Error(result.error);
       setPlans(prev => prev.filter(p => p.id !== id));
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to delete plan');
     }
   };
 
@@ -101,8 +120,8 @@ export function PlansModule() {
           name: plan.name,
           price: plan.price,
           period: plan.period,
-          description: plan.description,
-          features: plan.features,
+          description: plan.description || null,
+          features: plan.features || [],
           lead_limit: plan.lead_limit,
           email_limit: plan.email_limit,
           telegram_limit: plan.telegram_limit,
@@ -116,7 +135,7 @@ export function PlansModule() {
       }
       setDirty(false);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Failed to save');
     }
     setSaving(false);
   };
@@ -286,19 +305,19 @@ export function PlansModule() {
                 <div>
                   <label className="text-[11px] uppercase tracking-wider text-[#555] font-medium">Features</label>
                   <div className="mt-2 space-y-1.5">
-                    {plan.features.map((f, i) => (
+                    {(plan.features || []).map((f, i) => (
                       <div key={i} className="flex items-center gap-2">
                         <input
-                          value={f}
+                          value={f || ''}
                           onChange={e => {
-                            const newFeatures = [...plan.features];
+                            const newFeatures = [...(plan.features || [])];
                             newFeatures[i] = e.target.value;
                             updatePlan(plan.id, 'features', newFeatures);
                           }}
                           className="flex-1 bg-[#080808] border border-[#1a1a1a] rounded px-3 py-1.5 text-[#e0e0e0] text-[12px] focus:border-[#333] outline-none"
                         />
                         <button
-                          onClick={() => updatePlan(plan.id, 'features', plan.features.filter((_, j) => j !== i))}
+                          onClick={() => updatePlan(plan.id, 'features', (plan.features || []).filter((_, j) => j !== i))}
                           className="text-[#444] hover:text-[#f87171] text-[12px]"
                         >
                           x
@@ -306,7 +325,7 @@ export function PlansModule() {
                       </div>
                     ))}
                     <button
-                      onClick={() => updatePlan(plan.id, 'features', [...plan.features, 'New feature'])}
+                      onClick={() => updatePlan(plan.id, 'features', [...(plan.features || []), 'New feature'])}
                       className="text-[11px] text-[#555] hover:text-[#aaa] transition-colors"
                     >
                       + Add feature
