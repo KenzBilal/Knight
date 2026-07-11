@@ -5,16 +5,16 @@ import type { QueryResult } from './types';
 declare global {
   interface Window {
     electronAPI: {
-      onWorkerLog: (cb: (msg: string) => void) => void;
-      onWorkerError: (cb: (msg: string) => void) => void;
-      onWorkerStatus: (cb: (msg: string) => void) => void;
+      onWorkerLog: (cb: (msg: string) => void) => (() => void);
+      onWorkerError: (cb: (msg: string) => void) => (() => void);
+      onWorkerStatus: (cb: (msg: string) => void) => (() => void);
       windowMinimize: () => void;
       windowMaximize: () => void;
       windowClose: () => void;
       getEnv: () => Promise<Record<string, string>>;
       saveEnv: (data: Record<string, string>) => Promise<{ success: boolean }>;
       getUsers: () => Promise<{ data: any[] | null; error: string | null }>;
-      getLogs: () => Promise<string[]>;
+      getLogs: () => Promise<{ data: string[] | null; error: string | null } | string[]>;
       dbQuery: (query: {
         table: string;
         action: 'select' | 'insert' | 'update' | 'delete' | 'count';
@@ -27,8 +27,8 @@ declare global {
         match?: Record<string, any>;
       }) => Promise<QueryResult<any>>;
       workerStatus: () => Promise<any>;
-      workerRestart: () => Promise<{ success: boolean }>;
-      workerStop: () => Promise<{ success: boolean }>;
+      workerRestart: () => Promise<{ success: boolean; error?: string }>;
+      workerStop: () => Promise<{ success: boolean; error?: string }>;
     };
   }
 }

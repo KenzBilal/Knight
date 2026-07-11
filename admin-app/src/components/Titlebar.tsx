@@ -1,9 +1,15 @@
 import { Minus, Square, X } from 'lucide-react';
 
 export function Titlebar() {
-  const handleMinimize = () => window.electronAPI?.windowMinimize();
-  const handleMaximize = () => window.electronAPI?.windowMaximize();
-  const handleClose = () => window.electronAPI?.windowClose();
+  const handleMinimize = () => {
+    try { window.electronAPI?.windowMinimize(); } catch (e) { console.error('[Titlebar] minimize failed:', e); }
+  };
+  const handleMaximize = () => {
+    try { window.electronAPI?.windowMaximize(); } catch (e) { console.error('[Titlebar] maximize failed:', e); }
+  };
+  const handleClose = () => {
+    try { window.electronAPI?.windowClose(); } catch (e) { console.error('[Titlebar] close failed:', e); }
+  };
 
   return (
     <div className="h-9 bg-[#0a0a0a] border-b border-[#1a1a1a] flex items-center justify-between shrink-0 drag-region px-3 select-none">
