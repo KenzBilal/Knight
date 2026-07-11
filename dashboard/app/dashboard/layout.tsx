@@ -15,14 +15,15 @@ export default async function DashboardLayout({
   if (!org) redirect("/auth/signup");
 
   return (
-    <div className="flex h-screen bg-[#080808]">
+    <div className="flex h-screen bg-[#f4f4f4] overflow-hidden">
       <Sidebar
         orgPlan={org.plan}
-        orgName={org.name}
         userEmail={user.email}
         userName={user.name}
       />
-      <DashboardContent>{children}</DashboardContent>
+      <DashboardContent userEmail={user.email} userName={user.name}>
+        {children}
+      </DashboardContent>
     </div>
   );
 }

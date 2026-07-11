@@ -399,3 +399,13 @@ body {
   transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   animation: progress-fill 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ─── Dashboard (light theme) overrides ────────────────────────────────────── */
+/* These only affect elements inside the dashboard layout which sets bg-[#f4f4f4]. */
+/* The landing page continues to use the dark ink palette above. */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.animate-spin { animation: spin 0.8s linear infinite; }

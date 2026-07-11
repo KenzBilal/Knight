@@ -2,50 +2,24 @@
 
 import { useState, useEffect } from "react";
 
-interface Contact {
-  id: string;
-  email: string;
-  full_name: string;
-  role: string;
-}
-
+interface Contact { id: string; email: string; full_name: string; role: string; }
 interface Company {
-  id: string;
-  name: string;
-  website_url: string;
-  industry: string;
-  lead_score: number;
-  status: string;
-  created_at: string;
-  contacts: Contact[];
+  id: string; name: string; website_url: string;
+  industry: string; lead_score: number; status: string;
+  created_at: string; contacts: Contact[];
 }
 
 const columns = [
-  { id: "NEW",      label: "New",      color: "text-[#a3a3a3]", dot: "bg-[#3a3a3a]" },
-  { id: "PITCHED",  label: "Pitched",  color: "text-[#737373]", dot: "bg-[#525252]" },
-  { id: "REPLIED",  label: "Replied",  color: "text-[#4ade80]", dot: "bg-[#4ade80]" },
-  { id: "REJECTED", label: "Rejected", color: "text-[#f87171]", dot: "bg-[#f87171]" },
+  { id: "NEW",      label: "New",      dot: "bg-[#aaa]",     count_bg: "bg-[#f0f0f0] text-[#999]" },
+  { id: "PITCHED",  label: "Pitched",  dot: "bg-blue-400",   count_bg: "bg-blue-50 text-blue-400" },
+  { id: "REPLIED",  label: "Replied",  dot: "bg-green-500",  count_bg: "bg-green-50 text-green-500" },
+  { id: "REJECTED", label: "Rejected", dot: "bg-red-400",    count_bg: "bg-red-50 text-red-400" },
 ];
 
 function ScoreBadge({ score }: { score: number }) {
-  // Lower score = worse site = hotter lead
-  if (score < 40)
-    return (
-      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#f87171]/[0.1] text-[#f87171]">
-        {score}
-      </span>
-    );
-  if (score < 70)
-    return (
-      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/[0.05] text-[#737373]">
-        {score}
-      </span>
-    );
-  return (
-    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#4ade80]/[0.08] text-[#4ade80]">
-      {score}
-    </span>
-  );
+  if (score < 40) return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-500">{score}</span>;
+  if (score < 70) return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#f0f0f0] text-[#888]">{score}</span>;
+  return <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-green-50 text-green-600">{score}</span>;
 }
 
 export default function ProspectsPage() {
@@ -58,26 +32,22 @@ export default function ProspectsPage() {
   useEffect(() => {
     fetch("/api/prospects")
       .then((r) => r.json())
-      .then((data) => {
-        setCompanies(data.companies || []);
-        setLoading(false);
-      })
+      .then((d) => { setCompanies(d.companies || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  function getCompaniesByStatus(status: string) {
-    const filtered = companies.filter((c) => {
-      if (status === "NEW")
-        return !c.status || c.status === "NEW" || c.status === "DISCOVERED";
-      return c.status === status;
-    });
+  function getByStatus(status: string) {
+    const filtered = companies.filter((c) =>
+      status === "NEW"
+        ? !c.status || c.status === "NEW" || c.status === "DISCOVERED"
+        : c.status === status
+    );
     if (!search.trim()) return filtered;
     const q = search.toLowerCase();
     return filtered.filter(
-      (c) =>
-        c.name?.toLowerCase().includes(q) ||
-        c.industry?.toLowerCase().includes(q) ||
-        c.website_url?.toLowerCase().includes(q)
+      (c) => c.name?.toLowerCase().includes(q) ||
+             c.industry?.toLowerCase().includes(q) ||
+             c.website_url?.toLowerCase().includes(q)
     );
   }
 
@@ -86,52 +56,30 @@ export default function ProspectsPage() {
     e.dataTransfer.effectAllowed = "move";
   }
 
-  // Bug fix: always clear draggedId, even if drop target is invalid
-  function handleDragEnd() {
-    setDraggedId(null);
-    setDragOver(null);
-  }
+  function handleDragEnd() { setDraggedId(null); setDragOver(null); }
 
   async function handleDrop(e: React.DragEvent, newStatus: string) {
     e.preventDefault();
     if (!draggedId) return;
-    const prevCompanies = companies;
-    // Optimistic update
-    setCompanies((prev) =>
-      prev.map((c) => (c.id === draggedId ? { ...c, status: newStatus } : c))
-    );
-    setDraggedId(null);
-    setDragOver(null);
+    const prev = companies;
+    setCompanies((c) => c.map((x) => x.id === draggedId ? { ...x, status: newStatus } : x));
+    setDraggedId(null); setDragOver(null);
     try {
       const res = await fetch("/api/prospects", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ companyId: draggedId, status: newStatus }),
       });
-      if (!res.ok) throw new Error("Failed");
-    } catch {
-      // Rollback on failure
-      setCompanies(prevCompanies);
-    }
-  }
-
-  function handleDragOver(e: React.DragEvent, colId: string) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOver(colId);
+      if (!res.ok) throw new Error();
+    } catch { setCompanies(prev); }
   }
 
   return (
     <div className="p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-xs">
-          <svg
-            width="14" height="14"
-            viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-            strokeLinecap="round" strokeLinejoin="round"
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#3a3a3a]"
-          >
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#bbb]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
           <input
@@ -139,107 +87,99 @@ export default function ProspectsPage() {
             placeholder="Search prospects..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="input-base pl-9 h-9 text-xs"
+            className="w-full bg-white border border-[#ebebeb] rounded-xl pl-9 pr-4 py-2.5 text-sm text-[#333] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all"
           />
         </div>
-        <div className="flex items-center gap-2 text-xs text-[#3a3a3a]">
-          <span className="text-[#f87171]">●</span> Hot lead (score &lt; 40)
+        <div className="flex items-center gap-1.5 text-xs text-[#aaa] bg-white border border-[#ebebeb] rounded-xl px-3 py-2.5">
+          <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+          Score &lt; 40 = hot lead
         </div>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              className="card min-h-[480px] p-3 animate-pulse"
-            >
-              <div className="h-3 w-16 bg-white/[0.04] rounded mb-3" />
-              <div className="space-y-2">
-                {[1, 2, 3].map((j) => (
-                  <div key={j} className="h-16 bg-white/[0.03] rounded" />
-                ))}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-[#ebebeb] min-h-[480px] p-4 animate-pulse">
+              <div className="h-3 w-16 bg-[#f0f0f0] rounded mb-4"/>
+              <div className="space-y-2.5">
+                {[1,2,3].map((j) => <div key={j} className="h-16 bg-[#f7f7f7] rounded-xl"/>)}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {columns.map((col) => {
-            const colCompanies = getCompaniesByStatus(col.id);
+            const items = getByStatus(col.id);
             const isOver = dragOver === col.id;
             return (
               <div
                 key={col.id}
                 onDrop={(e) => handleDrop(e, col.id)}
-                onDragOver={(e) => handleDragOver(e, col.id)}
+                onDragOver={(e) => { e.preventDefault(); setDragOver(col.id); }}
                 onDragLeave={() => setDragOver(null)}
               >
                 {/* Column header */}
-                <div className="flex items-center gap-2 mb-2.5 px-1">
-                  <span className={`w-1.5 h-1.5 rounded-full ${col.dot}`} />
-                  <h3 className={`text-xs font-medium ${col.color}`}>
-                    {col.label}
-                  </h3>
-                  <span className="text-[10px] text-[#2a2a2a] font-mono">
-                    {colCompanies.length}
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <span className={`w-2 h-2 rounded-full ${col.dot}`}/>
+                  <span className="text-sm font-semibold text-[#333]">{col.label}</span>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full ml-auto ${col.count_bg}`}>
+                    {items.length}
                   </span>
                 </div>
 
-                {/* Column */}
-                <div
-                  className={`rounded-xl min-h-[480px] p-2 space-y-2 transition-colors ${
-                    isOver
-                      ? "bg-white/[0.03] border border-white/[0.08]"
-                      : "border border-white/[0.04] bg-[#0a0a0a]"
-                  }`}
-                >
-                  {colCompanies.length === 0 ? (
-                    <div className="text-center mt-12">
-                      <p className="text-xs text-[#2a2a2a]">
-                        {search ? "No matches" : col.id === "NEW" ? "No new prospects" : `No ${col.label.toLowerCase()}`}
+                {/* Column body */}
+                <div className={`min-h-[520px] rounded-2xl p-2 space-y-2 transition-all duration-150 ${
+                  isOver
+                    ? "bg-[#111]/[0.04] border-2 border-dashed border-[#ccc]"
+                    : "bg-[#f4f4f4] border-2 border-transparent"
+                }`}>
+                  {items.length === 0 ? (
+                    <div className="text-center mt-14">
+                      <p className="text-xs text-[#ccc]">
+                        {search ? "No matches" : col.id === "NEW" ? "No new prospects" : `No ${col.label.toLowerCase()} leads`}
                       </p>
                     </div>
-                  ) : (
-                    colCompanies.map((company) => (
-                      <div
-                        key={company.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, company.id)}
-                        onDragEnd={handleDragEnd}
-                        className={`rounded-lg bg-[#0f0f0f] border border-white/[0.05] p-3 cursor-grab active:cursor-grabbing hover:border-white/[0.1] transition-all duration-150 ${
-                          draggedId === company.id ? "opacity-40" : ""
-                        }`}
-                      >
-                        {/* Company name */}
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className="w-6 h-6 rounded bg-white/[0.04] flex items-center justify-center flex-shrink-0">
-                            <span className="text-[10px] font-mono text-[#525252]">
-                              {company.name?.[0]?.toUpperCase() || "?"}
-                            </span>
-                          </div>
-                          <span className="text-sm font-medium text-[#d4d4d4] truncate">
-                            {company.name || "Unknown"}
+                  ) : items.map((company) => (
+                    <div
+                      key={company.id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, company.id)}
+                      onDragEnd={handleDragEnd}
+                      className={`bg-white rounded-xl border border-[#ebebeb] p-3.5 cursor-grab active:cursor-grabbing hover:shadow-sm hover:border-[#ddd] transition-all duration-150 select-none ${
+                        draggedId === company.id ? "opacity-40 scale-95" : ""
+                      }`}
+                    >
+                      {/* Company name */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-7 h-7 rounded-lg bg-[#f0f0f0] flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-semibold text-[#555]">
+                            {company.name?.[0]?.toUpperCase() || "?"}
                           </span>
                         </div>
-
-                        {/* Industry / domain */}
-                        <p className="text-[11px] text-[#3a3a3a] truncate mb-2">
-                          {company.industry || company.website_url || ""}
-                        </p>
-
-                        {/* Contact + score */}
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] text-[#2a2a2a] truncate">
-                            {company.contacts?.[0]?.email || "No email"}
-                          </span>
-                          {company.lead_score > 0 && (
-                            <ScoreBadge score={company.lead_score} />
-                          )}
-                        </div>
+                        <span className="text-sm font-medium text-[#111] truncate">
+                          {company.name || "Unknown"}
+                        </span>
                       </div>
-                    ))
-                  )}
+
+                      {/* Industry */}
+                      {(company.industry || company.website_url) && (
+                        <p className="text-[11px] text-[#aaa] truncate mb-2">
+                          {company.industry || company.website_url}
+                        </p>
+                      )}
+
+                      {/* Contact + score */}
+                      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-[#f0f0f0]">
+                        <span className="text-[11px] text-[#bbb] truncate">
+                          {company.contacts?.[0]?.email || "No email"}
+                        </span>
+                        {company.lead_score > 0 && (
+                          <ScoreBadge score={company.lead_score} />
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             );
