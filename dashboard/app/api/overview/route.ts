@@ -53,12 +53,39 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false })
       .limit(10);
 
+    // Fetch companies for chart
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0, 0, 0, 0);
+
+    const { data: companies } = await supabase
+      .from("companies")
+      .select("created_at")
+      .eq("org_id", org.id)
+      .gte("created_at", sixMonthsAgo.toISOString());
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const chartData = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const mName = monthNames[d.getMonth()];
+      const year = d.getFullYear();
+      const count = companies?.filter(c => {
+        const cDate = new Date(c.created_at);
+        return cDate.getMonth() === d.getMonth() && cDate.getFullYear() === year;
+      }).length || 0;
+      chartData.push({ month: mName, value: count });
+    }
+
     return NextResponse.json({
       totalProspects: totalProspects || 0,
       activeAudits: activeAudits || 0,
       emailsSent: emailsSent || 0,
       replies: replies || 0,
       recentJobs: recentJobs || [],
+      chartData,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

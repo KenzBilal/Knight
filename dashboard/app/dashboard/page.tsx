@@ -9,6 +9,7 @@ interface OverviewData {
   activeAudits: number;
   emailsSent: number;
   replies: number;
+  chartData?: { month: string; value: number }[];
   recentJobs: Array<{
     id: string;
     type: string;
@@ -49,7 +50,65 @@ function timeAgo(d: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
+// ─── Bar Chart (pure SVG) ─────────────────────────────────────────────────────
+function BarChart({ data }: { data: { month: string; value: number }[] }) {
+  const max = Math.max(...data.map((d) => d.value), 10);
+  const chartH = 160;
+  const barW = 36;
+  const gap = 20;
+  const totalW = data.length * (barW + gap) - gap;
 
+  const yTicks = [0, 25, 50, 75, 100];
+
+  return (
+    <svg
+      viewBox={`0 0 ${totalW + 40} ${chartH + 48}`}
+      className="w-full"
+      style={{ maxHeight: 220 }}
+    >
+      {/* Y-axis ticks */}
+      {yTicks.map((tick) => {
+        const y = chartH - (tick / max) * chartH;
+        return (
+          <g key={tick}>
+            <line
+              x1={30} x2={totalW + 30}
+              y1={y} y2={y}
+              stroke="#ebebeb" strokeWidth="1"
+            />
+            <text x={24} y={y + 4} fontSize="9" fill="#bbb" textAnchor="end">
+              {tick === 0 ? "0" : `${tick}`}
+            </text>
+          </g>
+        );
+      })}
+
+      {/* Bars */}
+      {data.map((d, i) => {
+        const barH = (d.value / max) * chartH;
+        const x = 30 + i * (barW + gap);
+        const y = chartH - barH;
+        const isLatest = i === data.length - 1;
+        return (
+          <g key={d.month}>
+            <rect
+              x={x} y={y}
+              width={barW} height={barH}
+              rx="6" ry="6"
+              fill={isLatest ? "#d4d4d4" : "#111"}
+            />
+            <text
+              x={x + barW / 2} y={chartH + 18}
+              fontSize="10" fill="#aaa" textAnchor="middle"
+            >
+              {d.month}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 // ─── Stat Card ────────────────────────────────────────────────────────────────
 function StatCard({
@@ -204,8 +263,30 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* ── Two column: Find Leads + Pipeline Health ── */}
-      <div className="grid lg:grid-cols-2 gap-4 mb-6">
+      {/* ── Two column: Chart + Right panel ── */}
+      <div className="grid lg:grid-cols-[1fr_320px] gap-4 mb-6">
+
+        {/* Bar chart card */}
+        <div className="bg-white rounded-2xl p-6" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-base font-semibold text-[#111]">
+              Leads Discovered
+            </h2>
+            <button
+              onClick={fetchData}
+              className="w-8 h-8 rounded-lg border border-[#ebebeb] flex items-center justify-center text-[#aaa] hover:text-[#555] hover:bg-[#f7f7f7] transition-all"
+              aria-label="Refresh"
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+              </svg>
+            </button>
+          </div>
+          <BarChart data={data?.chartData || []} />
+        </div>
+
+        {/* Right panel */}
+        <div className="flex flex-col gap-4">
 
           {/* Quick discover form */}
           <div className="bg-white rounded-2xl p-5 flex-1" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
@@ -278,6 +359,7 @@ export default function DashboardPage() {
             ))}
           </div>
         </div>
+      </div>
 
       {/* ── Activity table ── */}
       <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)' }}>
