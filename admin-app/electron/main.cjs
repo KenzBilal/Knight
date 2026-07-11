@@ -744,10 +744,11 @@ async function executeCommand(rawCmd) {
   }
 }
 
-// ─── HTTP SERVER ─────────────────────────────────────────────────────────────
+// ─── HTTP + WEBSOCKET SERVER ─────────────────────────────────────────────────
 function startDebugServer() {
   try {
     const http = require('http');
+    const WebSocket = require('ws');
     const PORT = 19822;
 
     const server = http.createServer(async (req, res) => {
@@ -757,7 +758,6 @@ function startDebugServer() {
 
       if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
 
-      // GET endpoints
       if (req.method === 'GET') {
         if (req.url === '/screenshot') {
           if (mainWindow && !mainWindow.isDestroyed()) {
@@ -787,7 +787,6 @@ function startDebugServer() {
             }
           });
         }
-        // GET /cmd?cmd=db+select+plans
         if (req.url.startsWith('/cmd')) {
           const url = new URL(req.url, `http://localhost:${PORT}`);
           const cmd = url.searchParams.get('cmd');
@@ -799,12 +798,11 @@ function startDebugServer() {
           endpoints: {
             GET: ['/state', '/errors', '/logs', '/commands', '/screenshot', '/cmd?cmd=...'],
             POST: ['/cmd'],
+            WebSocket: 'ws://host:19822',
           },
-          usage: 'POST /cmd with body: {"cmd":"db select plans"}',
         });
       }
 
-      // POST /cmd
       if (req.method === 'POST' && req.url === '/cmd') {
         const body = await readBody(req);
         try {
@@ -820,8 +818,40 @@ function startDebugServer() {
       json(res, 404, { ok: false, error: 'Not found' });
     });
 
+    // ─── WebSocket: persistent shell connections ───────────────────────────
+    const wss = new WebSocket.Server({ server });
+
+    function broadcast(type, data) {
+      const msg = JSON.stringify({ type, data });
+      wss.clients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) client.send(msg);
+      });
+    }
+
+    wss.on('connection', (ws) => {
+      LOG.info('Shell connected');
+      ws.on('message', async (raw) => {
+        try {
+          const msg = JSON.parse(raw.toString());
+          if (msg.type === 'cmd') {
+            const result = await executeCommand(msg.cmd);
+            ws.send(JSON.stringify({ type: 'result', id: msg.id, ...result }));
+          } else if (msg.type === 'ping') {
+            ws.send(JSON.stringify({ type: 'pong' }));
+          }
+        } catch (err) {
+          ws.send(JSON.stringify({ type: 'error', error: err.message }));
+        }
+      });
+      ws.on('close', () => LOG.info('Shell disconnected'));
+      ws.send(JSON.stringify({ type: 'welcome', commands: Object.keys(commandRegistry), uptime: Math.floor(process.uptime()) }));
+    });
+
+    // Make broadcast available globally for log forwarding
+    global._wsBroadcast = broadcast;
+
     server.listen(PORT, '0.0.0.0', () => {
-      LOG.ok(`Command server: http://0.0.0.0:${PORT}`);
+      LOG.ok(`Command server: http://0.0.0.0:${PORT} (HTTP + WebSocket)`);
     });
 
     server.on('error', (err) => {
