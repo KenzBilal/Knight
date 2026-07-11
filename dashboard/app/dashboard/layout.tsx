@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex h-screen">
       <Sidebar orgPlan={org.plan} orgName={org.name} />
-      <DashboardContent orgName={org.name}>{children}</DashboardContent>
+      <DashboardContent>{children}</DashboardContent>
     </div>
   );
 }

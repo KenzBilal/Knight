@@ -32,35 +32,35 @@ export function OnboardingChecklist() {
         {
           id: "profile",
           title: "Complete your profile",
-          description: "Add your company name, website, and services",
+          description: "",
           href: "/dashboard/wizard/profile",
           completed: hasCompany && hasServices,
         },
         {
           id: "calendly",
           title: "Add Calendly link",
-          description: "Let prospects book meetings with you",
+          description: "",
           href: "/dashboard/wizard/calendly",
           completed: hasCalendly,
         },
         {
           id: "domain",
           title: "Verify email domain",
-          description: "Send emails from your business address",
+          description: "",
           href: "/dashboard/wizard/domain",
           completed: hasDomain,
         },
         {
           id: "apikeys",
-          title: "Add API keys (optional)",
-          description: "Use your own AI provider keys",
+          title: "Add API keys",
+          description: "",
           href: "/dashboard/wizard/keys",
           completed: hasKeys,
         },
         {
           id: "discover",
           title: "Run your first discovery",
-          description: "Find businesses that need your services",
+          description: "",
           href: "/dashboard",
           completed: false,
         },
@@ -133,7 +133,6 @@ export function OnboardingChecklist() {
               <p className={`text-sm font-medium ${step.completed ? "text-green-400" : "text-paper-100"}`}>
                 {step.title}
               </p>
-              <p className="text-xs text-paper-400">{step.description}</p>
             </div>
             {!step.completed && (
               <span className="text-xs text-flash-500">→</span>

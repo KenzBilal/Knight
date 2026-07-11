@@ -1,8 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { HelpModal } from "@/components/HelpModal";
-import { EmptyState } from "@/components/EmptyState";
 
 interface Email {
   id: string;
@@ -13,11 +11,7 @@ interface Email {
 }
 
 interface Thread {
-  company: {
-    id: string;
-    name: string;
-    website: string;
-  };
+  company: { id: string; name: string; website: string };
   emails: Email[];
   lastActivity: string;
   hasReply: boolean;
@@ -31,26 +25,13 @@ export default function InboxPage() {
   useEffect(() => {
     fetch("/api/inbox")
       .then(r => r.json())
-      .then(data => {
-        setThreads(data.threads || []);
-        setLoading(false);
-      })
+      .then(data => { setThreads(data.threads || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
   return (
     <div className="p-8">
-      <div className="flex items-center gap-2 mb-6">
-        <h1 className="font-display text-2xl text-paper-100">Inbox</h1>
-        <HelpModal title="Inbox">
-          <p>The Inbox shows all email conversations with your prospects.</p>
-          <p><strong>Features:</strong></p>
-          <p>• View inbound and outbound emails</p>
-          <p>• Click on any thread to see the full conversation</p>
-          <p>• Threads with replies are marked with a green indicator</p>
-          <p>• Sort by most recent activity</p>
-        </HelpModal>
-      </div>
+      <h1 className="font-display text-2xl text-paper-100 mb-6">Inbox</h1>
 
       {loading ? (
         <div className="space-y-2">
@@ -67,18 +48,12 @@ export default function InboxPage() {
           ))}
         </div>
       ) : threads.length === 0 ? (
-        <div className="rounded-xl border border-line bg-ink-900 p-6">
-          <EmptyState
-            icon="📬"
-            title="No email threads yet"
-            description="Replies from prospects will appear here. Run a discovery and send some pitches to get started."
-            action="Start Discovery"
-            href="/dashboard"
-          />
+        <div className="rounded-xl border border-line bg-ink-900 p-12 text-center">
+          <p className="text-4xl mb-3">📬</p>
+          <p className="text-sm text-paper-400">No email threads yet</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Thread List */}
           <div className="md:col-span-1 space-y-2">
             {threads.map((thread) => (
               <button
@@ -101,40 +76,24 @@ export default function InboxPage() {
                       <span className="text-sm font-medium text-paper-100 truncate">
                         {thread.company.name || "Unknown"}
                       </span>
-                      {thread.hasReply && (
-                        <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />
-                      )}
+                      {thread.hasReply && <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0" />}
                     </div>
                     <p className="text-xs text-paper-400 truncate">
                       {thread.emails[thread.emails.length - 1]?.subject || "No subject"}
                     </p>
                   </div>
-                  <span className="text-xs text-paper-400">
-                    {new Date(thread.lastActivity).toLocaleDateString()}
-                  </span>
                 </div>
               </button>
             ))}
           </div>
 
-          {/* Thread Detail */}
           <div className="md:col-span-2">
             {selectedThread ? (
               <div className="rounded-xl border border-line bg-ink-900 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="font-display text-lg text-paper-100">
-                      {selectedThread.company.name}
-                    </h2>
-                    <p className="text-xs text-paper-400">
-                      {selectedThread.company.website || "No website"}
-                    </p>
-                  </div>
-                  <span className="text-xs text-paper-400">
-                    {selectedThread.emails.length} messages
-                  </span>
+                  <h2 className="font-display text-lg text-paper-100">{selectedThread.company.name}</h2>
+                  <span className="text-xs text-paper-400">{selectedThread.emails.length} messages</span>
                 </div>
-
                 <div className="space-y-4 max-h-[600px] overflow-auto">
                   {selectedThread.emails.map((email) => (
                     <div
@@ -164,7 +123,7 @@ export default function InboxPage() {
               </div>
             ) : (
               <div className="rounded-xl border border-line bg-ink-900 p-6 flex items-center justify-center h-64">
-                <p className="text-sm text-paper-400">Select a thread to view conversation</p>
+                <p className="text-sm text-paper-400">Select a thread</p>
               </div>
             )}
           </div>
