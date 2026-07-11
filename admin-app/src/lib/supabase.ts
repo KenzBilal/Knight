@@ -45,9 +45,14 @@ export async function dbQuery(query: {
   match?: Record<string, any>;
 }): Promise<QueryResult<any>> {
   if (!window.electronAPI?.dbQuery) {
-    return { data: null, error: 'electronAPI not available' };
+    return { data: null, error: 'Electron IPC not available — run via Electron, not browser' };
   }
-  return window.electronAPI.dbQuery(query);
+  try {
+    const result = await window.electronAPI.dbQuery(query);
+    return result;
+  } catch (err: any) {
+    return { data: null, error: err.message || String(err) };
+  }
 }
 
 export async function dbSelect<T>(

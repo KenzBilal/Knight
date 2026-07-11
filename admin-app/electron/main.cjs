@@ -2,7 +2,6 @@ const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electr
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
-const { createClient } = require('@supabase/supabase-js');
 
 let mainWindow;
 let tray;
@@ -30,12 +29,23 @@ let _supabase = null;
 function getSupabase() {
   if (_supabase) return _supabase;
   const env = parseEnv(envPath);
-  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) return null;
-  const WebSocket = require('ws');
-  _supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    realtime: { transport: WebSocket }
-  });
-  return _supabase;
+  if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error('[Admin] Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in', envPath);
+    return null;
+  }
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    let WebSocket;
+    try { WebSocket = require('ws'); } catch { WebSocket = undefined; }
+    const opts = {};
+    if (WebSocket) opts.realtime = { transport: WebSocket };
+    _supabase = createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, opts);
+    console.log('[Admin] Supabase client created');
+    return _supabase;
+  } catch (err) {
+    console.error('[Admin] Failed to create Supabase client:', err.message);
+    return null;
+  }
 }
 
 // ─── ENV ─────────────────────────────────────────────────────────────────────
@@ -49,7 +59,7 @@ ipcMain.handle('save-env', (event, envData) => {
 ipcMain.handle('get-users', async () => {
   try {
     const supabase = getSupabase();
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('Supabase not configured — check worker/.env');
     const { data, error } = await supabase.auth.admin.listUsers();
     if (error) throw error;
     return { data: data.users, error: null };
@@ -62,7 +72,7 @@ ipcMain.handle('get-users', async () => {
 ipcMain.handle('db-query', async (event, query) => {
   try {
     const supabase = getSupabase();
-    if (!supabase) throw new Error('Supabase not configured');
+    if (!supabase) throw new Error('Supabase not configured — check worker/.env');
 
     const { table, action, filters, select, order, limit, offset, data, match } = query;
 
@@ -251,7 +261,10 @@ function createTray() {
   tray.on('click', () => mainWindow.show());
 }
 
+console.log('[Admin] Main process starting, registering IPC handlers...');
+
 app.whenReady().then(() => {
+  console.log('[Admin] App ready, creating window...');
   createWindow();
   createTray();
   startWorker();

@@ -11,7 +11,10 @@ const api = {
   saveEnv: (data) => ipcRenderer.invoke('save-env', data),
   getUsers: () => ipcRenderer.invoke('get-users'),
   getLogs: () => ipcRenderer.invoke('get-logs'),
-  dbQuery: (query) => ipcRenderer.invoke('db-query', query),
+  dbQuery: (query) => ipcRenderer.invoke('db-query', query).catch(err => ({
+    data: null,
+    error: err.message || String(err),
+  })),
   workerStatus: () => ipcRenderer.invoke('worker-status'),
   workerRestart: () => ipcRenderer.invoke('worker-restart'),
   workerStop: () => ipcRenderer.invoke('worker-stop'),
