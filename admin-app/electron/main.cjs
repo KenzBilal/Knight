@@ -438,6 +438,26 @@ app.on('window-all-closed', () => {
   LOG.info('All windows closed, app stays in tray');
 });
 
+// ─── COMMAND SERVER ──────────────────────────────────────────────────────────
+const commandRegistry = {};
+
+function registerCommand(name, handler) {
+  commandRegistry[name] = handler;
+}
+
+function readBody(req) {
+  return new Promise((resolve) => {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => resolve(body));
+  });
+}
+
+function json(res, status, data) {
+  res.writeHead(status, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify(data));
+}
+
 // ─── DEBUG LOG FILE ──────────────────────────────────────────────────────────
 const debugLogPath = path.join(__dirname, '../../admin-debug.log');
 const errorLog = [];
@@ -484,68 +504,330 @@ process.on('unhandledRejection', (reason) => {
   writeDebugFile();
 });
 
-// ─── DEBUG HTTP SERVER ───────────────────────────────────────────────────────
+// ─── COMMANDS: DB ────────────────────────────────────────────────────────────
+registerCommand('db', async (args) => {
+  const [action, table, ...rest] = args;
+  if (!action || !table) return { ok: false, error: 'Usage: db <select|count|insert|update|delete> <table> [--where key=val] [--limit N] [--order col:asc|desc]' };
+
+  const supabase = getSupabase();
+  if (!supabase) return { ok: false, error: 'Supabase not configured' };
+
+  // Parse flags
+  const flags = {};
+  const jsonParts = [];
+  for (let i = 0; i < rest.length; i++) {
+    if (rest[i] === '--where' && rest[i + 1]) { flags.where = rest[i + 1]; i++; }
+    else if (rest[i] === '--limit' && rest[i + 1]) { flags.limit = parseInt(rest[i + 1]); i++; }
+    else if (rest[i] === '--order' && rest[i + 1]) { flags.order = rest[i + 1]; i++; }
+    else if (rest[i] === '--select' && rest[i + 1]) { flags.select = rest[i + 1]; i++; }
+    else if (rest[i] === '--count') { flags.count = true; }
+    else { jsonParts.push(rest[i]); }
+  }
+
+  // Parse where clause
+  let filters = {};
+  if (flags.where) {
+    for (const pair of flags.where.split(',')) {
+      const [k, ...vParts] = pair.split('=');
+      filters[k.trim()] = vParts.join('=').trim();
+    }
+  }
+
+  // Parse JSON data for insert/update
+  let jsonData = {};
+  if (jsonParts.length > 0) {
+    try { jsonData = JSON.parse(jsonParts.join(' ')); } catch { return { ok: false, error: 'Invalid JSON: ' + jsonParts.join(' ') }; }
+  }
+
+  const start = Date.now();
+  try {
+    let builder;
+    if (action === 'select') {
+      builder = supabase.from(table).select(flags.select || '*');
+      for (const [k, v] of Object.entries(filters)) builder = builder.eq(k, v);
+      if (flags.order) { const [col, dir] = flags.order.split(':'); builder = builder.order(col, { ascending: dir !== 'desc' }); }
+      if (flags.limit) builder = builder.limit(flags.limit);
+    } else if (action === 'count') {
+      builder = supabase.from(table).select('*', { count: 'exact', head: true });
+      for (const [k, v] of Object.entries(filters)) builder = builder.eq(k, v);
+    } else if (action === 'insert') {
+      builder = supabase.from(table).insert(jsonData).select();
+    } else if (action === 'update') {
+      builder = supabase.from(table).update(jsonData);
+      for (const [k, v] of Object.entries(filters)) builder = builder.eq(k, v);
+    } else if (action === 'delete') {
+      builder = supabase.from(table).delete();
+      for (const [k, v] of Object.entries(filters)) builder = builder.eq(k, v);
+    } else {
+      return { ok: false, error: 'Unknown db action: ' + action };
+    }
+
+    const { data, error, count } = await builder;
+    if (error) return { ok: false, error: error.message, time: Date.now() - start };
+
+    if (action === 'count') return { ok: true, count, time: Date.now() - start };
+    const rows = Array.isArray(data) ? data : [];
+    if (action === 'select') return { ok: true, count: rows.length, data: rows, time: Date.now() - start };
+    return { ok: true, data, time: Date.now() - start };
+  } catch (err) {
+    return { ok: false, error: err.message, time: Date.now() - start };
+  }
+});
+
+// ─── COMMANDS: WORKER ────────────────────────────────────────────────────────
+registerCommand('worker', async (args) => {
+  const [action] = args;
+  if (action === 'status') {
+    const running = workerProcess && workerProcess.exitCode === null;
+    return {
+      ok: true,
+      running,
+      pid: workerProcess?.pid || null,
+      uptime: running ? Math.floor(process.uptime()) : 0,
+      memory: running ? process.memoryUsage() : null,
+    };
+  }
+  if (action === 'restart') {
+    if (workerProcess) workerProcess.kill('SIGTERM');
+    startWorker();
+    return { ok: true, pid: workerProcess?.pid };
+  }
+  if (action === 'stop') {
+    if (workerProcess) { workerProcess.kill('SIGTERM'); return { ok: true }; }
+    return { ok: false, error: 'No worker running' };
+  }
+  if (action === 'start') {
+    if (workerProcess && workerProcess.exitCode === null) return { ok: false, error: 'Worker already running' };
+    startWorker();
+    return { ok: true, pid: workerProcess?.pid };
+  }
+  return { ok: false, error: 'Usage: worker <status|start|stop|restart>' };
+});
+
+// ─── COMMANDS: USERS ─────────────────────────────────────────────────────────
+registerCommand('users', async (args) => {
+  const [action] = args;
+  if (action !== 'list') return { ok: false, error: 'Usage: users list' };
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { ok: false, error: 'Supabase not configured' };
+    const { data, error } = await supabase.auth.admin.listUsers();
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, count: data.users.length, data: data.users.map(u => ({ id: u.id, email: u.email, created: u.created_at, last_sign_in: u.last_sign_in_at })) };
+  } catch (err) { return { ok: false, error: err.message }; }
+});
+
+// ─── COMMANDS: ENV ───────────────────────────────────────────────────────────
+registerCommand('env', async (args) => {
+  const [action, ...rest] = args;
+  if (action === 'get') {
+    const env = parseEnv(envPath);
+    const keys = rest.length > 0 ? rest : Object.keys(env);
+    const result = {};
+    for (const k of keys) result[k] = env[k] || '(not set)';
+    return { ok: true, data: result };
+  }
+  if (action === 'set') {
+    const env = parseEnv(envPath);
+    for (const pair of rest) {
+      const [k, ...vParts] = pair.split('=');
+      if (k) env[k.trim()] = vParts.join('=').trim();
+    }
+    writeEnv(envPath, env);
+    resetSupabase();
+    return { ok: true };
+  }
+  if (action === 'list') {
+    return { ok: true, data: Object.keys(parseEnv(envPath)) };
+  }
+  return { ok: false, error: 'Usage: env <get|set|list> [key] [value]' };
+});
+
+// ─── COMMANDS: ERRORS ────────────────────────────────────────────────────────
+registerCommand('errors', async (args) => {
+  const limit = parseInt(args[0]) || 20;
+  return { ok: true, count: errorLog.length, data: errorLog.slice(-limit) };
+});
+
+// ─── COMMANDS: LOGS ──────────────────────────────────────────────────────────
+registerCommand('logs', async (args) => {
+  const [action, ...rest] = args;
+  if (action === 'tail') {
+    const n = parseInt(rest[0]) || 50;
+    return { ok: true, count: logCache.length, data: logCache.slice(-n) };
+  }
+  if (action === 'clear') {
+    logCache.length = 0;
+    return { ok: true };
+  }
+  return { ok: true, count: logCache.length, data: logCache.slice(-50) };
+});
+
+// ─── COMMANDS: APP STATE ─────────────────────────────────────────────────────
+registerCommand('state', async () => {
+  return {
+    ok: true,
+    data: {
+      window: mainWindow ? !mainWindow.isDestroyed() : false,
+      workerRunning: workerProcess ? workerProcess.exitCode === null : false,
+      workerPid: workerProcess?.pid || null,
+      supabase: !!_supabase,
+      uptime: Math.floor(process.uptime()),
+      memory: process.memoryUsage(),
+      logCount: logCache.length,
+      errorCount: errorLog.length,
+    }
+  };
+});
+
+// ─── COMMANDS: APP CONTROL ───────────────────────────────────────────────────
+registerCommand('app', async (args) => {
+  const [action] = args;
+  if (action === 'quit') { isQuitting = true; app.quit(); return { ok: true }; }
+  if (action === 'show') { mainWindow?.show(); return { ok: true }; }
+  if (action === 'hide') { mainWindow?.hide(); return { ok: true }; }
+  return { ok: false, error: 'Usage: app <quit|show|hide>' };
+});
+
+// ─── COMMANDS: SQL (raw) ────────────────────────────────────────────────────
+registerCommand('sql', async (args) => {
+  const query = args.join(' ');
+  if (!query) return { ok: false, error: 'Usage: sql <raw SQL>' };
+  try {
+    const supabase = getSupabase();
+    if (!supabase) return { ok: false, error: 'Supabase not configured' };
+    const { data, error } = await supabase.rpc('query', { query_text: query }).single().catch(() => {
+      return supabase.from(query.split(' ')[2] || '_').select('*').limit(1);
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true, data };
+  } catch (err) { return { ok: false, error: err.message }; }
+});
+
+// ─── COMMANDS: IPC (raw) ────────────────────────────────────────────────────
+registerCommand('ipc', async (args) => {
+  const [channel, ...rest] = args;
+  if (!channel) return { ok: false, error: 'Usage: ipc <channel> [json_args]' };
+  try {
+    let payload = {};
+    if (rest.length > 0) payload = JSON.parse(rest.join(' '));
+    const result = await new Promise((resolve, reject) => {
+      const event = { sender: mainWindow?.webContents };
+      ipcMain.emit(channel, event, payload);
+      setTimeout(() => resolve({ ok: true }), 100);
+    });
+    return result;
+  } catch (err) { return { ok: false, error: err.message }; }
+});
+
+// ─── COMMAND DISPATCHER ──────────────────────────────────────────────────────
+async function executeCommand(rawCmd) {
+  const parts = rawCmd.trim().split(/\s+/);
+  const cmd = parts[0];
+  const args = parts.slice(1);
+
+  LOG.ipc('cmd:', rawCmd);
+
+  if (!cmd) return { ok: false, error: 'No command provided. Commands: ' + Object.keys(commandRegistry).join(', ') };
+  if (!commandRegistry[cmd]) return { ok: false, error: `Unknown command: ${cmd}. Available: ${Object.keys(commandRegistry).join(', ')}` };
+
+  try {
+    return await commandRegistry[cmd](args);
+  } catch (err) {
+    return { ok: false, error: err.message };
+  }
+}
+
+// ─── HTTP SERVER ─────────────────────────────────────────────────────────────
 function startDebugServer() {
   try {
     const http = require('http');
     const PORT = 19822;
 
-    const server = http.createServer((req, res) => {
+    const server = http.createServer(async (req, res) => {
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-      if (req.url === '/state') {
-        res.end(JSON.stringify({
-          window: mainWindow ? !mainWindow.isDestroyed() : false,
-          worker: workerProcess ? { pid: workerProcess.pid, running: workerProcess.exitCode === null } : null,
-          supabase: !!_supabase,
-          uptime: Math.floor(process.uptime()),
-          memory: process.memoryUsage(),
-          logCount: logCache.length,
-          errorCount: errorLog.length,
-        }, null, 2));
-      } else if (req.url === '/logs') {
-        res.end(JSON.stringify({ logs: logCache.slice(-200) }, null, 2));
-      } else if (req.url === '/errors') {
-        res.end(JSON.stringify({ errors: errorLog.slice(-50) }, null, 2));
-      } else if (req.url === '/dump') {
-        writeDebugFile();
-        res.end(JSON.stringify({ ok: true, path: debugLogPath }));
-      } else if (req.url === '/screenshot') {
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.webContents.capturePage().then(image => {
-            res.setHeader('Content-Type', 'image/png');
-            res.end(image.toPNG());
-          }).catch(err => {
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: err.message }));
-          });
-        } else {
-          res.statusCode = 404;
-          res.end(JSON.stringify({ error: 'No window' }));
+      if (req.method === 'OPTIONS') { res.writeHead(200); return res.end(); }
+
+      // GET endpoints
+      if (req.method === 'GET') {
+        if (req.url === '/screenshot') {
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            try {
+              const image = await mainWindow.webContents.capturePage();
+              res.writeHead(200, { 'Content-Type': 'image/png' });
+              return res.end(image.toPNG());
+            } catch (err) { return json(res, 500, { ok: false, error: err.message }); }
+          }
+          return json(res, 404, { ok: false, error: 'No window' });
         }
-      } else {
-        res.end(JSON.stringify({
-          endpoints: ['/state', '/logs', '/errors', '/dump', '/screenshot'],
-          usage: 'GET http://localhost:19822/state',
-        }));
+        if (req.url === '/errors') return json(res, 200, { ok: true, count: errorLog.length, data: errorLog.slice(-50) });
+        if (req.url === '/logs') return json(res, 200, { ok: true, count: logCache.length, data: logCache.slice(-200) });
+        if (req.url === '/commands') return json(res, 200, { ok: true, commands: Object.keys(commandRegistry) });
+        if (req.url === '/state') {
+          return json(res, 200, {
+            ok: true,
+            data: {
+              window: mainWindow ? !mainWindow.isDestroyed() : false,
+              workerRunning: workerProcess ? workerProcess.exitCode === null : false,
+              workerPid: workerProcess?.pid || null,
+              supabase: !!_supabase,
+              uptime: Math.floor(process.uptime()),
+              logCount: logCache.length,
+              errorCount: errorLog.length,
+              commands: Object.keys(commandRegistry),
+            }
+          });
+        }
+        // GET /cmd?cmd=db+select+plans
+        if (req.url.startsWith('/cmd')) {
+          const url = new URL(req.url, `http://localhost:${PORT}`);
+          const cmd = url.searchParams.get('cmd');
+          if (!cmd) return json(res, 400, { ok: false, error: 'Missing ?cmd= parameter' });
+          const result = await executeCommand(cmd);
+          return json(res, result.ok ? 200 : 400, result);
+        }
+        return json(res, 200, {
+          endpoints: {
+            GET: ['/state', '/errors', '/logs', '/commands', '/screenshot', '/cmd?cmd=...'],
+            POST: ['/cmd'],
+          },
+          usage: 'POST /cmd with body: {"cmd":"db select plans"}',
+        });
       }
+
+      // POST /cmd
+      if (req.method === 'POST' && req.url === '/cmd') {
+        const body = await readBody(req);
+        try {
+          const { cmd } = JSON.parse(body);
+          if (!cmd) return json(res, 400, { ok: false, error: 'Missing "cmd" field' });
+          const result = await executeCommand(cmd);
+          return json(res, result.ok ? 200 : 400, result);
+        } catch (err) {
+          return json(res, 400, { ok: false, error: 'Invalid JSON body: ' + err.message });
+        }
+      }
+
+      json(res, 404, { ok: false, error: 'Not found' });
     });
 
-    server.listen(PORT, '127.0.0.1', () => {
-      LOG.ok(`Debug server: http://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+      LOG.ok(`Command server: http://0.0.0.0:${PORT}`);
     });
 
     server.on('error', (err) => {
       if (err.code === 'EADDRINUSE') {
-        LOG.warn(`Debug port ${PORT} in use, trying ${PORT + 1}`);
-        server.listen(PORT + 1, '127.0.0.1');
+        LOG.warn(`Port ${PORT} in use, trying ${PORT + 1}`);
+        server.listen(PORT + 1, '0.0.0.0');
       } else {
-        LOG.error('Debug server error:', err.message);
+        LOG.error('Command server error:', err.message);
       }
     });
   } catch (err) {
-    LOG.error('Failed to start debug server:', err.message);
+    LOG.error('Failed to start command server:', err.message);
   }
 }
 
