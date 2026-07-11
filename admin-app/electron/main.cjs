@@ -420,6 +420,7 @@ app.whenReady().then(() => {
   createTray();
   startWorker();
   startDebugServer();
+  startAutoTunnel();
   writeDebugFile();
 
   app.on('activate', () => {
@@ -868,3 +869,41 @@ function startDebugServer() {
 }
 
 LOG.info('IPC handlers registered, waiting for app ready...');
+
+// ─── AUTO TUNNEL ────────────────────────────────────────────────────────────
+function startAutoTunnel() {
+  try {
+    const { execFile } = require('child_process');
+    LOG.info('Starting auto-tunnel (knight-admin-kenz.loca.lt)...');
+
+    const tunnel = execFile('npx', ['localtunnel', '--port', '19822', '--subdomain', 'knight-admin-kenz'], {
+      timeout: 30000,
+    }, (err, stdout, stderr) => {
+      if (err && err.killed) LOG.warn('Auto-tunnel process ended');
+      if (stderr) LOG.warn('Tunnel stderr:', stderr.trim());
+    });
+
+    tunnel.stdout.on('data', (data) => {
+      const msg = data.toString().trim();
+      if (msg) {
+        LOG.ok('Tunnel:', msg);
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+          try { mainWindow.webContents.send('worker-log', `[TUNNEL] ${msg}`); } catch {}
+        }
+      }
+    });
+
+    tunnel.stderr.on('data', (data) => {
+      const msg = data.toString().trim();
+      if (msg && !msg.includes('WARN')) LOG.warn('Tunnel:', msg);
+    });
+
+    tunnel.on('close', (code) => {
+      LOG.warn('Auto-tunnel exited with code', code);
+    });
+
+    LOG.ok('Auto-tunnel started');
+  } catch (err) {
+    LOG.warn('Auto-tunnel failed (non-critical):', err.message);
+  }
+}
