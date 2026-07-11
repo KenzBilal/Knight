@@ -74,8 +74,6 @@ export async function incrementUsage(orgId: string, action: ActionType): Promise
   const periodStart = new Date();
   periodStart.setDate(1);
   periodStart.setHours(0, 0, 0, 0);
-  const periodStartStr = periodStart.toISOString().split("T")[0];
-
   // Use RPC to atomically increment usage
   await supabase.rpc("increment_usage", {
     p_org_id: orgId,

@@ -95,7 +95,7 @@ export default function TelegramWizardPage() {
 
       {step === 1 && mode === "userbot" && (
         <WizardCard title="Phone Number" description="Enter your Telegram phone" icon={<span className="text-2xl">📞</span>}>
-          <form onSubmit={e => { e.preventDefault(); username && setStep(2); }} className="space-y-4">
+          <form onSubmit={e => { e.preventDefault(); if (username) setStep(2); }} className="space-y-4">
             <div>
               <label className="block text-sm text-neutral-400 mb-1.5">Phone Number</label>
               <input type="tel" required value={phone} onChange={e => setPhone(e.target.value)} placeholder="+91 98765 43210"
@@ -116,7 +116,7 @@ export default function TelegramWizardPage() {
 
       {step === 1 && mode === "normal" && (
         <WizardCard title="Create Bot" description="Get token from @BotFather" icon={<span className="text-2xl">🤖</span>}>
-          <form onSubmit={e => { e.preventDefault(); botToken && setStep(2); }} className="space-y-4">
+          <form onSubmit={e => { e.preventDefault(); if (botToken) setStep(2); }} className="space-y-4">
             <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4">
               <p className="text-xs text-neutral-500 mb-2">How to create:</p>
               <ol className="text-xs text-neutral-400 space-y-1 list-decimal list-inside">

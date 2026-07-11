@@ -58,8 +58,6 @@ export default function BillingPage() {
   const emailsUsed = usage?.usage.emails || 0;
   const leadsLimit = usage?.limits.leads || 50;
   const emailsLimit = usage?.limits.emails || 50;
-  const unlimited = leadsLimit === -1;
-
   return (
     <div className="p-8 max-w-5xl">
       <h1 className="font-display text-2xl text-paper-100 mb-6">Billing</h1>

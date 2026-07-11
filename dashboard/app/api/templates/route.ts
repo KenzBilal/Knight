@@ -138,7 +138,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ templates, defaults: false });
-  } catch (error: any) {
+  } catch (_error) {
     return NextResponse.json({ templates: DEFAULT_TEMPLATES, defaults: true });
   }
 }
@@ -191,7 +191,7 @@ export async function POST(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ template });
-  } catch (error: any) {
+  } catch (_error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -238,7 +238,7 @@ export async function PUT(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ template });
-  } catch (error: any) {
+  } catch (_error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -272,7 +272,7 @@ export async function DELETE(req: Request) {
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
+  } catch (_error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

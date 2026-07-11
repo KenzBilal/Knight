@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
-import { getCookie } from "@/lib/utils";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 

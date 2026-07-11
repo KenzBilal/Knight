@@ -81,7 +81,7 @@ export default function ProfileWizardPage() {
           <div className="space-y-4">
             <p className="text-sm text-neutral-400">Knight uses your company info to generate personalized pitches.</p>
             <div className="rounded-lg bg-neutral-950 border border-neutral-800 p-4 space-y-2">
-              <p className="text-xs text-neutral-500 font-medium">We'll ask for:</p>
+              <p className="text-xs text-neutral-500 font-medium">We&apos;ll ask for:</p>
               <div className="text-xs text-neutral-400 space-y-1">
                 <p>1. Company name & website</p>
                 <p>2. Services you offer</p>
