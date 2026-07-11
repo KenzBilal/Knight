@@ -34,7 +34,7 @@ export function Sidebar({ orgPlan = "free", orgName = "Knight" }: SidebarProps) 
   }
 
   return (
-    <aside className="w-64 h-screen border-r border-line bg-ink-950 flex flex-col shrink-0">
+    <aside className="w-64 h-screen sticky top-0 border-r border-line bg-ink-950 flex flex-col shrink-0">
       <div className="px-5 h-16 flex items-center border-b border-line">
         {isAgency ? (
           <Link href="/dashboard" className="font-display text-lg text-paper-100">

@@ -40,13 +40,13 @@ export function WizardLayout({
   const isLastStep = currentStep === steps.length - 1;
 
   return (
-    <div className="min-h-screen bg-ink-950">
-      {/* Top bar */}
-      <div className="border-b border-line bg-ink-900/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div className="p-8">
+      <div className="max-w-3xl mx-auto">
+        {/* Back link + step counter */}
+        <div className="flex items-center justify-between mb-6">
           <Link
             href={backHref}
-            className="text-sm text-paper-400 hover:text-paper-200 transition-colors flex items-center gap-1.5"
+            className="text-sm text-paper-400 hover:text-paper-200 transition-colors inline-flex items-center gap-1.5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -57,9 +57,6 @@ export function WizardLayout({
             Step {currentStep + 1} of {steps.length}
           </span>
         </div>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-6 py-8">
         {/* Progress bar */}
         <FadeIn>
           <div className="mb-8">

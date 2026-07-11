@@ -14,7 +14,6 @@ const STEPS = [
 export default function KeysWizardPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [useCustomKeys, setUseCustomKeys] = useState(false);
   const [cohereKey, setCohereKey] = useState("");
   const [geminiKey, setGeminiKey] = useState("");
   const [openrouterKey, setOpenrouterKey] = useState("");
@@ -24,11 +23,6 @@ export default function KeysWizardPage() {
   useEffect(() => {
     fetch("/api/settings/keys")
       .then(r => r.json())
-      .then(data => {
-        if (data.hasKeys) {
-          setUseCustomKeys(true);
-        }
-      })
       .catch(() => {});
   }, []);
 

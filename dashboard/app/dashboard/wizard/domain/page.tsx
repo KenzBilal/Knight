@@ -81,7 +81,7 @@ export default function DomainWizardPage() {
       toast.success("Domain verified!");
       setCompleted(true);
       setStep(4);
-    } catch (err: any) {
+    } catch {
       toast.error("Verification failed. Check DNS records.");
     } finally {
       setLoading(false);

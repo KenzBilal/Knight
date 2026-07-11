@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { getUser, getOrg } from "@/lib/auth";
-import { OnboardingChecklist } from "@/components/OnboardingChecklist";
+import { DashboardContent } from "@/components/DashboardContent";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getUser();
@@ -11,12 +11,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!org) redirect("/auth/signup");
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-screen">
       <Sidebar orgPlan={org.plan} orgName={org.name} />
-      <main className="flex-1 overflow-auto">
-        <OnboardingChecklist />
-        {children}
-      </main>
+      <DashboardContent orgName={org.name}>{children}</DashboardContent>
     </div>
   );
 }
