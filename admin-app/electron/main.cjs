@@ -297,9 +297,11 @@ function startWorker() {
       const logEntry = `[WORKER] ${msg}`;
       logCache.push(logEntry);
       if (logCache.length > MAX_LOG_CACHE) logCache.shift();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('worker-log', msg);
-      }
+      try {
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+          mainWindow.webContents.send('worker-log', msg);
+        }
+      } catch {}
     });
 
     workerProcess.stderr.on('data', (data) => {
@@ -308,18 +310,22 @@ function startWorker() {
       const logEntry = `[WORKER:ERR] ${msg}`;
       logCache.push(logEntry);
       if (logCache.length > MAX_LOG_CACHE) logCache.shift();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('worker-error', msg);
-      }
+      try {
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+          mainWindow.webContents.send('worker-error', msg);
+        }
+      } catch {}
     });
 
     workerProcess.on('close', (code) => {
       const msg = `Worker exited with code ${code}`;
       LOG.warn(msg);
       logCache.push(`[WORKER:EXIT] ${msg}`);
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('worker-status', msg);
-      }
+      try {
+        if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+          mainWindow.webContents.send('worker-status', msg);
+        }
+      } catch {}
     });
 
     workerProcess.on('error', (err) => {
@@ -429,8 +435,8 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   LOG.info('App quitting...');
   isQuitting = true;
-  writeDebugFile();
   stopWorker();
+  writeDebugFile();
 });
 
 app.on('window-all-closed', () => {
