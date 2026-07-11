@@ -7,19 +7,19 @@ export default function TermsPage() {
       <Navbar />
 
       <div className="mx-auto max-w-4xl px-6 py-24">
-        <h1 className="font-display text-4xl md:text-5xl text-paper-100 mb-4">Terms of Service</h1>
-        <p className="text-sm text-neutral-500 mb-12">Last updated: July 10, 2026</p>
+        <h1 className="font-display text-4xl md:text-5xl text-[#111] mb-4">Terms of Service</h1>
+        <p className="text-sm text-[#888] mb-12">Last updated: July 10, 2026</p>
 
-        <div className="space-y-8 text-neutral-400 leading-relaxed">
+        <div className="space-y-8 text-[#666] leading-relaxed">
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">1. Acceptance</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">1. Acceptance</h2>
             <p>
               By using Knight, you agree to these Terms. If you don&apos;t agree, don&apos;t use the service.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">2. Service</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">2. Service</h2>
             <p>
               Knight is an AI-powered B2B sales automation platform that finds clients through website auditing,
               personalized outreach, and automated communication via email and Telegram.
@@ -27,7 +27,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">3. Account</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">3. Account</h2>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>You must be 18+ to use Knight</li>
               <li>Provide accurate registration information</li>
@@ -37,7 +37,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">4. Acceptable Use</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">4. Acceptable Use</h2>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>No unlawful use</li>
               <li>No spam or unsolicited communications</li>
@@ -48,7 +48,7 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">5. Payment</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">5. Payment</h2>
             <ul className="list-disc list-inside space-y-2 ml-4">
               <li>Free and paid plans available</li>
               <li>Fees are non-refundable except per our Refund Policy</li>
@@ -58,24 +58,24 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">6. Your Data</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">6. Your Data</h2>
             <p>
               You own your data. We won&apos;t sell it. You grant us a limited license to process it as needed to provide the service.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">7. Liability</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">7. Liability</h2>
             <p>
               To the maximum extent permitted by law, Knight is not liable for indirect, incidental, or consequential damages.
             </p>
           </section>
 
           <section>
-            <h2 className="font-display text-2xl text-paper-100 mb-4">8. Contact</h2>
+            <h2 className="font-display text-2xl text-[#111] mb-4">8. Contact</h2>
             <p>
               Questions? Contact us at{" "}
-              <a href="mailto:legal@knight.com" className="text-paper-100 hover:underline">legal@knight.com</a>.
+              <a href="mailto:legal@knight.com" className="text-[#111] hover:underline">legal@knight.com</a>.
             </p>
           </section>
         </div>
