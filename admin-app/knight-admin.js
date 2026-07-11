@@ -2,7 +2,7 @@
 
 const http = require('http');
 
-const SERVER = process.env.KNIGHT_SERVER || 'http://localhost:19822';
+const SERVER = process.env.KNIGHT_SERVER || 'https://knight-admin-kenz.loca.lt';
 
 function usage() {
   console.log(`
