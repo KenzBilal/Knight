@@ -218,8 +218,20 @@ ipcMain.handle('worker-status', () => {
     pid: workerProcess?.pid || null,
     uptime: running ? process.uptime() : 0,
     isRunning: running,
-    memory: running ? process.memoryUsage() : null,
+    memory: null,
   };
+
+  // Get actual worker process memory from /proc on Linux
+  if (running && workerProcess?.pid) {
+    try {
+      const fs = require('fs');
+      const stat = fs.readFileSync(`/proc/${workerProcess.pid}/status`, 'utf8');
+      const rss = stat.match(/VmRSS:\s+(\d+)\s+kB/);
+      const vsz = stat.match(/VmSize:\s+(\d+)\s+kB/);
+      if (rss) status.memory = { rss: parseInt(rss[1]) * 1024, heapUsed: parseInt(vsz ? vsz[1] : rss[1]) * 1024 };
+    } catch {}
+  }
+
   LOG.ipc('worker-status', running ? 'running' : 'stopped', 'pid:', status.pid);
   return status;
 });
@@ -671,15 +683,24 @@ registerCommand('logs', async (args) => {
 
 // ─── COMMANDS: APP STATE ─────────────────────────────────────────────────────
 registerCommand('state', async () => {
+  const workerRunning = workerProcess ? workerProcess.exitCode === null : false;
+  let workerMemory = null;
+  if (workerRunning && workerProcess?.pid) {
+    try {
+      const stat = fs.readFileSync(`/proc/${workerProcess.pid}/status`, 'utf8');
+      const rss = stat.match(/VmRSS:\s+(\d+)\s+kB/);
+      if (rss) workerMemory = { rss: parseInt(rss[1]) * 1024 };
+    } catch {}
+  }
   return {
     ok: true,
     data: {
       window: mainWindow ? !mainWindow.isDestroyed() : false,
-      workerRunning: workerProcess ? workerProcess.exitCode === null : false,
+      workerRunning,
       workerPid: workerProcess?.pid || null,
+      workerMemory,
       supabase: !!_supabase,
       uptime: Math.floor(process.uptime()),
-      memory: process.memoryUsage(),
       logCount: logCache.length,
       errorCount: errorLog.length,
     }
