@@ -14,12 +14,17 @@ export function EnvironmentModule() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showValues, setShowValues] = useState<Record<string, boolean>>({});
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      if (window.electronAPI?.getEnv) {
-        const data = await window.electronAPI.getEnv();
-        setEnvData(data || {});
+      try {
+        if (window.electronAPI?.getEnv) {
+          const data = await window.electronAPI.getEnv();
+          setEnvData(data || {});
+        }
+      } catch {
+        // Env unavailable
       }
       setLoading(false);
     }
@@ -28,25 +33,44 @@ export function EnvironmentModule() {
 
   const handleSave = async () => {
     setSaving(true);
-    await window.electronAPI?.saveEnv(envData);
-    setTimeout(() => setSaving(false), 500);
+    setSaveMsg(null);
+    try {
+      await window.electronAPI?.saveEnv(envData);
+      setSaveMsg('Saved');
+      setTimeout(() => setSaveMsg(null), 2000);
+    } catch {
+      setSaveMsg('Error saving');
+    }
+    setSaving(false);
   };
 
   const toggleShow = (key: string) => setShowValues(p => ({ ...p, [key]: !p[key] }));
 
-  if (loading) return <div className="p-8 text-[#555] text-[13px]">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center text-[#555]">
+        <div className="w-5 h-5 border-2 border-[#333] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-[12px]">Loading environment...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <PageHeader title="Environment" subtitle="Worker configuration">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[#e0e0e0] text-[#121212] text-[12px] font-medium hover:bg-[#fff] transition-colors disabled:opacity-50"
-        >
-          <Save size={12} />
-          {saving ? 'Saving...' : 'Save'}
-        </button>
+        <div className="flex items-center gap-3">
+          {saveMsg && (
+            <span className={`text-[11px] ${saveMsg === 'Saved' ? 'text-green-400' : 'text-red-400'}`}>{saveMsg}</span>
+          )}
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-1.5 px-4 py-1.5 rounded bg-[#e0e0e0] text-[#121212] text-[12px] font-medium hover:bg-[#fff] transition-colors disabled:opacity-50"
+          >
+            <Save size={12} />
+            {saving ? 'Saving...' : 'Save'}
+          </button>
+        </div>
       </PageHeader>
 
       <div className="flex-1 overflow-auto p-6">

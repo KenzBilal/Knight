@@ -14,15 +14,19 @@ export function ActivityModule() {
 
   async function load() {
     setLoading(true);
-    const filters: Record<string, any> = {};
-    if (levelFilter !== 'all') filters.level = levelFilter;
+    try {
+      const filters: Record<string, any> = {};
+      if (levelFilter !== 'all') filters.level = levelFilter;
 
-    const res = await dbSelect('activity_log', {
-      filters,
-      order: { column: 'created_at', ascending: false },
-      limit: 200,
-    });
-    setLogs(res.data || []);
+      const res = await dbSelect('activity_log', {
+        filters,
+        order: { column: 'created_at', ascending: false },
+        limit: 200,
+      });
+      setLogs(res.data || []);
+    } catch {
+      setLogs([]);
+    }
     setLoading(false);
   }
 
@@ -64,7 +68,8 @@ export function ActivityModule() {
             { key: 'created_at', label: 'Time', render: (r: any) => new Date(r.created_at).toLocaleString() },
           ]}
           data={filtered}
-          emptyMessage={loading ? 'Loading...' : 'No activity found'}
+          loading={loading}
+          emptyMessage="No activity found"
         />
       </div>
     </div>

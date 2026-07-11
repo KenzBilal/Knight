@@ -14,6 +14,8 @@
     font-family: var(--font-sans);
     overflow: hidden;
     user-select: none;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -32,25 +34,36 @@
 }
 
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #222;
+  background: #2a2a2a;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #333;
+  background: #3a3a3a;
 }
 
 input, textarea, select {
   user-select: text;
+  font-size: 13px;
 }
 
 input[type="password"] {
   font-family: monospace;
   letter-spacing: 2px;
+}
+
+/* Smooth transitions for tab switching */
+main > div {
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
 }

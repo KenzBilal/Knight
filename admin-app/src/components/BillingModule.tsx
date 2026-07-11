@@ -12,11 +12,15 @@ export function BillingModule() {
 
   async function load() {
     setLoading(true);
-    const res = await dbSelect('orgs', {
-      order: { column: 'created_at', ascending: false },
-      limit: 500,
-    });
-    setOrgs(res.data || []);
+    try {
+      const res = await dbSelect('orgs', {
+        order: { column: 'created_at', ascending: false },
+        limit: 500,
+      });
+      setOrgs(res.data || []);
+    } catch {
+      setOrgs([]);
+    }
     setLoading(false);
   }
 
@@ -32,7 +36,6 @@ export function BillingModule() {
     switch (o.plan) {
       case 'starter': return sum + 49;
       case 'pro': return sum + 149;
-      case 'agency': return sum + 299;
       default: return sum;
     }
   }, 0);
@@ -55,8 +58,8 @@ export function BillingModule() {
 
         <div>
           <h3 className="text-[11px] uppercase tracking-wider text-[#555] font-medium mb-3">Plan Distribution</h3>
-          <div className="grid grid-cols-4 gap-3">
-            {['free', 'starter', 'pro', 'agency'].map(plan => (
+          <div className="grid grid-cols-3 gap-3">
+            {['free', 'starter', 'pro'].map(plan => (
               <div key={plan} className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg p-4 text-center">
                 <Badge variant={planBadgeColor(plan)}>{plan}</Badge>
                 <div className="text-xl font-display text-[#e0e0e0] mt-2">{planCounts[plan] || 0}</div>
@@ -76,6 +79,7 @@ export function BillingModule() {
               { key: 'created_at', label: 'Since', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
             ]}
             data={orgs}
+            loading={loading}
             emptyMessage="No organizations"
           />
         </div>

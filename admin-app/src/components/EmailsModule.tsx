@@ -13,11 +13,15 @@ export function EmailsModule() {
 
   async function load() {
     setLoading(true);
-    const res = await dbSelect('emails', {
-      order: { column: 'created_at', ascending: false },
-      limit: 200,
-    });
-    setEmails(res.data || []);
+    try {
+      const res = await dbSelect('emails', {
+        order: { column: 'created_at', ascending: false },
+        limit: 200,
+      });
+      setEmails(res.data || []);
+    } catch {
+      setEmails([]);
+    }
     setLoading(false);
   }
 
@@ -45,7 +49,8 @@ export function EmailsModule() {
             { key: 'created_at', label: 'Sent', render: (r: any) => new Date(r.created_at).toLocaleString() },
           ]}
           data={filtered}
-          emptyMessage={loading ? 'Loading...' : 'No emails found'}
+          loading={loading}
+          emptyMessage="No emails found"
         />
       </div>
     </div>

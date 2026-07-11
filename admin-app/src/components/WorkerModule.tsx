@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Cpu, Play, Square, RotateCcw } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Cpu, Play, RotateCcw, Square } from 'lucide-react';
 import { PageHeader } from './PageHeader';
 import { StatCard } from './StatCard';
 import { LogViewer } from './LogViewer';
@@ -8,16 +8,21 @@ export function WorkerModule() {
   const [status, setStatus] = useState<any>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const logListeners = useRef<((msg: string) => void)[]>([]);
 
   async function loadStatus() {
     setLoading(true);
-    if (window.electronAPI?.workerStatus) {
-      const s = await window.electronAPI.workerStatus();
-      setStatus(s);
-    }
-    if (window.electronAPI?.getLogs) {
-      const cached = await window.electronAPI.getLogs();
-      if (cached) setLogs(cached.slice(-100));
+    try {
+      if (window.electronAPI?.workerStatus) {
+        const s = await window.electronAPI.workerStatus();
+        setStatus(s);
+      }
+      if (window.electronAPI?.getLogs) {
+        const cached = await window.electronAPI.getLogs();
+        if (cached) setLogs(cached.slice(-100));
+      }
+    } catch {
+      // Worker unavailable
     }
     setLoading(false);
   }
@@ -30,22 +35,43 @@ export function WorkerModule() {
 
   useEffect(() => {
     const api = window.electronAPI;
-    api?.onWorkerLog?.((msg: string) => setLogs(p => [...p, msg].slice(-200)));
-    api?.onWorkerError?.((msg: string) => setLogs(p => [...p, `[ERROR] ${msg}`].slice(-200)));
-    api?.onWorkerStatus?.((msg: string) => setLogs(p => [...p, `[STATUS] ${msg}`].slice(-200)));
+    const onLog = (msg: string) => setLogs(p => [...p, msg].slice(-200));
+    const onError = (msg: string) => setLogs(p => [...p, `[ERROR] ${msg}`].slice(-200));
+    const onStatus = (msg: string) => setLogs(p => [...p, `[STATUS] ${msg}`].slice(-200));
+
+    api?.onWorkerLog?.(onLog);
+    api?.onWorkerError?.(onError);
+    api?.onWorkerStatus?.(onStatus);
+
+    logListeners.current = [onLog, onError, onStatus];
+
+    return () => {
+      // Clear listeners by setting new empty functions
+      logListeners.current = [];
+    };
   }, []);
 
   const handleRestart = async () => {
-    await window.electronAPI?.workerRestart();
-    setTimeout(loadStatus, 1000);
+    try {
+      await window.electronAPI?.workerRestart();
+      setTimeout(loadStatus, 1000);
+    } catch {
+      // Restart failed
+    }
   };
 
   const handleStop = async () => {
-    await window.electronAPI?.workerStop();
-    setTimeout(loadStatus, 1000);
+    try {
+      await window.electronAPI?.workerStop();
+      setTimeout(loadStatus, 1000);
+    } catch {
+      // Stop failed
+    }
   };
 
-  const memMB = status?.memory ? (status.memory.heapUsed / 1024 / 1024).toFixed(1) : '0';
+  const memMB = status?.memory?.heapUsed
+    ? (status.memory.heapUsed / 1024 / 1024).toFixed(1)
+    : '0';
 
   return (
     <div className="flex flex-col h-full overflow-hidden">

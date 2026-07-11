@@ -13,11 +13,15 @@ export function OrgsModule() {
 
   async function load() {
     setLoading(true);
-    const res = await dbSelect('orgs', {
-      order: { column: 'created_at', ascending: false },
-      limit: 100,
-    });
-    setOrgs(res.data || []);
+    try {
+      const res = await dbSelect('orgs', {
+        order: { column: 'created_at', ascending: false },
+        limit: 100,
+      });
+      setOrgs(res.data || []);
+    } catch {
+      setOrgs([]);
+    }
     setLoading(false);
   }
 
@@ -48,7 +52,8 @@ export function OrgsModule() {
             { key: 'created_at', label: 'Created', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
           ]}
           data={filtered}
-          emptyMessage={loading ? 'Loading...' : 'No organizations found'}
+          loading={loading}
+          emptyMessage="No organizations found"
         />
       </div>
     </div>

@@ -19,36 +19,44 @@ export function Overview() {
 
   async function loadStats() {
     setLoading(true);
-    const [usersRes, orgsRes, leadsRes, emailsRes, jobsRes, activeRes] = await Promise.all([
-      dbCount('org_members'),
-      dbCount('orgs'),
-      dbCount('companies'),
-      dbCount('emails'),
-      dbCount('jobs'),
-      dbCount('jobs', { status: 'RUNNING' }),
-    ]);
+    try {
+      const [usersRes, orgsRes, leadsRes, emailsRes, jobsRes, activeRes] = await Promise.all([
+        dbCount('org_members'),
+        dbCount('orgs'),
+        dbCount('companies'),
+        dbCount('emails'),
+        dbCount('jobs'),
+        dbCount('jobs', { status: 'RUNNING' }),
+      ]);
 
-    setStats({
-      users: usersRes.data || 0,
-      orgs: orgsRes.data || 0,
-      leads: leadsRes.data || 0,
-      emails: emailsRes.data || 0,
-      jobs: jobsRes.data || 0,
-      activeJobs: activeRes.data || 0,
-    });
+      setStats({
+        users: usersRes.data || 0,
+        orgs: orgsRes.data || 0,
+        leads: leadsRes.data || 0,
+        emails: emailsRes.data || 0,
+        jobs: jobsRes.data || 0,
+        activeJobs: activeRes.data || 0,
+      });
 
-    const activityRes = await dbSelect('activity_log', {
-      order: { column: 'created_at', ascending: false },
-      limit: 10,
-    });
-    setRecentActivity(activityRes.data || []);
+      const activityRes = await dbSelect('activity_log', {
+        order: { column: 'created_at', ascending: false },
+        limit: 10,
+      });
+      setRecentActivity(activityRes.data || []);
+    } catch {
+      // Stats failed to load — show zeros
+    }
     setLoading(false);
   }
 
   async function loadLogs() {
-    if (window.electronAPI?.getLogs) {
-      const cached = await window.electronAPI.getLogs();
-      if (cached) setLogs(cached.slice(-50));
+    try {
+      if (window.electronAPI?.getLogs) {
+        const cached = await window.electronAPI.getLogs();
+        if (cached) setLogs(cached.slice(-50));
+      }
+    } catch {
+      // Logs unavailable
     }
   }
 
@@ -80,10 +88,10 @@ export function Overview() {
               ) : (
                 <div className="divide-y divide-[#141414]">
                   {recentActivity.map((a: any) => (
-                    <div key={a.id} className="px-4 py-2.5 flex items-center justify-between">
-                      <span className="text-[12px] text-[#888] truncate">{a.message}</span>
+                    <div key={a.id || Math.random()} className="px-4 py-2.5 flex items-center justify-between">
+                      <span className="text-[12px] text-[#888] truncate">{a.message || 'Unknown event'}</span>
                       <span className="text-[10px] text-[#444] shrink-0 ml-3">
-                        {new Date(a.created_at).toLocaleTimeString()}
+                        {a.created_at ? new Date(a.created_at).toLocaleTimeString() : ''}
                       </span>
                     </div>
                   ))}

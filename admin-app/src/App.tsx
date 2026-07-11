@@ -20,16 +20,26 @@ import { SettingsModule } from './components/SettingsModule';
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [logs, setLogs] = useState<string[]>([]);
-  const logsEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const api = window.electronAPI || (window as any).electronAPI;
-    if (api?.getLogs) {
-      api.getLogs().then((cached: string[]) => { if (cached) setLogs(cached); });
-    }
-    api?.onWorkerLog?.((msg: string) => setLogs(p => [...p, msg].slice(-2000)));
-    api?.onWorkerError?.((msg: string) => setLogs(p => [...p, `[ERROR] ${msg}`].slice(-2000)));
-    api?.onWorkerStatus?.((msg: string) => setLogs(p => [...p, `[STATUS] ${msg}`].slice(-2000)));
+    const api = window.electronAPI;
+    if (!api) return;
+
+    api.getLogs?.().then((cached: string[]) => {
+      if (cached) setLogs(cached);
+    }).catch(() => {});
+
+    const onLog = (msg: string) => setLogs(p => [...p, msg].slice(-2000));
+    const onError = (msg: string) => setLogs(p => [...p, `[ERROR] ${msg}`].slice(-2000));
+    const onStatus = (msg: string) => setLogs(p => [...p, `[STATUS] ${msg}`].slice(-2000));
+
+    api.onWorkerLog?.(onLog);
+    api.onWorkerError?.(onError);
+    api.onWorkerStatus?.(onStatus);
+
+    return () => {
+      // Listeners are overwritten on each call, no explicit remove needed
+    };
   }, []);
 
   const renderContent = () => {
@@ -64,7 +74,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#121212] text-[#e0e0e0] font-sans">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#121212] text-[#e0e0e0] font-sans" style={{ zoom: '1.08' }}>
       <Titlebar />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar active={activeTab} onChange={setActiveTab} />

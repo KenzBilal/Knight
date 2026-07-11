@@ -13,11 +13,15 @@ export function TelegramModule() {
 
   async function load() {
     setLoading(true);
-    const res = await dbSelect('telegram_leads', {
-      order: { column: 'created_at', ascending: false },
-      limit: 200,
-    });
-    setLeads(res.data || []);
+    try {
+      const res = await dbSelect('telegram_leads', {
+        order: { column: 'created_at', ascending: false },
+        limit: 200,
+      });
+      setLeads(res.data || []);
+    } catch {
+      setLeads([]);
+    }
     setLoading(false);
   }
 
@@ -47,7 +51,8 @@ export function TelegramModule() {
             { key: 'created_at', label: 'Created', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
           ]}
           data={filtered}
-          emptyMessage={loading ? 'Loading...' : 'No Telegram leads found'}
+          loading={loading}
+          emptyMessage="No Telegram leads found"
         />
       </div>
     </div>

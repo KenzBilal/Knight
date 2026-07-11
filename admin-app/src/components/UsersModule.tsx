@@ -3,7 +3,7 @@ import { RefreshCw } from 'lucide-react';
 import { PageHeader } from './PageHeader';
 import { DataTable } from './DataTable';
 import { SearchInput } from './SearchInput';
-import { dbSelect } from '../lib/supabase';
+
 
 export function UsersModule() {
   const [users, setUsers] = useState<any[]>([]);
@@ -54,7 +54,8 @@ export function UsersModule() {
               { key: 'last_sign_in_at', label: 'Last Sign In', render: (r: any) => r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleDateString() : 'Never' },
             ]}
             data={filtered}
-            emptyMessage={loading ? 'Loading...' : 'No users found'}
+            loading={loading}
+            emptyMessage="No users found"
           />
         )}
       </div>

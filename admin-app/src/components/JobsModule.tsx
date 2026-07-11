@@ -14,15 +14,19 @@ export function JobsModule() {
 
   async function load() {
     setLoading(true);
-    const filters: Record<string, any> = {};
-    if (statusFilter !== 'all') filters.status = statusFilter;
+    try {
+      const filters: Record<string, any> = {};
+      if (statusFilter !== 'all') filters.status = statusFilter;
 
-    const res = await dbSelect('jobs', {
-      filters,
-      order: { column: 'created_at', ascending: false },
-      limit: 200,
-    });
-    setJobs(res.data || []);
+      const res = await dbSelect('jobs', {
+        filters,
+        order: { column: 'created_at', ascending: false },
+        limit: 200,
+      });
+      setJobs(res.data || []);
+    } catch {
+      setJobs([]);
+    }
     setLoading(false);
   }
 
@@ -66,7 +70,8 @@ export function JobsModule() {
             { key: 'created_at', label: 'Created', render: (r: any) => new Date(r.created_at).toLocaleString() },
           ]}
           data={filtered}
-          emptyMessage={loading ? 'Loading...' : 'No jobs found'}
+          loading={loading}
+          emptyMessage="No jobs found"
         />
       </div>
     </div>

@@ -12,6 +12,7 @@ interface DataTableProps<T> {
   data: T[];
   onRowClick?: (row: T) => void;
   emptyMessage?: string;
+  loading?: boolean;
 }
 
 export function DataTable<T extends Record<string, any>>({
@@ -19,6 +20,7 @@ export function DataTable<T extends Record<string, any>>({
   data,
   onRowClick,
   emptyMessage = 'No data',
+  loading = false,
 }: DataTableProps<T>) {
   return (
     <div className="border border-[#1a1a1a] rounded-lg bg-[#080808] overflow-hidden">
@@ -33,7 +35,16 @@ export function DataTable<T extends Record<string, any>>({
           </tr>
         </thead>
         <tbody className="divide-y divide-[#141414]">
-          {data.length === 0 ? (
+          {loading && data.length === 0 ? (
+            <tr>
+              <td colSpan={columns.length} className="px-4 py-12 text-center">
+                <div className="flex items-center justify-center gap-2 text-[#555] text-[12px]">
+                  <div className="w-4 h-4 border-2 border-[#333] border-t-transparent rounded-full animate-spin" />
+                  Loading...
+                </div>
+              </td>
+            </tr>
+          ) : data.length === 0 ? (
             <tr>
               <td colSpan={columns.length} className="px-4 py-8 text-center text-[#444] text-[13px]">
                 {emptyMessage}
@@ -42,7 +53,7 @@ export function DataTable<T extends Record<string, any>>({
           ) : (
             data.map((row, i) => (
               <tr
-                key={row.id || i}
+                key={row.id ?? i}
                 onClick={() => onRowClick?.(row)}
                 className={`hover:bg-[#0d0d0d] transition-colors text-[#999] ${onRowClick ? 'cursor-pointer' : ''}`}
               >

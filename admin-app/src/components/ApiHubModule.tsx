@@ -10,11 +10,15 @@ export function ApiHubModule() {
 
   async function load() {
     setLoading(true);
-    const res = await dbSelect('org_api_keys', {
-      order: { column: 'created_at', ascending: false },
-      limit: 200,
-    });
-    setKeys(res.data || []);
+    try {
+      const res = await dbSelect('org_api_keys', {
+        order: { column: 'created_at', ascending: false },
+        limit: 200,
+      });
+      setKeys(res.data || []);
+    } catch {
+      setKeys([]);
+    }
     setLoading(false);
   }
 
@@ -43,7 +47,8 @@ export function ApiHubModule() {
             { key: 'created_at', label: 'Created', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
           ]}
           data={keys}
-          emptyMessage={loading ? 'Loading...' : 'No API keys found'}
+          loading={loading}
+          emptyMessage="No API keys found"
         />
       </div>
     </div>
