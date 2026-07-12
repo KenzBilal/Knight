@@ -11,13 +11,6 @@ function getSupabase(req: NextRequest) {
   );
 }
 
-function getAdminSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
-
 // GET /api/support — list user's tickets + unseen count
 export async function GET(req: NextRequest) {
   const supabase = getSupabase(req);

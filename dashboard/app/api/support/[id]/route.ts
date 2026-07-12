@@ -12,14 +12,14 @@ function getSupabase(req: NextRequest) {
 }
 
 // GET /api/support/[id] — get ticket + all replies
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = getSupabase(req);
   if (!supabase) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = params;
+  const { id } = await params;
 
   // Get ticket (must belong to user)
   const { data: ticket, error: ticketError } = await supabase
@@ -50,14 +50,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 }
 
 // PATCH /api/support/[id] — add reply or update ticket
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = getSupabase(req);
   if (!supabase) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id } = params;
+  const { id } = await params;
   const body = await req.json();
 
   // Verify ticket belongs to user
