@@ -7,3 +7,13 @@ node_modules/
 *.log
 .DS_Store
 .vercel
+
+# Admin app build artifacts
+admin-app/dist/
+admin-app/dist-electron/
+admin-app/electron/icons/
+admin-app/electron/icon.png
+admin-app/assets/sounds/
+
+# OS files
+Thumbs.db

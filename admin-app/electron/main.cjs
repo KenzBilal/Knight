@@ -1,15 +1,19 @@
-const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, Notification, globalShortcut, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
 
+// ─── APP METADATA ────────────────────────────────────────────────────────────
+app.setName('Knight');
+app.setAppUserModelId('com.knight.desktop');
+
 // ─── LOGGING ─────────────────────────────────────────────────────────────────
 const LOG = {
-  info: (...args) => console.log('[Admin]', new Date().toISOString(), '[INFO]', ...args),
-  warn: (...args) => console.warn('[Admin]', new Date().toISOString(), '[WARN]', ...args),
-  error: (...args) => console.error('[Admin]', new Date().toISOString(), '[ERROR]', ...args),
-  ok: (...args) => console.log('[Admin]', new Date().toISOString(), '[OK]', ...args),
-  ipc: (...args) => console.log('[Admin]', new Date().toISOString(), '[IPC]', ...args),
+  info: (...args) => console.log('[Knight]', new Date().toISOString(), '[INFO]', ...args),
+  warn: (...args) => console.warn('[Knight]', new Date().toISOString(), '[WARN]', ...args),
+  error: (...args) => console.error('[Knight]', new Date().toISOString(), '[ERROR]', ...args),
+  ok: (...args) => console.log('[Knight]', new Date().toISOString(), '[OK]', ...args),
+  ipc: (...args) => console.log('[Knight]', new Date().toISOString(), '[IPC]', ...args),
 };
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -19,13 +23,32 @@ let workerProcess = null;
 let isQuitting = false;
 const logCache = [];
 const MAX_LOG_CACHE = 2000;
+const NOTIFICATION_SOUNDS_DIR = path.join(__dirname, '../assets/sounds');
 
 const envPath = path.join(__dirname, '../../worker/.env');
 const isDev = process.env.NODE_ENV === 'development';
 
 LOG.info('Main process starting...');
+LOG.info('App name:', app.getName());
+LOG.info('App version:', app.getVersion());
 LOG.info('Env path:', envPath);
 LOG.info('Dev mode:', isDev);
+
+// ─── SINGLE INSTANCE LOCK ────────────────────────────────────────────────────
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
+  LOG.warn('Another instance is already running. Quitting...');
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    LOG.info('Second instance detected, showing window');
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
 
 // ─── ENV UTILS ───────────────────────────────────────────────────────────────
 function parseEnv(filePath) {
@@ -93,6 +116,53 @@ function getSupabase() {
 function resetSupabase() {
   _supabase = null;
   LOG.info('Supabase client reset');
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+function showNotification(title, body, options = {}) {
+  if (!Notification.isSupported()) {
+    LOG.warn('Notifications not supported on this platform');
+    return;
+  }
+
+  const iconPath = path.join(__dirname, 'icon.png');
+  const notif = new Notification({
+    title: title || 'Knight',
+    body: body || '',
+    icon: fs.existsSync(iconPath) ? iconPath : undefined,
+    silent: options.silent || false,
+    timeoutType: options.timeout || 'default',
+    urgency: options.urgency || 'normal',
+    ...options,
+  });
+
+  notif.on('show', () => LOG.info('Notification shown:', title));
+  notif.on('click', () => {
+    LOG.info('Notification clicked');
+    mainWindow?.show();
+    mainWindow?.focus();
+  });
+  notif.on('close', () => LOG.info('Notification closed'));
+
+  notif.show();
+  LOG.ok('Notification:', title, '-', body?.substring(0, 50));
+}
+
+// ─── SOUNDS ──────────────────────────────────────────────────────────────────
+function playSound(soundName) {
+  try {
+    const soundPath = path.join(NOTIFICATION_SOUNDS_DIR, `${soundName}.wav`);
+    if (fs.existsSync(soundPath)) {
+      // Use aplay on Linux
+      spawn('aplay', [soundPath], { stdio: 'ignore', detached: true }).unref();
+      LOG.ok('Playing sound:', soundName);
+    } else {
+      // Fallback: use system bell via xdg or terminal bell
+      LOG.warn('Sound file not found:', soundPath);
+    }
+  } catch (err) {
+    LOG.error('Failed to play sound:', err.message);
+  }
 }
 
 // ─── IPC: ENV ────────────────────────────────────────────────────────────────
@@ -211,6 +281,39 @@ ipcMain.handle('get-logs', () => {
   return { data: logCache, error: null };
 });
 
+// ─── IPC: NOTIFICATIONS ──────────────────────────────────────────────────────
+ipcMain.handle('show-notification', (event, { title, body, options }) => {
+  LOG.ipc('show-notification', title);
+  showNotification(title, body, options);
+  return { ok: true };
+});
+
+// ─── IPC: SOUNDS ─────────────────────────────────────────────────────────────
+ipcMain.handle('play-sound', (event, { name }) => {
+  LOG.ipc('play-sound', name);
+  playSound(name);
+  return { ok: true };
+});
+
+// ─── IPC: APP INFO ───────────────────────────────────────────────────────────
+ipcMain.handle('get-app-info', () => {
+  return {
+    name: app.getName(),
+    version: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    electron: process.versions.electron,
+    node: process.versions.node,
+  };
+});
+
+// ─── IPC: OPEN EXTERNAL ──────────────────────────────────────────────────────
+ipcMain.handle('open-external', (event, url) => {
+  LOG.ipc('open-external', url);
+  shell.openExternal(url);
+  return { ok: true };
+});
+
 // ─── IPC: WORKER STATUS ──────────────────────────────────────────────────────
 ipcMain.handle('worker-status', () => {
   const running = workerProcess && workerProcess.exitCode === null;
@@ -221,10 +324,8 @@ ipcMain.handle('worker-status', () => {
     memory: null,
   };
 
-  // Get actual worker process memory from /proc on Linux
   if (running && workerProcess?.pid) {
     try {
-      const fs = require('fs');
       const stat = fs.readFileSync(`/proc/${workerProcess.pid}/status`, 'utf8');
       const rss = stat.match(/VmRSS:\s+(\d+)\s+kB/);
       if (rss) status.memory = { rss: parseInt(rss[1]) * 1024 };
@@ -286,6 +387,11 @@ ipcMain.on('window-maximize', () => {
 ipcMain.on('window-close', () => {
   LOG.ipc('window-close → hiding to tray');
   mainWindow?.hide();
+  // Show tray notification on first hide
+  if (tray && !mainWindow._hasHiddenOnce) {
+    mainWindow._hasHiddenOnce = true;
+    showNotification('Knight', 'Running in the background. Click the tray icon to open.', { silent: true });
+  }
 });
 
 // ─── WORKER PROCESS ──────────────────────────────────────────────────────────
@@ -313,6 +419,17 @@ function startWorker() {
           mainWindow.webContents.send('worker-log', msg);
         }
       } catch {}
+
+      // Check for important events and notify
+      if (msg.includes('Email sent') || msg.includes('email sent')) {
+        showNotification('Email Sent', msg.substring(0, 100));
+      }
+      if (msg.includes('Lead discovered') || msg.includes('lead discovered')) {
+        showNotification('New Lead', msg.substring(0, 100));
+      }
+      if (msg.includes('Audit complete') || msg.includes('audit complete')) {
+        showNotification('Audit Complete', msg.substring(0, 100));
+      }
     });
 
     workerProcess.stderr.on('data', (data) => {
@@ -337,6 +454,13 @@ function startWorker() {
           mainWindow.webContents.send('worker-status', msg);
         }
       } catch {}
+      // Notify if worker crashes
+      if (code !== 0 && code !== null) {
+        showNotification('Worker Stopped', `Worker process exited with code ${code}. Restarting...`, { urgency: 'critical' });
+        setTimeout(() => {
+          if (!isQuitting) startWorker();
+        }, 5000);
+      }
     });
 
     workerProcess.on('error', (err) => {
@@ -367,12 +491,16 @@ function stopWorker() {
 function createWindow() {
   LOG.info('Creating window...');
   try {
+    const iconPath = path.join(__dirname, 'icon.png');
+    const icon = fs.existsSync(iconPath) ? nativeImage.createFromPath(iconPath) : undefined;
+
     mainWindow = new BrowserWindow({
       width: 1400,
       height: 900,
       minWidth: 1000,
       minHeight: 600,
-      title: 'Knight Admin Control Center',
+      title: 'Knight',
+      icon: icon,
       backgroundColor: '#121212',
       frame: false,
       titleBarStyle: 'hidden',
@@ -394,6 +522,12 @@ function createWindow() {
       mainWindow = null;
     });
 
+    // Prevent new window creation (security)
+    mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+      shell.openExternal(url);
+      return { action: 'deny' };
+    });
+
     if (isDev) {
       mainWindow.loadURL('http://localhost:5173');
     } else {
@@ -407,19 +541,72 @@ function createWindow() {
 // ─── TRAY ────────────────────────────────────────────────────────────────────
 function createTray() {
   try {
-    const icon = nativeImage.createEmpty();
-    tray = new Tray(icon);
+    const iconPath = path.join(__dirname, 'icon.png');
+    let trayIcon;
+    if (fs.existsSync(iconPath)) {
+      trayIcon = nativeImage.createFromPath(iconPath).resize({ width: 22, height: 22 });
+    } else {
+      trayIcon = nativeImage.createEmpty();
+    }
+
+    tray = new Tray(trayIcon);
     const contextMenu = Menu.buildFromTemplate([
-      { label: 'Show Knight Admin', click: () => mainWindow?.show() },
+      { label: 'Show Knight', click: () => { mainWindow?.show(); mainWindow?.focus(); } },
       { type: 'separator' },
-      { label: 'Quit Knight Admin', click: () => { isQuitting = true; app.quit(); } },
+      { label: 'Worker Status', click: () => {
+        const running = workerProcess && workerProcess.exitCode === null;
+        showNotification('Worker', running ? `Running (PID: ${workerProcess.pid})` : 'Not running');
+      }},
+      { label: 'Restart Worker', click: () => {
+        if (workerProcess) workerProcess.kill('SIGTERM');
+        startWorker();
+        showNotification('Worker', 'Restarting worker...');
+      }},
+      { type: 'separator' },
+      { label: 'Quit Knight', click: () => { isQuitting = true; app.quit(); } },
     ]);
-    tray.setToolTip('Knight Admin');
+    tray.setToolTip('Knight — AI Sales Agent');
     tray.setContextMenu(contextMenu);
-    tray.on('click', () => mainWindow?.show());
+    tray.on('click', () => {
+      if (mainWindow?.isVisible()) {
+        mainWindow.focus();
+      } else {
+        mainWindow?.show();
+      }
+    });
     LOG.ok('Tray created');
   } catch (err) {
     LOG.error('Failed to create tray:', err.message);
+  }
+}
+
+// ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────────
+function registerShortcuts() {
+  try {
+    // Cmd/Ctrl+Q: Quit
+    globalShortcut.register('CommandOrControl+Q', () => {
+      LOG.info('Shortcut: Quit');
+      isQuitting = true;
+      app.quit();
+    });
+
+    // Cmd/Ctrl+R: Restart worker
+    globalShortcut.register('CommandOrControl+Shift+R', () => {
+      LOG.info('Shortcut: Restart worker');
+      if (workerProcess) workerProcess.kill('SIGTERM');
+      startWorker();
+      showNotification('Worker', 'Restarting worker...');
+    });
+
+    // Cmd/Ctrl+L: Toggle logs
+    globalShortcut.register('CommandOrControl+Shift+L', () => {
+      LOG.info('Shortcut: Toggle logs');
+      mainWindow?.webContents.send('toggle-logs');
+    });
+
+    LOG.ok('Keyboard shortcuts registered');
+  } catch (err) {
+    LOG.error('Failed to register shortcuts:', err.message);
   }
 }
 
@@ -428,9 +615,15 @@ app.whenReady().then(() => {
   LOG.info('App ready');
   createWindow();
   createTray();
+  registerShortcuts();
   startWorker();
   startDebugServer();
   writeDebugFile();
+
+  // Show startup notification
+  setTimeout(() => {
+    showNotification('Knight Online', 'Control center is ready. Worker is starting...', { silent: true });
+  }, 2000);
 
   app.on('activate', () => {
     LOG.info('App activated');
@@ -445,12 +638,12 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   LOG.info('App quitting...');
   isQuitting = true;
+  globalShortcut.unregisterAll();
   stopWorker();
   writeDebugFile();
 });
 
 app.on('window-all-closed', () => {
-  // Don't quit — keep running in tray
   LOG.info('All windows closed, app stays in tray');
 });
 
@@ -484,6 +677,7 @@ function writeDebugFile() {
     const lines = [
       `=== Knight Admin Debug Dump ===`,
       `Time: ${new Date().toISOString()}`,
+      `App: ${app.getName()} v${app.getVersion()}`,
       `Uptime: ${Math.floor(process.uptime())}s`,
       `Window: ${mainWindow ? (mainWindow.isDestroyed() ? 'destroyed' : 'exists') : 'null'}`,
       `Worker: ${workerProcess ? (workerProcess.exitCode === null ? `running (pid ${workerProcess.pid})` : `dead (code ${workerProcess.exitCode})`) : 'null'}`,
@@ -528,7 +722,6 @@ registerCommand('db', async (args) => {
   const supabase = getSupabase();
   if (!supabase) return { ok: false, error: 'Supabase not configured' };
 
-  // Parse flags
   const flags = {};
   const jsonParts = [];
   for (let i = 0; i < rest.length; i++) {
@@ -540,7 +733,6 @@ registerCommand('db', async (args) => {
     else { jsonParts.push(rest[i]); }
   }
 
-  // Parse where clause
   let filters = {};
   if (flags.where) {
     for (const pair of flags.where.split(',')) {
@@ -549,7 +741,6 @@ registerCommand('db', async (args) => {
     }
   }
 
-  // Parse JSON data for insert/update
   let jsonData = {};
   if (jsonParts.length > 0) {
     try { jsonData = JSON.parse(jsonParts.join(' ')); } catch { return { ok: false, error: 'Invalid JSON: ' + jsonParts.join(' ') }; }
@@ -628,6 +819,14 @@ registerCommand('worker', async (args) => {
   return { ok: false, error: 'Usage: worker <status|start|stop|restart>' };
 });
 
+// ─── COMMANDS: NOTIFY ────────────────────────────────────────────────────────
+registerCommand('notify', async (args) => {
+  const title = args[0] || 'Knight';
+  const body = args.slice(1).join(' ') || 'Test notification';
+  showNotification(title, body);
+  return { ok: true };
+});
+
 // ─── COMMANDS: USERS ─────────────────────────────────────────────────────────
 registerCommand('users', async (args) => {
   const [action] = args;
@@ -701,6 +900,9 @@ registerCommand('state', async () => {
   return {
     ok: true,
     data: {
+      app: app.getName(),
+      version: app.getVersion(),
+      platform: process.platform,
       window: mainWindow ? !mainWindow.isDestroyed() : false,
       workerRunning,
       workerPid: workerProcess?.pid || null,
@@ -719,7 +921,8 @@ registerCommand('app', async (args) => {
   if (action === 'quit') { isQuitting = true; app.quit(); return { ok: true }; }
   if (action === 'show') { mainWindow?.show(); return { ok: true }; }
   if (action === 'hide') { mainWindow?.hide(); return { ok: true }; }
-  return { ok: false, error: 'Usage: app <quit|show|hide>' };
+  if (action === 'version') { return { ok: true, version: app.getVersion(), name: app.getName() }; }
+  return { ok: false, error: 'Usage: app <quit|show|hide|version>' };
 });
 
 // ─── COMMANDS: SQL (raw) ────────────────────────────────────────────────────
@@ -803,6 +1006,9 @@ function startDebugServer() {
           return json(res, 200, {
             ok: true,
             data: {
+              app: app.getName(),
+              version: app.getVersion(),
+              platform: process.platform,
               window: mainWindow ? !mainWindow.isDestroyed() : false,
               workerRunning: workerProcess ? workerProcess.exitCode === null : false,
               workerPid: workerProcess?.pid || null,
@@ -822,6 +1028,8 @@ function startDebugServer() {
           return json(res, result.ok ? 200 : 400, result);
         }
         return json(res, 200, {
+          app: app.getName(),
+          version: app.getVersion(),
           endpoints: {
             GET: ['/state', '/errors', '/logs', '/commands', '/screenshot', '/cmd?cmd=...'],
             POST: ['/cmd'],
@@ -871,7 +1079,7 @@ function startDebugServer() {
         }
       });
       ws.on('close', () => LOG.info('Shell disconnected'));
-      ws.send(JSON.stringify({ type: 'welcome', commands: Object.keys(commandRegistry), uptime: Math.floor(process.uptime()) }));
+      ws.send(JSON.stringify({ type: 'welcome', app: app.getName(), version: app.getVersion(), commands: Object.keys(commandRegistry), uptime: Math.floor(process.uptime()) }));
     });
 
     // Make broadcast available globally for log forwarding
@@ -895,5 +1103,3 @@ function startDebugServer() {
 }
 
 LOG.info('IPC handlers registered, waiting for app ready...');
-
-

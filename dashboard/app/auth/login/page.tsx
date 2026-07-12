@@ -24,7 +24,12 @@ function LoginForm() {
     }).then(async res => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
-      router.push(searchParams.get("redirect") || "/dashboard");
+      const inviteToken = searchParams.get("invite_token");
+      if (inviteToken) {
+        router.push(`/api/team/accept?token=${inviteToken}`);
+      } else {
+        router.push(searchParams.get("redirect") || "/dashboard");
+      }
       return data;
     });
 

@@ -55,6 +55,25 @@ const api = {
   workerStatus: () => safeInvoke('worker-status'),
   workerRestart: () => safeInvoke('worker-restart'),
   workerStop: () => safeInvoke('worker-stop'),
+
+  // Notifications (native OS)
+  showNotification: (title, body, options) => safeInvoke('show-notification', { title, body, options }),
+
+  // Sounds
+  playSound: (name) => safeInvoke('play-sound', { name }),
+
+  // App info
+  getAppInfo: () => safeInvoke('get-app-info'),
+
+  // Open external URL
+  openExternal: (url) => safeInvoke('open-external', url),
+
+  // Toggle logs (event from main process)
+  onToggleLogs: (cb) => {
+    const handler = () => { try { cb(); } catch (err) { console.error('[Preload] onToggleLogs callback error:', err); } };
+    ipcRenderer.on('toggle-logs', handler);
+    return () => ipcRenderer.removeListener('toggle-logs', handler);
+  },
 };
 
 try {
@@ -66,4 +85,4 @@ try {
 window.electronAPI = api;
 window.ipcRenderer = ipcRenderer;
 
-console.log('[Preload] electronAPI ready');
+console.log('[Preload] electronAPI ready — Knight v1.0.0');

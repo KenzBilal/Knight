@@ -16,6 +16,8 @@ import { WorkerModule } from './components/WorkerModule';
 import { LogViewer } from './components/LogViewer';
 import { EnvironmentModule } from './components/EnvironmentModule';
 import { SettingsModule } from './components/SettingsModule';
+import { TeamModule } from './components/TeamModule';
+import { ToastContainer } from './components/Toast';
 
 // ─── ERROR BOUNDARY ──────────────────────────────────────────────────────────
 interface ErrorState {
@@ -77,6 +79,15 @@ export default function App() {
   const [ipcReady, setIpcReady] = useState(false);
   const [ipcError, setIpcError] = useState<string | null>(null);
 
+  // Expose setActiveTab for keyboard shortcuts
+  const setActiveTabSafe = (tabOrFn: Tab | ((prev: Tab) => Tab)) => {
+    if (typeof tabOrFn === 'function') {
+      setActiveTab(tabOrFn);
+    } else {
+      setActiveTab(tabOrFn);
+    }
+  };
+
   useEffect(() => {
     const api = window.electronAPI;
     if (!api) {
@@ -102,10 +113,16 @@ export default function App() {
       setLogs(p => [...p, `[STATUS] ${msg}`].slice(-2000));
     });
 
+    // Subscribe to keyboard shortcuts from main process
+    const unsubToggleLogs = api.onToggleLogs?.(() => {
+      setActiveTabSafe(prev => prev === 'logs' ? 'overview' : 'logs');
+    });
+
     return () => {
       unsubLog?.();
       unsubError?.();
       unsubStatus?.();
+      unsubToggleLogs?.();
     };
   }, []);
 
@@ -117,6 +134,7 @@ export default function App() {
       case 'orgs': return <OrgsModule />;
       case 'billing': return <BillingModule />;
       case 'plans': return <PlansModule />;
+      case 'team': return <TeamModule />;
       case 'jobs': return <JobsModule />;
       case 'leads': return <LeadsModule />;
       case 'emails': return <EmailsModule />;
@@ -162,6 +180,7 @@ export default function App() {
             </ErrorBoundary>
           </main>
         </div>
+        <ToastContainer />
       </div>
     </ErrorBoundary>
   );

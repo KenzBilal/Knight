@@ -1,13 +1,13 @@
 import {
   LayoutDashboard, Activity, Users, Building2, CreditCard, Tag,
   ListTodo, Target, Mail, MessageCircle, Key, Cpu, ScrollText,
-  Terminal, Settings, ChevronDown
+  Terminal, Settings, ChevronDown, UserCog
 } from 'lucide-react';
 import { useState } from 'react';
 
 export type Tab =
   | 'overview' | 'activity'
-  | 'users' | 'orgs' | 'billing' | 'plans'
+  | 'users' | 'orgs' | 'billing' | 'plans' | 'team'
   | 'jobs' | 'leads' | 'emails' | 'telegram'
   | 'api-hub' | 'worker' | 'logs' | 'environment'
   | 'settings';
@@ -35,6 +35,7 @@ const groups: NavGroup[] = [
     items: [
       { id: 'users', icon: Users, label: 'Users' },
       { id: 'orgs', icon: Building2, label: 'Organizations' },
+      { id: 'team', icon: UserCog, label: 'Team' },
       { id: 'billing', icon: CreditCard, label: 'Billing' },
       { id: 'plans', icon: Tag, label: 'Plans' },
     ],

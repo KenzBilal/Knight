@@ -8,6 +8,7 @@ declare global {
       onWorkerLog: (cb: (msg: string) => void) => (() => void);
       onWorkerError: (cb: (msg: string) => void) => (() => void);
       onWorkerStatus: (cb: (msg: string) => void) => (() => void);
+      onToggleLogs: (cb: () => void) => (() => void);
       windowMinimize: () => void;
       windowMaximize: () => void;
       windowClose: () => void;
@@ -29,6 +30,10 @@ declare global {
       workerStatus: () => Promise<any>;
       workerRestart: () => Promise<{ success: boolean; error?: string }>;
       workerStop: () => Promise<{ success: boolean; error?: string }>;
+      showNotification: (title: string, body: string, options?: Record<string, any>) => Promise<{ ok: boolean }>;
+      playSound: (name: string) => Promise<{ ok: boolean }>;
+      getAppInfo: () => Promise<{ name: string; version: string; platform: string; arch: string; electron: string; node: string }>;
+      openExternal: (url: string) => Promise<{ ok: boolean }>;
     };
   }
 }
