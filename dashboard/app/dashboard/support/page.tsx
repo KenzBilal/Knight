@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { createBrowserClient } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Ticket {
@@ -64,7 +65,24 @@ function getCategoryLabel(c: string) {
   return map[c] || c;
 }
 
+function playDing() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.value = 0.15;
+    osc.frequency.value = 880;
+    osc.start();
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.stop(ctx.currentTime + 0.2);
+  } catch {}
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
+const supabase = createBrowserClient();
+
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -79,12 +97,18 @@ export default function SupportPage() {
   const [newCategory, setNewCategory] = useState("other");
   const [creating, setCreating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const replyIdsRef = useRef<Set<string>>(new Set());
 
   // Fetch tickets
   useEffect(() => {
     fetch("/api/support")
       .then((r) => r.json())
-      .then((d) => setTickets(d.tickets || []))
+      .then((d) => {
+        const list = d.tickets || [];
+        setTickets(list);
+        // Cache reply IDs to avoid duplicates
+        list.forEach((t: Ticket) => replyIdsRef.current.add(t.id));
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -95,10 +119,78 @@ export default function SupportPage() {
     setLoadingReplies(true);
     fetch(`/api/support/${selectedTicket.id}`)
       .then((r) => r.json())
-      .then((d) => setReplies(d.replies || []))
+      .then((d) => {
+        const list = d.replies || [];
+        setReplies(list);
+        // Track existing reply IDs
+        list.forEach((r: Reply) => replyIdsRef.current.add(r.id));
+      })
       .catch(() => {})
       .finally(() => setLoadingReplies(false));
   }, [selectedTicket]);
+
+  // ─── Realtime: live replies for selected ticket ──────────────────────────
+  useEffect(() => {
+    if (!selectedTicket) return;
+
+    const channel = supabase
+      .channel(`support-replies-${selectedTicket.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "support_replies",
+          filter: `ticket_id=eq.${selectedTicket.id}`,
+        },
+        (payload) => {
+          const newReply = payload.new as Reply;
+          // Dedup
+          if (replyIdsRef.current.has(newReply.id)) return;
+          replyIdsRef.current.add(newReply.id);
+
+          setReplies((prev) => [...prev, newReply]);
+
+          // Sound + notification for admin replies
+          if (newReply.sender_type === "admin") {
+            playDing();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedTicket]);
+
+  // ─── Realtime: live ticket status updates ───────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel("support-tickets-updates")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "support_tickets",
+        },
+        (payload) => {
+          const updated = payload.new as Ticket;
+          setTickets((prev) =>
+            prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
+          );
+          setSelectedTicket((prev) =>
+            prev?.id === updated.id ? { ...prev, ...updated } : prev
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Scroll to bottom on new reply
   useEffect(() => {
@@ -145,11 +237,8 @@ export default function SupportPage() {
         body: JSON.stringify({ message: replyText.trim() }),
       });
       if (res.ok) {
-        // Refetch replies
-        const r = await fetch(`/api/support/${selectedTicket.id}`);
-        const d = await r.json();
-        setReplies(d.replies || []);
         setReplyText("");
+        // Realtime will add the reply automatically
       }
     } catch {}
     setSending(false);
