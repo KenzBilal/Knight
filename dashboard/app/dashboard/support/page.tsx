@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createBrowserClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Ticket {
@@ -81,7 +81,10 @@ function playDing() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-const supabase = createBrowserClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
