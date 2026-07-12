@@ -15,7 +15,7 @@ export default async function DashboardLayout({
   if (!org) redirect("/auth/signup");
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#f5f5f5] overflow-hidden">
       <Sidebar
         orgPlan={org.plan}
         userEmail={user.email}
