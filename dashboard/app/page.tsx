@@ -240,8 +240,22 @@ export default function LandingPage() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080808] to-transparent" />
 
         <div className="relative z-10 mx-auto max-w-5xl px-6 flex flex-col items-center text-center">
+          {/* Logo + Brand */}
+          <div className="flex items-center gap-5 mb-12 animate-fade-up">
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-[1.25rem] bg-white/[0.04] border border-white/[0.08] flex items-center justify-center">
+              <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="md:w-12 md:h-12">
+                <path d="M16 2C10 2 5 6.5 5 12v8c0 5.5 5 10 11 10s11-4.5 11-10v-8c0-5.5-5-10-11-10z" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
+                <path d="M16 6l-1 18h2L16 6z" fill="#fff"/>
+                <path d="M13 14l6-3v2l-4 2 4 2v2l-6-3z" fill="#fff"/>
+              </svg>
+            </div>
+            <span className="font-display text-6xl md:text-7xl lg:text-8xl font-800 text-white tracking-tight">
+              Knight
+            </span>
+          </div>
+
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 mb-10 animate-fade-up">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-1.5 mb-10 animate-fade-up animate-delay-100">
             <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-glow-pulse" />
             <span className="text-xs font-mono text-[#737373]">
               AI-powered B2B sales automation
@@ -250,7 +264,7 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1
-            className="font-display font-800 text-5xl md:text-7xl lg:text-8xl text-white leading-[0.95] tracking-tight mb-8 animate-fade-up animate-delay-100"
+            className="font-display font-800 text-5xl md:text-7xl lg:text-8xl text-white leading-[0.95] tracking-tight mb-8 animate-fade-up animate-delay-200"
             style={{ animationFillMode: "both" }}
           >
             Your AI sales rep
@@ -260,7 +274,7 @@ export default function LandingPage() {
 
           {/* Sub */}
           <p
-            className="text-base md:text-lg text-[#737373] leading-relaxed max-w-xl mb-10 animate-fade-up animate-delay-200"
+            className="text-base md:text-lg text-[#737373] leading-relaxed max-w-xl mb-10 animate-fade-up animate-delay-300"
             style={{ animationFillMode: "both" }}
           >
             Knight finds businesses that need your service, audits their website,
@@ -269,7 +283,7 @@ export default function LandingPage() {
 
           {/* CTAs */}
           <div
-            className="flex flex-col sm:flex-row items-center gap-3 animate-fade-up animate-delay-300"
+            className="flex flex-col sm:flex-row items-center gap-3 animate-fade-up animate-delay-400"
             style={{ animationFillMode: "both" }}
           >
             <Link href="/auth/signup" className="btn-primary px-7 py-3 text-sm font-semibold">
@@ -282,7 +296,7 @@ export default function LandingPage() {
 
           {/* Social proof */}
           <p
-            className="mt-8 text-xs text-[#3a3a3a] animate-fade-up animate-delay-400"
+            className="mt-8 text-xs text-[#3a3a3a] animate-fade-up animate-delay-500"
             style={{ animationFillMode: "both" }}
           >
             Free tier includes 50 leads and 50 emails per month
