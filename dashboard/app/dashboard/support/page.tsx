@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { useState, useEffect, useRef } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Ticket {
@@ -81,11 +80,6 @@ function playDing() {
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
 export default function SupportPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -100,18 +94,14 @@ export default function SupportPage() {
   const [newCategory, setNewCategory] = useState("other");
   const [creating, setCreating] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevReplyCountRef = useRef(0);
   const replyIdsRef = useRef<Set<string>>(new Set());
 
   // Fetch tickets
   useEffect(() => {
     fetch("/api/support")
       .then((r) => r.json())
-      .then((d) => {
-        const list = d.tickets || [];
-        setTickets(list);
-        // Cache reply IDs to avoid duplicates
-        list.forEach((t: Ticket) => replyIdsRef.current.add(t.id));
-      })
+      .then((d) => setTickets(d.tickets || []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -120,85 +110,65 @@ export default function SupportPage() {
   useEffect(() => {
     if (!selectedTicket) return;
     setLoadingReplies(true);
+    replyIdsRef.current.clear();
     fetch(`/api/support/${selectedTicket.id}`)
       .then((r) => r.json())
       .then((d) => {
         const list = d.replies || [];
         setReplies(list);
-        // Track existing reply IDs
+        prevReplyCountRef.current = list.length;
         list.forEach((r: Reply) => replyIdsRef.current.add(r.id));
       })
       .catch(() => {})
       .finally(() => setLoadingReplies(false));
   }, [selectedTicket]);
 
-  // ─── Realtime: live replies for selected ticket ──────────────────────────
+  // ─── Polling: live replies every 5 seconds ──────────────────────────────
   useEffect(() => {
     if (!selectedTicket) return;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/support/${selectedTicket.id}`);
+        const d = await res.json();
+        const newReplies: Reply[] = d.replies || [];
 
-    const channel = supabase
-      .channel(`support-replies-${selectedTicket.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "support_replies",
-          filter: `ticket_id=eq.${selectedTicket.id}`,
-        },
-        (payload) => {
-          const newReply = payload.new as Reply;
-          // Dedup
-          if (replyIdsRef.current.has(newReply.id)) return;
-          replyIdsRef.current.add(newReply.id);
+        // Check for new admin replies
+        const newOnes = newReplies.filter((r: Reply) => !replyIdsRef.current.has(r.id));
+        if (newOnes.length > 0) {
+          newOnes.forEach((r: Reply) => replyIdsRef.current.add(r.id));
+          setReplies(newReplies);
 
-          setReplies((prev) => [...prev, newReply]);
-
-          // Sound + notification for admin replies
-          if (newReply.sender_type === "admin") {
+          // Sound for admin replies
+          if (newOnes.some((r: Reply) => r.sender_type === "admin")) {
             playDing();
           }
         }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+      } catch {}
     };
+    const interval = setInterval(poll, 5000);
+    return () => clearInterval(interval);
   }, [selectedTicket]);
 
-  // ─── Realtime: live ticket status updates ───────────────────────────────
+  // ─── Polling: ticket list every 10 seconds ─────────────────────────────
   useEffect(() => {
-    const channel = supabase
-      .channel("support-tickets-updates")
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "support_tickets",
-        },
-        (payload) => {
-          const updated = payload.new as Ticket;
-          setTickets((prev) =>
-            prev.map((t) => (t.id === updated.id ? { ...t, ...updated } : t))
-          );
-          setSelectedTicket((prev) =>
-            prev?.id === updated.id ? { ...prev, ...updated } : prev
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
+    const poll = async () => {
+      try {
+        const res = await fetch("/api/support");
+        const d = await res.json();
+        if (d.tickets) setTickets(d.tickets);
+      } catch {}
     };
+    const interval = setInterval(poll, 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  // Scroll to bottom on new reply
+  // Scroll to bottom ONLY when new reply added (not on every render)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [replies]);
+    if (replies.length > prevReplyCountRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevReplyCountRef.current = replies.length;
+  }, [replies.length]);
 
   // Create new ticket
   async function handleCreate(e: React.FormEvent) {
@@ -241,7 +211,7 @@ export default function SupportPage() {
       });
       if (res.ok) {
         setReplyText("");
-        // Realtime will add the reply automatically
+        // Polling will pick up the new reply within 5s
       }
     } catch {}
     setSending(false);
