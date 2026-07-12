@@ -8,8 +8,6 @@ export async function GET(req: Request) {
   try {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
-    const { user } = await requireAuthFromToken(tokenMatch[1]);
 
     const url = new URL(req.url);
     const inviteToken = url.searchParams.get("token");
@@ -18,6 +16,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Token is required" }, { status: 400 });
     }
 
+    // If not logged in, redirect to login with token preserved
+    if (!tokenMatch) {
+      const loginUrl = new URL("/auth/login", req.url);
+      loginUrl.searchParams.set("invite_token", inviteToken);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const { user } = await requireAuthFromToken(tokenMatch[1]);
     const supabase = createServiceClient();
 
     // Find the invite
@@ -51,7 +57,7 @@ export async function GET(req: Request) {
       .single();
 
     if (existingMember) {
-      return NextResponse.json({ error: "You are already a member of this organization" }, { status: 400 });
+      return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
     // Add user to org_members
@@ -67,12 +73,10 @@ export async function GET(req: Request) {
     if (memberError) throw memberError;
 
     // Mark invite as accepted
-    const { error: updateError } = await supabase
+    await supabase
       .from("org_invites")
       .update({ accepted_at: new Date().toISOString() })
       .eq("id", invite.id);
-
-    if (updateError) throw updateError;
 
     return NextResponse.redirect(new URL("/dashboard", req.url));
   } catch (error: any) {

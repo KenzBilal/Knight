@@ -5,18 +5,18 @@ import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
 
 interface TeamMember {
-  id: string;
+  user_id: string;
   email: string;
   name: string | null;
   role: string;
-  joinedAt: string;
+  joined_at: string;
 }
 
 interface PendingInvite {
   id: string;
   email: string;
   role: string;
-  invitedAt: string;
+  created_at: string;
 }
 
 interface OrgData {
@@ -50,6 +50,7 @@ export default function TeamPage() {
 
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [removingMember, setRemovingMember] = useState<string | null>(null);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -65,6 +66,7 @@ export default function TeamPage() {
       .then(([teamData, orgData]) => {
         setMembers(teamData.members || []);
         setInvites(teamData.invites || []);
+        setCurrentUserEmail(teamData.currentUserEmail || null);
         setOrg(orgData.org || orgData);
         if (orgData.org?.name) {
           setOrgName(orgData.org.name);
@@ -93,7 +95,7 @@ export default function TeamPage() {
       if (!res.ok) throw new Error(data.error || "Failed to send invite");
 
       setInvites(prev => [
-        { id: data.invite?.id || Date.now().toString(), email: inviteEmail, role: inviteRole, invitedAt: new Date().toISOString() },
+        { id: data.invite?.id || Date.now().toString(), email: inviteEmail, role: inviteRole, created_at: new Date().toISOString() },
         ...prev,
       ]);
       setInviteEmail("");
@@ -107,7 +109,11 @@ export default function TeamPage() {
 
   async function handleCancelInvite(inviteId: string) {
     try {
-      const res = await fetch(`/api/team/invite?id=${inviteId}`, { method: "DELETE" });
+      const res = await fetch("/api/team/invite", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invite_id: inviteId }),
+      });
       if (!res.ok) throw new Error("Failed to cancel invite");
       setInvites(prev => prev.filter(i => i.id !== inviteId));
       toast.success("Invite cancelled");
@@ -119,13 +125,13 @@ export default function TeamPage() {
   async function handleChangeRole(memberId: string, newRole: string) {
     setChangingRole(memberId);
     try {
-      const res = await fetch("/api/team/role", {
-        method: "POST",
+      const res = await fetch("/api/team/member", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ memberId, role: newRole }),
+        body: JSON.stringify({ member_id: memberId, role: newRole }),
       });
       if (!res.ok) throw new Error("Failed to change role");
-      setMembers(prev => prev.map(m => m.id === memberId ? { ...m, role: newRole } : m));
+      setMembers(prev => prev.map(m => m.user_id === memberId ? { ...m, role: newRole } : m));
       toast.success("Role updated");
     } catch (err: any) {
       toast.error(err.message);
@@ -138,9 +144,13 @@ export default function TeamPage() {
     if (!confirm("Are you sure you want to remove this member?")) return;
     setRemovingMember(memberId);
     try {
-      const res = await fetch(`/api/team/member?id=${memberId}`, { method: "DELETE" });
+      const res = await fetch("/api/team/member", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ member_id: memberId }),
+      });
       if (!res.ok) throw new Error("Failed to remove member");
-      setMembers(prev => prev.filter(m => m.id !== memberId));
+      setMembers(prev => prev.filter(m => m.user_id !== memberId));
       toast.success("Member removed");
     } catch (err: any) {
       toast.error(err.message);
@@ -198,7 +208,7 @@ export default function TeamPage() {
     );
   }
 
-  const currentUserRole = members.find(m => true)?.role;
+  const currentUserRole = members.find(m => m.email === currentUserEmail)?.role;
 
   return (
     <div className="space-y-6">
@@ -225,7 +235,7 @@ export default function TeamPage() {
               </thead>
               <tbody>
                 {members.map(member => (
-                  <tr key={member.id} className="border-b border-[#1a1a1a] last:border-0 hover:bg-[#111] transition-colors">
+                  <tr key={member.user_id} className="border-b border-[#1a1a1a] last:border-0 hover:bg-[#111] transition-colors">
                     <td className="px-6 py-4">
                       <div>
                         <p className="text-sm font-medium text-[#e0e0e0]">{member.name || "No name"}</p>
@@ -239,7 +249,7 @@ export default function TeamPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className="text-xs text-[#666]">
-                        {new Date(member.joinedAt).toLocaleDateString()}
+                        {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : '-'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -247,19 +257,19 @@ export default function TeamPage() {
                         <div className="flex items-center justify-end gap-2">
                           <select
                             value={member.role}
-                            onChange={e => handleChangeRole(member.id, e.target.value)}
-                            disabled={changingRole === member.id}
+                            onChange={e => handleChangeRole(member.user_id, e.target.value)}
+                            disabled={changingRole === member.user_id}
                             className="bg-[#1a1a1a] border border-[#2a2a2a] text-[#e0e0e0] text-xs rounded-lg px-2 py-1.5 focus:outline-none focus:border-[#444] disabled:opacity-50"
                           >
                             <option value="admin">Admin</option>
                             <option value="member">Member</option>
                           </select>
                           <button
-                            onClick={() => handleRemoveMember(member.id)}
-                            disabled={removingMember === member.id}
+                            onClick={() => handleRemoveMember(member.user_id)}
+                            disabled={removingMember === member.user_id}
                             className="text-xs text-[#666] hover:text-red-400 transition-colors disabled:opacity-50 px-2 py-1.5"
                           >
-                            {removingMember === member.id ? "..." : "Remove"}
+                            {removingMember === member.user_id ? "..." : "Remove"}
                           </button>
                         </div>
                       )}

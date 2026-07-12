@@ -24,7 +24,7 @@ export async function GET(req: Request) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
 
@@ -61,6 +61,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       members: membersWithEmail,
       invites: (invites || []) as PendingInvite[],
+      currentUserEmail: user?.email,
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
