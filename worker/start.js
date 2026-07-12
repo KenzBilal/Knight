@@ -2,7 +2,7 @@ import { spawn } from 'child_process';
 import 'dotenv/config';
 
 // 1. Env validation
-const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'COHERE_API_KEY', 'OPENROUTER_API_KEY'];
+const required = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY'];
 const missing = required.filter(k => !process.env[k]);
 if (missing.length > 0) {
   console.error(`[Start] Fatal Error: Missing required environment variables: ${missing.join(', ')}`);

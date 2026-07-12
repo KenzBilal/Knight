@@ -4,10 +4,10 @@
 // Strategy B: Live Sniper (keyword listening in public groups)
 
 import { createClient } from '@supabase/supabase-js';
-import { nemotron as groq } from './nemotron_client.js';
 import 'dotenv/config';
 
 import ws from 'ws';
+import { complete } from './ai_hub.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
@@ -73,23 +73,19 @@ async function saveLead({ chatId, username, fullName, phone, email, instagram, l
   return data;
 }
 
-// ─── Generate Daily Search Keywords (Groq) ────────────────────────────────────
+// ─── Generate Daily Search Keywords ──────────────────────────────────────────
 export async function generateSearchKeywords() {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
-  const result = await groq.chat.completions.create({
-    model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-    messages: [{
-      role: 'user',
-      content: `Generate 10 diverse Telegram group search keywords for finding business owners.
+  const result = await complete('keyword_generate', [{
+    role: 'user',
+    content: `Generate 10 diverse Telegram group search keywords for finding business owners.
 Today is ${today}. Vary the niches: include some of these types: crypto signals, movies/series sharing, exam question banks, online stores, freelancers, coaching/courses, real estate, food delivery, clothing shops, travel agents, resellers.
 Return ONLY a JSON array of strings. No explanation.
-Example: ["crypto vip signals group", "NEET exam question bank", "dropshipping business owners"]`
-    }],
-    max_tokens: 200,
-  });
+Example: ["crypto vip signals group", "NEET exam question bank", "dropshipping business owners"]`,
+  }], { maxTokens: 200 });
 
   try {
-    const content = result.choices[0].message.content.trim();
+    const content = result.content.trim();
     const match = content.match(/\[.*\]/s);
     return match ? JSON.parse(match[0]) : [];
   } catch {
@@ -213,18 +209,14 @@ export async function processSniperMessage(chatId, username, message, groupName,
 // ─── Categorize Channel ───────────────────────────────────────────────────────
 async function categorizeChannel(name, bio) {
   try {
-    const result = await groq.chat.completions.create({
-      model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-      messages: [{
-        role: 'user',
-        content: `Categorize this Telegram channel in 2-3 words:
+    const result = await complete('channel_categorize', [{
+      role: 'user',
+      content: `Categorize this Telegram channel in 2-3 words:
 Name: ${name}
 Bio: ${bio}
-Return ONLY the category, nothing else. Examples: "Crypto Signals", "Movie Sharing", "Exam Question Bank", "Online Clothing Store", "Coaching/Courses"`
-      }],
-      max_tokens: 20,
-    });
-    return result.choices[0].message.content.trim();
+Return ONLY the category, nothing else. Examples: "Crypto Signals", "Movie Sharing", "Exam Question Bank", "Online Clothing Store", "Coaching/Courses"`,
+    }], { maxTokens: 20 });
+    return result.content.trim();
   } catch {
     return 'Unknown Business';
   }
@@ -237,11 +229,9 @@ async function generateInitialPitch(category, groupName, clientName, orgId) {
   const services = config.services_offered?.join(', ') || 'websites, Telegram bots, and web apps';
   const namePrompt = clientName ? `\nClient Name/Username: ${clientName}` : '';
 
-  const result = await groq.chat.completions.create({
-    model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-    messages: [{
-      role: 'user',
-      content: `You are a sales rep from ${companyName}. Write a very short, casual, human-sounding first message (max 3 lines) to the admin of a Telegram channel.
+  const result = await complete('initial_pitch', [{
+    role: 'user',
+    content: `You are a sales rep from ${companyName}. Write a very short, casual, human-sounding first message (max 3 lines) to the admin of a Telegram channel.
 
 Channel Type: ${category}
 Channel Name: ${groupName}${namePrompt}
@@ -254,11 +244,9 @@ The message should:
 4. If the Client Name is provided, use it naturally in your greeting
 
 Do NOT mention you found them on Telegram. Do NOT be salesy. Sound like a human.
-Return ONLY the message, nothing else.`
-    }],
-    max_tokens: 100,
-  });
-  return result.choices[0].message.content.trim();
+Return ONLY the message, nothing else.`,
+  }], { maxTokens: 100 });
+  return result.content.trim();
 }
 
 // ─── Auto-Cleanup: Delete ghosts ──────────────────────────────────────────────

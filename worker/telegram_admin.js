@@ -4,16 +4,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { Api } from 'telegram';
 import { CallbackQuery } from 'telegram/events/CallbackQuery.js';
-import OpenAI from 'openai';
 import ws from 'ws';
+import { complete } from './ai_hub.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
-});
-
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 // ─── Get Org Config ───────────────────────────────────────────────────────────
@@ -28,7 +23,9 @@ async function generateTeamSummary(lead) {
     .map(m => `${m.role === 'assistant' ? 'Sales Rep' : 'Client'}: ${m.content}`)
     .join('\n');
 
-  const prompt = `Extract the client details from the chat history below.
+  const result = await complete('team_summary', [
+    { role: 'system', content: 'You are an executive assistant. Your job is to extract client details from chat logs and fill out templates.' },
+    { role: 'user', content: `Extract the client details from the chat history below.
 
 FORMAT TEMPLATE:
 🚨 CLIENT-${lead.id.substring(0, 6).toUpperCase()} 🚨
@@ -44,19 +41,10 @@ FORMAT TEMPLATE:
 CHAT HISTORY:
 ${chatText}
 
-Fill in the FORMAT TEMPLATE using the details from the CHAT HISTORY. Output ONLY the filled-in template without any other text.`;
+Fill in the FORMAT TEMPLATE using the details from the CHAT HISTORY. Output ONLY the filled-in template without any other text.` },
+  ], { temperature: 0.2, maxTokens: 300 });
 
-  const completion = await openai.chat.completions.create({
-    messages: [
-      { role: 'system', content: 'You are an executive assistant. Your job is to extract client details from chat logs and fill out templates.' },
-      { role: 'user', content: prompt }
-    ],
-    model: 'meta-llama/llama-3.3-70b-instruct',
-    temperature: 0.2,
-    max_tokens: 300,
-  });
-
-  return completion.choices[0].message.content.trim();
+  return result.content.trim();
 }
 
 // ─── Setup Realtime Listener (Dashboard only) ────────────────────────────────

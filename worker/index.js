@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import { CohereClient } from 'cohere-ai';
 import { Resend } from 'resend';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
+import { complete } from './ai_hub.js';
 
 dotenv.config();
 
@@ -14,19 +13,8 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1);
 }
 
-if (!process.env.COHERE_API_KEY || !process.env.OPENROUTER_API_KEY) {
-  console.error('[Worker] Fatal Error: COHERE_API_KEY and OPENROUTER_API_KEY are required');
-  process.exit(1);
-}
-
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
-});
-
-import OpenAI from 'openai';
-const openaiClient = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY,
 });
 
 let jobProcessing = false;
@@ -423,19 +411,13 @@ async function handleProcessReply(job) {
   const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
   const companyName = orgConfig?.company_name || 'Knight';
 
-  const client = openaiClient;
-
   // Classify intent
-  const intentCompletion = await client.chat.completions.create({
-    messages: [{
-      role: 'user',
-      content: `Analyze this email reply to a cold outreach. Is the prospect rejecting us/not interested? Reply ONLY with "REJECTED" or "INTERESTED". Email: "${body_text}"`
-    }],
-    model: 'meta-llama/llama-3.1-8b-instruct:free',
-    temperature: 0.3,
-  });
+  const intentResult = await complete('reply_classification', [{
+    role: 'user',
+    content: `Analyze this email reply to a cold outreach. Is the prospect rejecting us/not interested? Reply ONLY with "REJECTED" or "INTERESTED". Email: "${body_text}"`,
+  }], { temperature: 0.3 });
 
-  const intent = intentCompletion.choices[0]?.message?.content?.trim().toUpperCase();
+  const intent = intentResult.content?.trim().toUpperCase();
 
   if (intent?.includes('REJECTED')) {
     console.log('[ProcessReply] Intent: REJECTED');
@@ -468,10 +450,7 @@ async function handleProcessReply(job) {
     };
     draftText = renderTemplate(template.body, variables);
   } else {
-    // Draft reply via Gemini
-    const gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = gemini.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
+    // Draft reply via AI Hub
     const prompt = `You are a professional sales closer representing ${companyName}.
 A potential client just replied to our cold outreach email.
 Read their reply and write a highly professional, persuasive response.
@@ -487,10 +466,12 @@ Client Reply:
 Respond with only the exact text of the email draft. No markdown, no preambles.`;
 
     try {
-      const response = await model.generateContent(prompt);
-      draftText = response.response.text().trim();
+      const result = await complete('reply_draft', [
+        { role: 'user', content: prompt },
+      ]);
+      draftText = result.content.trim();
     } catch (err) {
-      console.error('[ProcessReply] Gemini draft failed:', err.message);
+      console.error('[ProcessReply] AI draft failed:', err.message);
       draftText = `Hi,\n\nThanks for your reply. I'd be happy to discuss further.\n\nBest,\n${companyName} Team`;
     }
   }

@@ -1,12 +1,8 @@
 import puppeteer from 'puppeteer';
-import { CohereClient } from 'cohere-ai';
-import { nemotron as groq } from './nemotron_client.js';
+import { complete } from './ai_hub.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-const cohere = new CohereClient({ token: process.env.COHERE_API_KEY });
-const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 
 export async function fetchLighthouseData(url, attempt = 1) {
   const MAX_RETRIES = 3;
@@ -317,55 +313,35 @@ export async function extractContacts(page) {
 
 export async function extractSemanticBusinessData(rawText) {
   const cleanText = rawText.replace(/\s+/g, ' ').trim().slice(0, 10000);
-  const prompt = `
-  You are an expert business analyst. Read the following website text and extract exactly what this business does.
-  
-  WEBSITE TEXT:
-  """
-  ${cleanText}
-  """
-  
-  Return a JSON object with exactly these keys:
-  - "companyName": string
-  - "industry": string
-  - "primaryService": string
-  - "targetAudience": string
-  - "uniqueSellingProposition": string
-  `;
+  const messages = [{
+    role: 'user',
+    content: `You are an expert business analyst. Read the following website text and extract exactly what this business does.
 
-  const modRes = await fetch('https://openrouter.ai/api/v1/models');
-  const modJson = await modRes.json();
-  const freeModels = modJson.data.filter(m => m.pricing.prompt === '0' || m.pricing.prompt === 0).map(m => m.id);
-  const modelToUse = freeModels.includes('meta-llama/llama-3-8b-instruct:free') ? 'meta-llama/llama-3-8b-instruct:free' : freeModels[0];
+WEBSITE TEXT:
+"""
+${cleanText}
+"""
 
-  console.log(`[Semantic] Using ${modelToUse}...`);
+Return a JSON object with exactly these keys:
+- "companyName": string
+- "industry": string
+- "primaryService": string
+- "targetAudience": string
+- "uniqueSellingProposition": string`,
+  }];
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${OPENROUTER_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: modelToUse,
-      response_format: { type: 'json_object' },
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  const json = await response.json();
-  if (json.choices && json.choices.length > 0) {
-    return JSON.parse(json.choices[0].message.content);
-  }
-  throw new Error('Failed to extract semantic data');
+  console.log('[Semantic] Extracting business data...');
+  const result = await complete('semantic_extract', messages, { responseFormat: 'json' });
+  return JSON.parse(result.content);
 }
 
 export async function analyzeWithCohere(auditData) {
-  console.log('[Cohere] Analyzing...');
+  console.log('[AI Hub] Analyzing with audit_pitch...');
   const issuesSummary = auditData.issues?.map(i => `[${i.severity.toUpperCase()}] ${i.category}: ${i.issue}`).join('\n') || 'None';
 
-  const prompt = `
-  You are a sharp web agency consultant who closes clients by being specific.
+  const messages = [{
+    role: 'user',
+    content: `You are a sharp web agency consultant who closes clients by being specific.
   
   Website: ${auditData.url}
   Title: "${auditData.title}"
@@ -387,36 +363,23 @@ export async function analyzeWithCohere(auditData) {
   1. "companyName": name from URL/title
   2. "industry": specific industry (e.g. "Plumbing Services" not "Services")
   3. "leadScore": 1-100, lower = worse site = hotter lead
-  4. "pitch": cold email max 180 words. You represent Knight, an AI sales agent platform. Reference their specific industry/niche and 1-2 specific technical issues. Sign off as "The Knight Team". Sound professional, direct, and confident. IMPORTANT: Do not use exact metrics or robotic numbers. Use natural human language like "your site is noticeably slow" or "we noticed your images aren't optimized".
-  `;
+  4. "pitch": cold email max 180 words. You represent Knight, an AI sales agent platform. Reference their specific industry/niche and 1-2 specific technical issues. Sign off as "The Knight Team". Sound professional, direct, and confident. IMPORTANT: Do not use exact metrics or robotic numbers. Use natural human language like "your site is noticeably slow" or "we noticed your images aren't optimized".`,
+  }];
 
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const response = await cohere.chat({
-        message: prompt,
-        model: 'command-r-plus-08-2024',
-        responseFormat: { type: 'json_object' }
-      });
-      return JSON.parse(response.text);
-    } catch (e) {
-      const isRetryable = e.message?.includes('429') || e.message?.includes('rate limit');
-      if (isRetryable && attempt < 3) {
-        const wait = attempt * 15000;
-        console.log(`[Cohere] Throttled. Waiting ${wait / 1000}s...`);
-        await new Promise(r => setTimeout(r, wait));
-      } else {
-        console.error('[Cohere] Error:', e.message);
-        return { companyName: auditData.url, pitch: 'AI analysis failed.', leadScore: 50 };
-      }
-    }
+  try {
+    const result = await complete('audit_pitch', messages, { responseFormat: 'json' });
+    return JSON.parse(result.content);
+  } catch (e) {
+    console.error('[AI Hub] audit_pitch failed:', e.message);
+    return { companyName: auditData.url, pitch: 'AI analysis failed.', leadScore: 50 };
   }
-  return { companyName: auditData.url, pitch: 'All models unavailable.', leadScore: 50 };
 }
 
 export async function analyzeWithGroq(auditData) {
-  console.log('[Groq] Generating suggestions...');
-  const prompt = `
-  You are the lead technical strategist.
+  console.log('[AI Hub] Generating internal suggestions...');
+  const messages = [{
+    role: 'user',
+    content: `You are the lead technical strategist.
   We just audited a potential client's website: ${auditData.url}
   Tech Stack Detected: ${auditData.techStack}
   What they sell: ${auditData.businessContext.semantic?.primaryService || 'Unknown'}
@@ -433,18 +396,14 @@ export async function analyzeWithGroq(auditData) {
   
   Rules:
   - Be blunt, highly technical, and specific.
-  - No fluff, just 3-5 punchy bullet points.
-  `;
-  
+  - No fluff, just 3-5 punchy bullet points.`,
+  }];
+
   try {
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: 'user', content: prompt }],
-      model: 'nvidia/nemotron-3-ultra-550b-a55b:free',
-      temperature: 0.3,
-    });
-    return completion.choices[0]?.message?.content?.trim() || 'No suggestions generated.';
+    const result = await complete('internal_suggestions', messages);
+    return result.content || 'No suggestions generated.';
   } catch (e) {
-    console.error('[Groq] Error:', e.message);
+    console.error('[AI Hub] internal_suggestions failed:', e.message);
     return 'Error generating suggestions.';
   }
 }

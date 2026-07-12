@@ -2,15 +2,11 @@
 // Gemini Sales Brain — manages live Telegram conversations
 
 import { createClient } from '@supabase/supabase-js';
-import OpenAI from 'openai';
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY,
-});
 import 'dotenv/config';
 
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
+import { complete } from './ai_hub.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
@@ -89,14 +85,12 @@ export async function generateReply(lead, userMessage, orgId) {
     { role: 'user', content: userMessage }
   ];
 
-  const completion = await openai.chat.completions.create({
-    messages,
-    model: 'google/gemini-2.5-flash',
+  const result = await complete('telegram_reply', messages, {
     temperature: 0.8,
-    max_tokens: 200,
+    maxTokens: 200,
   });
 
-  const reply = completion.choices[0].message.content.trim();
+  const reply = result.content.trim();
 
   const closingPhrase = "noted for our team";
   const isClosing = reply.toLowerCase().includes(closingPhrase);
@@ -113,12 +107,9 @@ export async function generateSummary(lead) {
     .map(m => `${m.role === 'assistant' ? 'Sales Rep' : 'Client'}: ${m.content}`)
     .join('\n');
 
-  const completion = await openai.chat.completions.create({
-    model: 'meta-llama/llama-3.3-70b-instruct',
-    response_format: { type: "json_object" },
-    messages: [{
-      role: 'user',
-      content: `Based on this Telegram conversation, extract the lead details into a raw JSON object with the following keys:
+  const result = await complete('telegram_summary', [{
+    role: 'user',
+    content: `Based on this Telegram conversation, extract the lead details into a raw JSON object with the following keys:
 - "full_name": string or null
 - "phone": string or null
 - "location": string or null
@@ -128,16 +119,17 @@ export async function generateSummary(lead) {
 Output ONLY valid JSON.
 
 Conversation:
-${chatText}`
-    }],
-    max_tokens: 250
+${chatText}`,
+  }], {
+    responseFormat: 'json',
+    maxTokens: 250,
   });
 
   try {
-    return JSON.parse(completion.choices[0].message.content.trim());
+    return JSON.parse(result.content.trim());
   } catch (e) {
     console.error("Failed to parse JSON summary:", e);
-    return { ai_summary: completion.choices[0].message.content.trim() };
+    return { ai_summary: result.content.trim() };
   }
 }
 
