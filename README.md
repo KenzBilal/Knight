@@ -242,10 +242,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-[MIT](LICENSE) — Ken Bilal
+[MIT](LICENSE) — Kenz Bilal
 
 ---
 
 <p align="center">
-  Built with obsession by <a href="https://github.com/KenzBilal">Ken Bilal</a>
+  Built with obsession by <a href="https://github.com/KenzBilal">Kenz Bilal</a>
 </p>
