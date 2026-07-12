@@ -5,8 +5,8 @@ export interface Org {
   name: string;
   slug: string;
   plan: 'free' | 'starter' | 'pro' | 'agency';
-  stripe_customer_id: string | null;
-  stripe_subscription_id: string | null;
+  lemon_customer_id: string | null;
+  lemon_subscription_id: string | null;
   created_at: string;
 }
 

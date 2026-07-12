@@ -80,7 +80,7 @@ export function BillingModule() {
             columns={[
               { key: 'name', label: 'Org', render: (r: any) => <span className="text-[#e0e0e0]">{r.name}</span> },
               { key: 'plan', label: 'Plan', render: (r: any) => <Badge variant={planBadgeColor(r.plan)}>{r.plan}</Badge> },
-              { key: 'stripe_subscription_id', label: 'Subscription', render: (r: any) => r.stripe_subscription_id ? <Badge variant="success">Active</Badge> : <Badge>None</Badge> },
+              { key: 'lemon_subscription_id', label: 'Subscription', render: (r: any) => r.lemon_subscription_id ? <Badge variant="success">Active</Badge> : <Badge>None</Badge> },
               { key: 'created_at', label: 'Since', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
             ]}
             data={orgs}

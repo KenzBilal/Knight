@@ -48,7 +48,7 @@ export function OrgsModule() {
             { key: 'name', label: 'Name', render: (r: any) => <span className="text-[#e0e0e0]">{r.name}</span> },
             { key: 'slug', label: 'Slug', className: 'font-mono text-[11px] text-[#666]' },
             { key: 'plan', label: 'Plan', render: (r: any) => <Badge variant={planBadgeColor(r.plan)}>{r.plan}</Badge> },
-            { key: 'stripe_customer_id', label: 'Stripe', render: (r: any) => r.stripe_customer_id ? <Badge variant="success">Active</Badge> : <Badge>None</Badge> },
+            { key: 'lemon_customer_id', label: 'Lemon', render: (r: any) => r.lemon_customer_id ? <Badge variant="success">Active</Badge> : <Badge>None</Badge> },
             { key: 'created_at', label: 'Created', render: (r: any) => new Date(r.created_at).toLocaleDateString() },
           ]}
           data={filtered}
