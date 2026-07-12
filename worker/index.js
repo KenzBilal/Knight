@@ -17,14 +17,23 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   realtime: { transport: ws }
 });
 
-let jobProcessing = false;
+let activeJobs = 0;
+const MAX_CONCURRENT = 2;
 const jobQueue = [];
 const MAX_QUEUE_SIZE = 100;
-const JOB_DELAY_MS = 6000;
 const MAX_ATTEMPTS = 3;
+const JOB_TIMEOUT_MS = 120_000;
+const RAM_LIMIT_MB = 1500;
+const runningJobs = new Set();
 
 // Retry delays: 1 min, 5 min, 15 min
 const RETRY_DELAYS_MS = [60_000, 300_000, 900_000];
+
+// Priority: REPLY > SCRAPE > DISCOVER
+const JOB_PRIORITY = { PROCESS_REPLY: 0, SCRAPE: 1, AUDIT: 1, DISCOVER: 2 };
+function sortByPriority(queue) {
+  return queue.sort((a, b) => (JOB_PRIORITY[a.type] ?? 9) - (JOB_PRIORITY[b.type] ?? 9));
+}
 
 console.log('[Knight Worker] Starting...');
 
@@ -107,21 +116,48 @@ async function fetchPendingJobs() {
   }
 }
 
-async function processQueue() {
-  if (jobProcessing || jobQueue.length === 0) return;
-  jobProcessing = true;
-  const job = jobQueue.shift();
-  try {
-    await handleJob(job);
-  } catch (e) {
-    console.error('[Worker] Queue error:', e.message);
+function getUsedRAM_MB() {
+  const mem = process.memoryUsage();
+  return Math.round((mem.rss + mem.heapUsed) / 1024 / 1024);
+}
+
+function dedupKey(job) {
+  if (job.type === 'DISCOVER') return `discover:${job.payload?.keyword}:${job.payload?.location}`;
+  return `${job.type}:${job.payload?.target || job.payload?.company_id || job.id}`;
+}
+
+function processQueue() {
+  while (activeJobs < MAX_CONCURRENT && jobQueue.length > 0) {
+    // RAM guard
+    const usedMB = getUsedRAM_MB();
+    if (usedMB > RAM_LIMIT_MB) {
+      console.warn(`[Worker] RAM limit reached (${usedMB}MB > ${RAM_LIMIT_MB}MB). Pausing queue.`);
+      setTimeout(() => processQueue(), 30_000);
+      return;
+    }
+
+    sortByPriority(jobQueue);
+    const job = jobQueue.shift();
+    const dk = dedupKey(job);
+
+    // Dedup check
+    if (runningJobs.has(dk)) {
+      console.log(`[Worker] Skipping duplicate: ${dk}`);
+      continue;
+    }
+
+    activeJobs++;
+    runningJobs.add(dk);
+    console.log(`[Worker] Active: ${activeJobs}/${MAX_CONCURRENT} | Queue: ${jobQueue.length} | RAM: ${usedMB}MB`);
+
+    handleJob(job)
+      .catch(e => console.error('[Worker] Queue error:', e.message))
+      .finally(() => {
+        activeJobs--;
+        runningJobs.delete(dk);
+        processQueue();
+      });
   }
-  if (jobQueue.length > 0) {
-    console.log(`[Worker] Queue: ${jobQueue.length} remaining. Waiting ${JOB_DELAY_MS / 1000}s...`);
-    await new Promise(r => setTimeout(r, JOB_DELAY_MS));
-  }
-  jobProcessing = false;
-  processQueue();
 }
 
 async function handleJob(job) {
@@ -136,13 +172,23 @@ async function handleJob(job) {
   }).eq('id', job.id);
 
   try {
-    if (job.type === 'DISCOVER') {
-      await handleDiscover(job);
-    } else if (job.type === 'PROCESS_REPLY') {
-      await handleProcessReply(job);
-    } else {
-      await handleScrape(job);
-    }
+    // Wrap job with timeout
+    const jobPromise = (async () => {
+      if (job.type === 'DISCOVER') {
+        await handleDiscover(job);
+      } else if (job.type === 'PROCESS_REPLY') {
+        await handleProcessReply(job);
+      } else {
+        await handleScrape(job);
+      }
+    })();
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Job timed out after ${JOB_TIMEOUT_MS / 1000}s`)), JOB_TIMEOUT_MS)
+    );
+
+    await Promise.race([jobPromise, timeoutPromise]);
+
     await supabase.from('jobs').update({
       status: 'COMPLETED',
       completed_at: new Date().toISOString(),
@@ -151,7 +197,6 @@ async function handleJob(job) {
     console.error(`[Job] ${job.id} failed (attempt ${attempts}):`, error.message);
 
     if (attempts >= MAX_ATTEMPTS) {
-      // Mark permanently failed after max attempts
       await supabase.from('jobs').update({
         status: 'FAILED_PERMANENTLY',
         error: error.message,
@@ -159,7 +204,6 @@ async function handleJob(job) {
       }).eq('id', job.id);
       console.error(`[Job] ${job.id} permanently failed after ${MAX_ATTEMPTS} attempts.`);
     } else {
-      // Schedule retry with exponential backoff
       const retryDelay = RETRY_DELAYS_MS[attempts - 1] || RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
       console.log(`[Job] ${job.id} will retry in ${retryDelay / 1000}s...`);
       await supabase.from('jobs').update({
@@ -167,7 +211,6 @@ async function handleJob(job) {
         error: error.message,
         attempts,
       }).eq('id', job.id);
-      // Re-queue after delay
       setTimeout(() => {
         jobQueue.push({ ...job, attempts });
         processQueue();
