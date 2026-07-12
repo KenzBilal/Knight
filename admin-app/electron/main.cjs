@@ -596,12 +596,20 @@ registerCommand('worker', async (args) => {
   const [action] = args;
   if (action === 'status') {
     const running = workerProcess && workerProcess.exitCode === null;
+    let memory = null;
+    if (running && workerProcess?.pid) {
+      try {
+        const stat = fs.readFileSync(`/proc/${workerProcess.pid}/status`, 'utf8');
+        const rss = stat.match(/VmRSS:\s+(\d+)\s+kB/);
+        if (rss) memory = { rss: parseInt(rss[1]) * 1024 };
+      } catch {}
+    }
     return {
       ok: true,
       running,
       pid: workerProcess?.pid || null,
       uptime: running ? Math.floor(process.uptime()) : 0,
-      memory: running ? process.memoryUsage() : null,
+      memory,
     };
   }
   if (action === 'restart') {
