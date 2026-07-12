@@ -52,8 +52,13 @@ export function Navbar() {
             {/* Logo */}
             <Link
               href="/"
-              className="font-display text-xl font-700 text-white tracking-tight"
+              className="flex items-center gap-2.5 font-display text-xl font-700 text-white tracking-tight"
             >
+              <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M16 2C10 2 5 6.5 5 12v8c0 5.5 5 10 11 10s11-4.5 11-10v-8c0-5.5-5-10-11-10z" fill="#1a1a1a" stroke="#333" strokeWidth="1"/>
+                <path d="M16 6l-1 18h2L16 6z" fill="#fff"/>
+                <path d="M13 14l6-3v2l-4 2 4 2v2l-6-3z" fill="#fff"/>
+              </svg>
               Knight
             </Link>
 
