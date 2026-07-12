@@ -1,0 +1,18 @@
+{
+  "semi": true,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "printWidth": 100,
+  "bracketSpacing": true,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    "dist/",
+    "dist-electron/",
+    "*.min.js",
+    "package-lock.json"
+  ]
+}

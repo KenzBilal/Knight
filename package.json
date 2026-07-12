@@ -1,12 +1,45 @@
 {
   "name": "knight",
+  "version": "1.0.0",
   "private": true,
+  "description": "Knight — AI-Powered B2B Sales Agent",
+  "author": "Ken Bilal <ken@knight.app>",
+  "license": "MIT",
+  "homepage": "https://knight.app",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KenzBilal/Knight.git"
+  },
+  "workspaces": [
+    "dashboard",
+    "worker"
+  ],
   "scripts": {
-    "dev": "cd dashboard && npm run dev",
+    "dev": "concurrently \"npm run dev:dashboard\" \"npm run dev:worker\"",
+    "dev:dashboard": "cd dashboard && npm run dev",
+    "dev:worker": "cd worker && node --watch index.js",
     "build": "cd dashboard && npm run build",
     "start": "cd dashboard && npm start",
-    "worker": "cd worker && node index.js",
-    "worker:setup": "cd worker && node telegram_userbot.js --setup",
-    "install:all": "cd dashboard && npm install && cd ../worker && npm install"
+    "worker": "cd worker && pm2 start ecosystem.config.cjs",
+    "worker:stop": "cd worker && pm2 stop knight-worker",
+    "worker:restart": "cd worker && pm2 restart knight-worker",
+    "worker:logs": "cd worker && pm2 logs knight-worker",
+    "lint": "cd dashboard && npm run lint",
+    "lint:fix": "cd dashboard && npx next lint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "cd dashboard && npm test",
+    "typecheck": "cd dashboard && npx tsc --noEmit",
+    "install:all": "npm install",
+    "setup": "cp -n dashboard/.env.example dashboard/.env.local 2>/dev/null; cp -n worker/.env.example worker/.env 2>/dev/null; echo 'Created .env files — fill in your keys'",
+    "clean": "rm -rf dashboard/.next dashboard/node_modules worker/node_modules node_modules",
+    "health": "curl -s http://localhost:3000/api/health | jq"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4",
+    "prettier": "^3.5.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

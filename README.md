@@ -1,112 +1,251 @@
 # Knight
 
-Autonomous AI-powered B2B sales agent. Discovers leads, audits websites, writes personalized pitches, sends cold emails, handles replies, and manages Telegram outreach — all on autopilot.
+<p align="center">
+  <img src="admin-app/electron/icon.png" width="120" alt="Knight Logo">
+</p>
+
+<h3 align="center">AI-Powered B2B Sales Agent</h3>
+
+<p align="center">
+  Autonomous prospect discovery, website audits, personalized outreach, and intelligent reply handling — all on autopilot.
+</p>
+
+<p align="center">
+  <a href="https://knight.app">Website</a> ·
+  <a href="https://knight.app/docs">Docs</a> ·
+  <a href="https://github.com/KenzBilal/Knight/issues">Issues</a> ·
+  <a href="https://github.com/KenzBilal/Knight/releases">Releases</a>
+</p>
+
+---
+
+## What is Knight?
+
+Knight is a fully autonomous B2B sales agent that works 24/7 to find leads, audit their websites, write personalized pitches, send emails, and handle replies — all powered by AI.
+
+### Core Features
+
+- **Autonomous Discovery** — Finds businesses matching your ideal customer profile
+- **Website Audits** — Analyzes prospects' sites for SEO, performance, and UX issues
+- **AI Pitch Generation** — Creates personalized outreach based on audit findings
+- **Smart Email Sending** — Sends sequences via Resend with custom domains
+- **Reply Handling** — AI reads and responds to incoming replies intelligently
+- **Telegram Integration** — Discover leads from Telegram groups, auto-pitch
+- **Team Management** — Multi-user orgs with roles (Owner, Admin, Member)
+- **Desktop Control Center** — Electron app for full system control
 
 ## Architecture
 
 ```
-Knight/
-├── dashboard/      # Next.js 15 (App Router) — Deploy to Vercel
-├── worker/         # Node.js background worker — Runs locally via PM2
-└── supabase/       # Database schema
+┌─────────────────────────────────────────────────────────┐
+│                      KNIGHT STACK                       │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
+│  │   Dashboard   │  │   Desktop    │  │   Website     │  │
+│  │  (Next.js 15) │  │  (Electron)  │  │  (Marketing)  │  │
+│  └──────┬───────┘  └──────┬───────┘  └──────────────┘  │
+│         │                  │                             │
+│         └────────┬─────────┘                             │
+│                  │                                       │
+│  ┌───────────────▼───────────────┐                      │
+│  │      Supabase (PostgreSQL)     │                      │
+│  │  • Auth  • DB  • Realtime      │                      │
+│  └───────────────┬───────────────┘                      │
+│                  │                                       │
+│  ┌───────────────▼───────────────┐                      │
+│  │       Worker (Node.js)         │                      │
+│  │  • Puppeteer  • AI APIs        │                      │
+│  │  • Email      • Telegram       │                      │
+│  └───────────────────────────────┘                      │
+│                                                         │
+├─────────────────────────────────────────────────────────┤
+│  AI: Cohere (audit) · Gemini (pitches) · OpenRouter     │
+│  Email: Resend  ·  Payments: LemonSqueezy               │
+└─────────────────────────────────────────────────────────┘
 ```
 
-- **Dashboard** — Landing page + auth + billing + analytics dashboard
-- **Worker** — Background job processor (audits, emails, Telegram)
-- **Supabase** — PostgreSQL database + auth + realtime
+## Tech Stack
 
-## Setup
+| Layer | Technology |
+|-------|-----------|
+| Dashboard | Next.js 15, React 19, Tailwind CSS 4, TypeScript |
+| Desktop | Electron, Vite, React 19, TypeScript |
+| Worker | Node.js, Puppeteer, PM2 |
+| Database | Supabase (PostgreSQL, Auth, Realtime) |
+| AI | Cohere, Google Gemini, OpenRouter |
+| Email | Resend |
+| Payments | LemonSqueezy |
+| Deployment | Vercel (dashboard), AppImage/deb/dmg/exe (desktop) |
 
-### 1. Supabase
+## Quick Start
 
-1. Create a new Supabase project
-2. Run `supabase/schema.sql` in the SQL editor
-3. Copy your Project URL, Anon Key, and Service Role Key
+### Prerequisites
 
-### 2. Dashboard
+- Node.js 20+
+- npm 10+
+- Supabase account (free tier works)
+- Resend account (free tier works)
+
+### 1. Clone
 
 ```bash
-cd dashboard
-cp .env.example .env.local
-# Fill in your Supabase + Stripe + Resend keys
+git clone --recurse-submodules https://github.com/KenzBilal/Knight.git
+cd Knight
+```
+
+### 2. Install
+
+```bash
+npm run install:all
+```
+
+### 3. Configure
+
+```bash
+cp dashboard/.env.example dashboard/.env.local
+cp worker/.env.example worker/.env
+```
+
+Edit `dashboard/.env.local` and `worker/.env` with your API keys.
+
+### 4. Setup Database
+
+Run `supabase/schema.sql` in your Supabase SQL editor, then run each migration in `supabase/migrations/` in order.
+
+### 5. Run
+
+```bash
+npm run dev
+```
+
+Dashboard: [http://localhost:3000](http://localhost:3000)
+
+## Desktop App
+
+The admin desktop app lives in a [private repo](https://github.com/KenzBilal/Knight-Desktop).
+
+```bash
+cd admin-app
 npm install
 npm run dev
 ```
 
-Visit `http://localhost:3000`
+Or download a pre-built release from [Releases](https://github.com/KenzBilal/Knight-Desktop/releases).
 
-### 3. Worker
+## API Routes
 
-```bash
-cd worker
-cp .env.example .env
-# Fill in your Supabase + AI + Resend + Telegram keys
-npm install
-node index.js
-```
-
-### 4. Stripe
-
-1. Create products and prices in Stripe Dashboard
-2. Add webhook endpoint: `https://yourdomain.com/api/stripe/webhook`
-3. Events to listen for: `checkout.session.completed`, `customer.subscription.deleted`
-
-### 5. Resend
-
-1. Create a Resend account
-2. Add and verify your sending domain
-3. Copy your API key
+| Route | Method | Description |
+|-------|--------|-------------|
+| `/api/auth/login` | POST | Email/password login |
+| `/api/auth/signup` | POST | Create account |
+| `/api/auth/logout` | POST | Sign out |
+| `/api/overview` | GET | Dashboard stats |
+| `/api/prospects` | GET/POST | Manage prospects |
+| `/api/leads` | GET | Discovered leads |
+| `/api/audit` | POST | Run website audit |
+| `/api/draft` | POST | Generate AI pitch |
+| `/api/send-reply` | POST | Send email reply |
+| `/api/engine` | POST | Start/stop worker |
+| `/api/billing/checkout` | POST | Create checkout |
+| `/api/billing/webhook` | POST | LemonSqueezy webhook |
+| `/api/team` | GET | List team members |
+| `/api/team/invite` | POST | Send invite |
+| `/api/team/accept` | GET | Accept invite |
+| `/api/config` | GET/POST | Org settings |
+| `/api/plans` | GET | Available plans |
+| `/api/usage` | GET | Usage stats |
+| `/api/health` | GET | Health check |
 
 ## Environment Variables
 
-### Dashboard (`.env.local`)
+See `dashboard/.env.example` and `worker/.env.example` for the full list.
 
-| Variable | Description |
-|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `STRIPE_SECRET_KEY` | Stripe secret key |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret |
-| `STRIPE_PRICE_STARTER` | Stripe price ID for Starter plan |
-| `STRIPE_PRICE_PRO` | Stripe price ID for Pro plan |
-| `STRIPE_PRICE_AGENCY` | Stripe price ID for Agency plan |
-| `RESEND_API_KEY` | Resend API key |
-| `NEXT_PUBLIC_APP_URL` | Your app URL (http://localhost:3000 for dev) |
+### Dashboard
 
-### Worker (`.env`)
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
+| `LEMONSQUEEZY_API_KEY` | Yes | LemonSqueezy API key |
+| `LEMONSQUEEZY_STORE_ID` | Yes | LemonSqueezy store ID |
+| `LEMONSQUEEZY_WEBHOOK_SECRET` | Yes | LemonSqueezy webhook secret |
+| `RESEND_API_KEY` | Yes | Resend API key |
+| `NEXT_PUBLIC_APP_URL` | Yes | App URL (e.g. `https://knight.app`) |
 
-| Variable | Description |
-|----------|-------------|
-| `SUPABASE_URL` | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service role key |
-| `GEMINI_API_KEY` | Google AI Studio API key |
-| `COHERE_API_KEY` | Cohere API key |
-| `OPENROUTER_API_KEY` | OpenRouter API key |
-| `RESEND_API_KEY` | Resend API key |
-| `TELEGRAM_API_ID` | Telegram app API ID |
-| `TELEGRAM_API_HASH` | Telegram app API hash |
+### Worker
 
-## Pricing
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | Yes | Supabase project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
+| `COHERE_API_KEY` | Yes | Cohere API key (audits) |
+| `GEMINI_API_KEY` | Yes | Google Gemini API key (pitches) |
+| `OPENROUTER_API_KEY` | Yes | OpenRouter API key (suggestions) |
+| `RESEND_API_KEY` | Yes | Resend API key (emails) |
+| `TELEGRAM_API_ID` | No | Telegram API ID (for userbot) |
+| `TELEGRAM_API_HASH` | No | Telegram API hash (for userbot) |
 
-| Plan | Price | Leads/day | Emails/day | Telegram |
-|------|-------|-----------|------------|----------|
-| Free | $0 | 5 | 0 | No |
-| Starter | $49/mo | 20 | 30 | No |
-| Pro | $149/mo | 100 | 200 | Yes |
-| Agency | $299/mo | Unlimited | Unlimited | Yes |
+## Production Deployment
 
-## Tech Stack
+### Dashboard (Vercel)
 
-- **Frontend:** Next.js 15, React 19, Tailwind CSS 4, TypeScript
-- **Backend:** Supabase (PostgreSQL + Auth + Realtime), Node.js
-- **AI:** Cohere, Google Gemini, OpenRouter (Nemotron + Llama)
-- **Email:** Resend
-- **Telegram:** gramjs (MTProto)
-- **Payments:** Stripe
-- **Scraping:** Puppeteer
-- **Hosting:** Vercel (dashboard), Local via PM2 (worker)
+```bash
+# Auto-deploys on push to master
+git push origin master
+```
 
+### Worker (PM2)
 
+```bash
+cd worker
+npm install
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup
+```
 
+### Desktop App
 
+Builds are automated via GitHub Actions on the [private repo](https://github.com/KenzBilal/Knight-Desktop).
+
+## Project Structure
+
+```
+Knight/
+├── dashboard/              # Next.js 15 dashboard + marketing site
+│   ├── app/                # App router pages + API routes
+│   │   ├── api/            # 30 API endpoints
+│   │   ├── auth/           # Login, signup
+│   │   ├── dashboard/      # Main dashboard pages
+│   │   └── (marketing)/    # Landing, about, pricing, legal
+│   ├── components/         # 16 React components
+│   └── lib/                # Auth, billing, utils
+├── worker/                 # Autonomous sales agent
+│   ├── index.js            # Job engine
+│   ├── shared_audit.js     # Website audit
+│   ├── telegram_*.js       # Telegram integration
+│   └── utils/              # Crypto helpers
+├── admin-app/              # Electron desktop app (submodule)
+├── supabase/               # Database schema + migrations
+│   ├── schema.sql          # Full schema (14 tables)
+│   └── migrations/         # 9 migrations
+├── docs/                   # Documentation
+├── docker-compose.yml      # Production Docker setup
+└── package.json            # Root workspace config
+```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+[MIT](LICENSE) — Ken Bilal
+
+---
+
+<p align="center">
+  Built with obsession by <a href="https://github.com/KenzBilal">Ken Bilal</a>
+</p>
