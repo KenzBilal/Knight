@@ -183,7 +183,7 @@ export default async function PricingPage() {
             <span className="text-[#525252]">a year of Knight.</span>
           </h1>
           <p className="text-base text-[#737373] leading-relaxed animate-fade-up animate-delay-200">
-            Start free. Upgrade when you're ready. Cancel anytime — no lock-in,
+            Start free. Upgrade when you&apos;re ready. Cancel anytime — no lock-in,
             no contracts.
           </p>
         </div>
