@@ -8,7 +8,8 @@ import { LandingPage } from "@/components/LandingPage";
 async function getLandingContent() {
   try {
     const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
     const res = await fetch(`${baseUrl}/api/landing-content`, {
       next: { revalidate: 3600 },
     });

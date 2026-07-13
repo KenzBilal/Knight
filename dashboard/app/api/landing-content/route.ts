@@ -123,11 +123,7 @@ export async function GET() {
       result[row.section] = row.content;
     }
 
-    return NextResponse.json(result, {
-      headers: {
-        "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
-      },
-    });
+    return NextResponse.json(result);
   } catch {
     // Always return defaults so page never breaks
     return NextResponse.json(DEFAULTS, {
