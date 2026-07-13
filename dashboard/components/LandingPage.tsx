@@ -149,18 +149,27 @@ function useScrollReveal() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
+    const items = el.querySelectorAll(".reveal");
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             (entry.target as HTMLElement).classList.add("revealed");
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.12 }
+      { threshold: 0.05, rootMargin: "0px 0px -10% 0px" }
     );
-    const items = el.querySelectorAll(".reveal");
-    items.forEach((item) => observer.observe(item));
+    items.forEach((item) => {
+      // If already visible (e.g. navigated via #hash), reveal immediately
+      const rect = item.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        (item as HTMLElement).classList.add("revealed");
+      } else {
+        observer.observe(item);
+      }
+    });
     return () => observer.disconnect();
   }, []);
   return ref;
