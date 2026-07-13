@@ -147,9 +147,11 @@ const DEFAULT_CTA: CtaContent = {
 function useScrollReveal() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const items = el.querySelectorAll(".reveal");
+    // Observe ALL .reveal elements in the entire document, not scoped to one ref.
+    // The old approach used a single ref shared by multiple sections, so only the
+    // last section's elements were observed — leaving earlier sections invisible.
+    const items = document.querySelectorAll(".reveal");
+    if (items.length === 0) return;
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -162,7 +164,6 @@ function useScrollReveal() {
       { threshold: 0.05, rootMargin: "0px 0px -10% 0px" }
     );
     items.forEach((item) => {
-      // If already visible (e.g. navigated via #hash), reveal immediately
       const rect = item.getBoundingClientRect();
       if (rect.top < window.innerHeight && rect.bottom > 0) {
         (item as HTMLElement).classList.add("revealed");
