@@ -1,251 +1,324 @@
 # Knight
 
-<p align="center">
-  <img src="admin-app/electron/icon.png" width="120" alt="Knight Logo">
-</p>
+**Autonomous B2B Sales Agent**
 
-<h3 align="center">AI-Powered B2B Sales Agent</h3>
+Knight is a full-stack SaaS platform that automates B2B prospecting end-to-end — from finding leads on Google Maps, to auditing their websites, generating personalized AI pitches, sending cold emails, and handling Telegram conversations.
 
-<p align="center">
-  Autonomous prospect discovery, website audits, personalized outreach, and intelligent reply handling — all on autopilot.
-</p>
-
-<p align="center">
-  <a href="https://knight.app">Website</a> ·
-  <a href="https://knight.app/docs">Docs</a> ·
-  <a href="https://github.com/KenzBilal/Knight/issues">Issues</a> ·
-  <a href="https://github.com/KenzBilal/Knight/releases">Releases</a>
-</p>
+Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 
 ---
 
-## What is Knight?
+## Table of Contents
 
-Knight is a fully autonomous B2B sales agent that works 24/7 to find leads, audit their websites, write personalized pitches, send emails, and handle replies — all powered by AI.
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Project Structure](#project-structure)
+- [Core Features](#core-features)
+- [Desktop App](#desktop-app)
+- [Worker](#worker)
+- [Database](#database)
+- [Deployment](#deployment)
+- [License](#license)
 
-### Core Features
-
-- **Autonomous Discovery** — Finds businesses matching your ideal customer profile
-- **Website Audits** — Analyzes prospects' sites for SEO, performance, and UX issues
-- **AI Pitch Generation** — Creates personalized outreach based on audit findings
-- **Smart Email Sending** — Sends sequences via Resend with custom domains
-- **Reply Handling** — AI reads and responds to incoming replies intelligently
-- **Telegram Integration** — Discover leads from Telegram groups, auto-pitch
-- **Team Management** — Multi-user orgs with roles (Owner, Admin, Member)
-- **Desktop Control Center** — Electron app for full system control
+---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                      KNIGHT STACK                       │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │   Dashboard   │  │   Desktop    │  │   Website     │  │
-│  │  (Next.js 15) │  │  (Electron)  │  │  (Marketing)  │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────────────┘  │
-│         │                  │                             │
-│         └────────┬─────────┘                             │
-│                  │                                       │
-│  ┌───────────────▼───────────────┐                      │
-│  │      Supabase (PostgreSQL)     │                      │
-│  │  • Auth  • DB  • Realtime      │                      │
-│  └───────────────┬───────────────┘                      │
-│                  │                                       │
-│  ┌───────────────▼───────────────┐                      │
-│  │       Worker (Node.js)         │                      │
-│  │  • Puppeteer  • AI APIs        │                      │
-│  │  • Email      • Telegram       │                      │
-│  └───────────────────────────────┘                      │
-│                                                         │
-├─────────────────────────────────────────────────────────┤
-│  AI: Cohere (audit) · Gemini (pitches) · OpenRouter     │
-│  Email: Resend  ·  Payments: LemonSqueezy               │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│   Dashboard      │     │   Worker         │     │   Desktop App    │
+│   (Next.js 15)   │────▶│   (Node.js)      │     │   (Electron)     │
+│   Vercel         │     │   PM2 / Docker   │     │   Admin panel    │
+└────────┬────────┘     └────────┬─────────┘     └────────┬─────────┘
+         │                       │                         │
+         └───────────────────────┼─────────────────────────┘
+                                 │
+                    ┌────────────┴────────────┐
+                    │      Supabase           │
+                    │  PostgreSQL + Auth +     │
+                    │  Storage + Edge Functions│
+                    └─────────────────────────┘
 ```
+
+- **Dashboard** — Next.js 15 App Router on Vercel with Supabase Auth, cookie-based sessions, team management, billing, support tickets, landing page CMS
+- **Worker** — Independent Node.js process (PM2/Docker) polling `jobs` table, concurrent batch processing (max 2 jobs), priority queues, rate limiting, RAM monitoring
+- **Desktop App** — Electron 41 + Vite 6 + React 19 admin panel for managing users, plans, AI providers, website content, support tickets, environment config, worker control
+- **Supabase** — PostgreSQL database with 17+ migrations, RLS policies, Edge Functions for Telegram, real-time subscriptions, file storage
+
+---
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Dashboard | Next.js 15, React 19, Tailwind CSS 4, TypeScript |
-| Desktop | Electron, Vite, React 19, TypeScript |
-| Worker | Node.js, Puppeteer, PM2 |
-| Database | Supabase (PostgreSQL, Auth, Realtime) |
-| AI | Cohere, Google Gemini, OpenRouter |
-| Email | Resend |
-| Payments | LemonSqueezy |
-| Deployment | Vercel (dashboard), AppImage/deb/dmg/exe (desktop) |
+| Frontend | React 19, Tailwind CSS 4, Next.js 15 App Router |
+| Auth | Supabase Auth, httpOnly cookies (7-day expiry) |
+| Database | PostgreSQL via Supabase, 17+ migrations |
+| API | Next.js Route Handlers, Edge Functions |
+| Worker | Node.js, cheerio, Google Maps scraping, Puppeteer |
+| Desktop | Electron 41, Vite 6, React 19, electron-updater |
+| Email | Resend API |
+| Payments | LemonSqueezy (subscriptions + usage-based) |
+| AI | OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, Cerebras |
+| Deploy | Vercel (dashboard), PM2/Docker (worker), GitHub Releases (desktop) |
 
-## Quick Start
+---
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
-- npm 10+
-- Supabase account (free tier works)
-- Resend account (free tier works)
+- Node.js 18+
+- npm or yarn
+- Supabase project ([supabase.com](https://supabase.com))
+- Resend API key ([resend.com](https://resend.com))
+- LemonSqueezy account ([lemonsqueezy.com](https://lemonsqueezy.com))
 
 ### 1. Clone
 
 ```bash
-git clone --recurse-submodules https://github.com/KenzBilal/Knight.git
+git clone https://github.com/KenzBilal/Knight.git
 cd Knight
+git submodule update --init --recursive
 ```
 
-### 2. Install
+### 2. Environment
 
 ```bash
-npm run install:all
+cp .env.example .env
 ```
 
-### 3. Configure
+Fill in your keys:
+
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+RESEND_API_KEY=re_your_key
+ENCRYPTION_KEY=your-32-char-hex
+```
+
+### 3. Database
+
+Run all migrations in `supabase/migrations/` in order via the Supabase SQL Editor, or use the Supabase CLI:
 
 ```bash
-cp dashboard/.env.example dashboard/.env.local
-cp worker/.env.example worker/.env
+supabase db push
 ```
 
-Edit `dashboard/.env.local` and `worker/.env` with your API keys.
-
-### 4. Setup Database
-
-Run `supabase/schema.sql` in your Supabase SQL editor, then run each migration in `supabase/migrations/` in order.
-
-### 5. Run
+### 4. Install
 
 ```bash
-npm run dev
+npm run setup
 ```
 
-Dashboard: [http://localhost:3000](http://localhost:3000)
-
-## Desktop App
-
-The admin desktop app lives in a [private repo](https://github.com/KenzBilal/Knight-Desktop).
+### 5. Start
 
 ```bash
-cd admin-app
-npm install
-npm run dev
+npm run dev          # Dashboard on localhost:3000
+npm run worker       # Worker via PM2
 ```
 
-Or download a pre-built release from [Releases](https://github.com/KenzBilal/Knight-Desktop/releases).
-
-## API Routes
-
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/auth/login` | POST | Email/password login |
-| `/api/auth/signup` | POST | Create account |
-| `/api/auth/logout` | POST | Sign out |
-| `/api/overview` | GET | Dashboard stats |
-| `/api/prospects` | GET/POST | Manage prospects |
-| `/api/leads` | GET | Discovered leads |
-| `/api/audit` | POST | Run website audit |
-| `/api/draft` | POST | Generate AI pitch |
-| `/api/send-reply` | POST | Send email reply |
-| `/api/engine` | POST | Start/stop worker |
-| `/api/billing/checkout` | POST | Create checkout |
-| `/api/billing/webhook` | POST | LemonSqueezy webhook |
-| `/api/team` | GET | List team members |
-| `/api/team/invite` | POST | Send invite |
-| `/api/team/accept` | GET | Accept invite |
-| `/api/config` | GET/POST | Org settings |
-| `/api/plans` | GET | Available plans |
-| `/api/usage` | GET | Usage stats |
-| `/api/health` | GET | Health check |
-
-## Environment Variables
-
-See `dashboard/.env.example` and `worker/.env.example` for the full list.
-
-### Dashboard
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous key |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
-| `LEMONSQUEEZY_API_KEY` | Yes | LemonSqueezy API key |
-| `LEMONSQUEEZY_STORE_ID` | Yes | LemonSqueezy store ID |
-| `LEMONSQUEEZY_WEBHOOK_SECRET` | Yes | LemonSqueezy webhook secret |
-| `RESEND_API_KEY` | Yes | Resend API key |
-| `NEXT_PUBLIC_APP_URL` | Yes | App URL (e.g. `https://knight.app`) |
-
-### Worker
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `SUPABASE_URL` | Yes | Supabase project URL |
-| `SUPABASE_SERVICE_ROLE_KEY` | Yes | Supabase service role key |
-| `COHERE_API_KEY` | Yes | Cohere API key (audits) |
-| `GEMINI_API_KEY` | Yes | Google Gemini API key (pitches) |
-| `OPENROUTER_API_KEY` | Yes | OpenRouter API key (suggestions) |
-| `RESEND_API_KEY` | Yes | Resend API key (emails) |
-| `TELEGRAM_API_ID` | No | Telegram API ID (for userbot) |
-| `TELEGRAM_API_HASH` | No | Telegram API hash (for userbot) |
-
-## Production Deployment
-
-### Dashboard (Vercel)
-
-```bash
-# Auto-deploys on push to master
-git push origin master
-```
-
-### Worker (PM2)
-
-```bash
-cd worker
-npm install
-pm2 start ecosystem.config.cjs
-pm2 save
-pm2 startup
-```
-
-### Desktop App
-
-Builds are automated via GitHub Actions on the [private repo](https://github.com/KenzBilal/Knight-Desktop).
+---
 
 ## Project Structure
 
 ```
 Knight/
-├── dashboard/              # Next.js 15 dashboard + marketing site
-│   ├── app/                # App router pages + API routes
-│   │   ├── api/            # 30 API endpoints
-│   │   ├── auth/           # Login, signup
-│   │   ├── dashboard/      # Main dashboard pages
-│   │   └── (marketing)/    # Landing, about, pricing, legal
-│   ├── components/         # 16 React components
-│   └── lib/                # Auth, billing, utils
-├── worker/                 # Autonomous sales agent
-│   ├── index.js            # Job engine
-│   ├── shared_audit.js     # Website audit
-│   ├── telegram_*.js       # Telegram integration
-│   └── utils/              # Crypto helpers
-├── admin-app/              # Electron desktop app (submodule)
-├── supabase/               # Database schema + migrations
-│   ├── schema.sql          # Full schema (14 tables)
-│   └── migrations/         # 9 migrations
-├── docs/                   # Documentation
-├── docker-compose.yml      # Production Docker setup
-└── package.json            # Root workspace config
+├── admin-app/                  # Electron desktop app (git submodule)
+│   ├── electron/               # Main process (main.cjs, preload.cjs)
+│   ├── src/
+│   │   ├── components/         # 18+ admin modules
+│   │   └── lib/                # Supabase, settings, types
+│   ├── assets/sounds/          # WAV notification sounds
+│   └── vite.config.ts          # HMR + full-reload plugin
+├── dashboard/                  # Next.js 15 dashboard + marketing site
+│   ├── app/
+│   │   ├── api/                # Route handlers (leads, emails, billing, support, etc.)
+│   │   ├── dashboard/          # App pages (overview, prospects, inbox, settings, etc.)
+│   │   ├── pricing/            # Live pricing page (DB-driven)
+│   │   └── page.tsx            # Landing page (Supabase direct query, force-dynamic)
+│   ├── components/             # UI components (LandingPage, DashboardContent, etc.)
+│   └── lib/                    # Auth, Supabase, pricing helpers
+├── docs/                       # Documentation
+├── supabase/
+│   └── migrations/             # 17 SQL migrations (001–017)
+├── worker/
+│   ├── index.js                # Concurrent job processor (max 2, priority, RAM guard)
+│   ├── integrations/           # Scrapers, email, Telegram, webhooks
+│   ├── jobs/                   # Job type handlers
+│   └── utils/                  # Queue, plans, DB helpers
+├── docker-compose.yml          # Dashboard + Worker services
+├── Dockerfile                  # Multi-stage Next.js build
+└── ecosystem.config.cjs        # PM2 config for worker
 ```
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## License
-
-[MIT](LICENSE) — Kenz Bilal
 
 ---
 
-<p align="center">
-  Built with obsession by <a href="https://github.com/KenzBilal">Kenz Bilal</a>
-</p>
+## Core Features
+
+### Lead Discovery
+Search Google Maps by niche + location. Results are automatically scored and queued for auditing.
+
+### Website Audits
+30+ point analysis: broken links, missing meta tags, SSL issues, performance problems, mobile readiness, accessibility gaps. Results feed into AI pitch generation.
+
+### AI Pitch Generation
+Contextual pitches built from audit findings. Each pitch references specific issues on the prospect's website to create compelling, personalized outreach.
+
+### Cold Email Outreach
+Automated email sequences via Resend. Custom tracking domains, reply detection, bounce handling, rate limiting.
+
+### Telegram Integration
+AI-powered Telegram conversations for real-time lead qualification. Runs as an Edge Function on Supabase with user-level configuration.
+
+### AI Provider Hub
+Admin-managed AI providers with multiple API keys per provider, automatic rotation, cooldown on failures, usage tracking. Supports OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, and Cerebras.
+
+### Billing
+LemonSqueezy-powered subscriptions with three tiers:
+- **Free** — 50 leads/mo, 50 emails/mo
+- **Starter ($49/mo)** — Unlimited leads & emails
+- **Pro ($149/mo)** — Telegram agent, drip sequences, custom domains, BYOK
+
+### Support Tickets
+Threaded ticket system with admin replies, status management, real-time polling, unread badge in dashboard top bar and desktop app.
+
+### Landing Page CMS
+Database-driven landing page sections (hero, stats, steps, features, FAQ, CTA). Editable from the desktop app's WebsiteContent tab. Content stored as JSONB in the `landing_content` table.
+
+---
+
+## Desktop App
+
+Electron 41 admin panel with frameless window, custom titlebar, and 18+ management modules.
+
+### Building
+
+```bash
+cd admin-app
+npm install
+npx vite build && npx electron-builder --linux AppImage
+```
+
+**Important:** You must run `vite build` before `electron-builder`. The builder does not auto-build the renderer.
+
+### Auto-Updates
+
+Uses `electron-updater` with GitHub Releases. Requires a `GH_TOKEN` env var for the private `KenzBilal/Knight-Desktop` repo. Updates are checked on app start and downloaded automatically with a restart prompt.
+
+### Modules
+
+| Group | Module | Description |
+|-------|--------|-------------|
+| Overview | Dashboard | System stats, quick actions |
+| Overview | Activity Log | Audit trail of all actions |
+| Management | Users | User CRUD, role assignment |
+| Management | Organizations | Org management |
+| Management | Team | Team invites, roles |
+| Management | Billing | Subscription management |
+| Management | Plans | Plan config, limits, features |
+| Data | Jobs Queue | Job monitoring, retry, cancel |
+| Data | Leads | Lead management |
+| Data | Emails | Email log |
+| Data | Telegram | Telegram config |
+| Data | Support | Ticket threads, admin replies |
+| Content | Website Content | Landing page CMS editor |
+| System | AI Hub | Provider management, key rotation |
+| System | Worker | Start/stop/restart, health monitoring |
+| System | Log Viewer | Live log streaming |
+| System | Environment | `.env` editor, Supabase status |
+
+---
+
+## Worker
+
+The worker processes jobs concurrently with:
+
+- **Max 2 concurrent jobs** (configurable)
+- **Priority queues** — Discovery jobs run first
+- **RAM guard** — Pauses if system memory exceeds 1.5 GB
+- **120s timeout** per job
+- **Dedup** — Skips duplicate leads
+
+### Job Types
+
+| Job | Description |
+|-----|-------------|
+| `DISCOVER` | Google Maps scraping for new leads |
+| `SCRAPE` | Website audit + AI pitch + email send |
+| `PROCESS_REPLY` | Handle Telegram replies |
+
+### Running
+
+```bash
+pm2 start ecosystem.config.cjs    # Start via PM2
+pm2 status                        # Check status
+pm2 logs knight-worker            # View logs
+```
+
+Or via Docker:
+
+```bash
+docker compose up -d worker
+```
+
+---
+
+## Database
+
+PostgreSQL via Supabase with 17 migrations covering:
+
+- `001` — Core tables (users, leads, emails, jobs)
+- `002` — API keys schema
+- `003` — Email accounts, domains, templates
+- `004` — Telegram accounts, conversations, messages
+- `005` — Webhooks, audit logs, job queues
+- `006` — Pitch rewrites
+- `007` — Job retry columns, indexes
+- `008` — Pricing & plan limits
+- `009` — Organizations & team management
+- `010` — AI providers, models, keys, routing, task history
+- `011` — Support tickets & replies
+- `012` — Landing page CMS content
+- `013–017` — Additional features
+
+Full schema: `supabase/migrations/`
+
+---
+
+## Deployment
+
+### Dashboard (Vercel)
+
+Auto-deploys from `master` branch. Set environment variables in Vercel dashboard.
+
+```bash
+vercel --prod
+```
+
+### Worker
+
+```bash
+# PM2
+pm2 start ecosystem.config.cjs
+
+# Docker
+docker compose up -d worker
+```
+
+### Desktop App
+
+Builds published to GitHub Releases as AppImage. Auto-updater delivers updates to users.
+
+```bash
+cd admin-app
+GH_TOKEN=your_token npx vite build && npx electron-builder --linux AppImage --publish always
+```
+
+---
+
+## License
+
+Proprietary. All rights reserved. See [LICENSE](LICENSE) for details.
