@@ -13,6 +13,7 @@ import {
   ROICalculator,
   ComparisonTable,
 } from "@/components/LandingExtras";
+import { ScrollPathDecoration } from "@/components/ui/svg-follow-scroll";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeroContent {
@@ -231,6 +232,8 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
         <div className="absolute inset-0 hero-grid opacity-60" />
         <div className="absolute inset-0 hero-vignette" />
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#080808] to-transparent" />
+        {/* Scroll-following path — decorative, positioned to right side */}
+        <ScrollPathDecoration className="absolute -right-32 top-0 w-[700px] opacity-60 hidden lg:block" />
 
         <div className="relative z-10 mx-auto max-w-5xl px-6 flex flex-col items-center text-center">
           <h1 className="font-display font-800 text-6xl md:text-7xl lg:text-8xl text-white tracking-tight mb-6 animate-fade-up">
