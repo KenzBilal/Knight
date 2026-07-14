@@ -78,31 +78,33 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden bg-white">
       <HalftoneBackground />
-      <div className="w-full max-w-md flex-1 flex flex-col justify-center relative z-10">
-        <FadeIn>
-          <div className="text-center mb-8">
-            <Link href="/" className="font-display text-2xl text-[#111] hover:text-[#444] transition-colors drop-shadow-sm">Knight</Link>
-            <p className="text-sm text-[#666] mt-2 drop-shadow-sm">Sign in to your dashboard</p>
-          </div>
-        </FadeIn>
+      <div className="w-full max-w-md flex-1 flex flex-col justify-center relative z-10 py-12">
+        <div className="bg-white/70 backdrop-blur-xl border border-black/5 p-8 sm:p-10 rounded-[2rem] shadow-2xl">
+          <FadeIn>
+            <div className="text-center mb-8">
+              <Link href="/" className="font-display text-2xl text-[#111] hover:text-[#444] transition-colors drop-shadow-sm">Knight</Link>
+              <p className="text-sm text-[#666] mt-2 drop-shadow-sm">Sign in to your dashboard</p>
+            </div>
+          </FadeIn>
 
-        <Suspense fallback={
-          <div className="flex items-center justify-center py-8">
-            <svg className="animate-spin h-6 w-6 text-[#666]" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-          </div>
-        }>
-          <LoginForm />
-        </Suspense>
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-8">
+              <svg className="animate-spin h-6 w-6 text-[#666]" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+            </div>
+          }>
+            <LoginForm />
+          </Suspense>
 
-        <FadeIn delay={400}>
-          <p className="text-center text-sm text-[#666] mt-6 drop-shadow-sm">
-            Don&apos;t have an account?{" "}
-            <Link href="/auth/signup" className="text-[#111] font-medium hover:underline transition-colors">Sign up</Link>
-          </p>
-        </FadeIn>
+          <FadeIn delay={400}>
+            <p className="text-center text-sm text-[#666] mt-6 drop-shadow-sm">
+              Don&apos;t have an account?{" "}
+              <Link href="/auth/signup" className="text-[#111] font-medium hover:underline transition-colors">Sign up</Link>
+            </p>
+          </FadeIn>
+        </div>
       </div>
 
       <FadeIn delay={500}>
