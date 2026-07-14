@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useScroll, useSpring, useTransform, MotionValue } from "framer-motion";
-import { useRef } from "react";
+import { useRef, RefObject } from "react";
 
 // ─── Knight-themed scroll SVG decoration ───────────────────────────────────────
 // Place <ScrollPathDecoration /> as absolute inset-0 inside the page root div.
@@ -17,7 +17,7 @@ export function ScrollPathDecoration({
   pageRef,
 }: {
   className?: string;
-  pageRef?: React.RefObject<HTMLDivElement | null>;
+  pageRef?: RefObject<HTMLDivElement | null>;
 }) {
   const internalRef = useRef<HTMLDivElement>(null);
   const targetRef = pageRef ?? internalRef;
@@ -31,7 +31,7 @@ export function ScrollPathDecoration({
   const smoothProgress = useSpring(scrollYProgress, SPRING_CONFIG);
 
   return (
-    <div ref={pageRef ? undefined : internalRef} className={`pointer-events-none ${className}`}>
+    <div ref={pageRef ? undefined : internalRef} className={`pointer-events-none overflow-hidden ${className}`}>
       <KnightPath scrollYProgress={smoothProgress} />
     </div>
   );

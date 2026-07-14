@@ -225,7 +225,7 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
   const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={pageRef} className="relative min-h-screen bg-[#080808]">
+    <div ref={pageRef} className="relative min-h-screen bg-[#080808] overflow-hidden">
       {/* Scroll-following path — full page, spring-smoothed, GPU composited */}
       <ScrollPathDecoration
         pageRef={pageRef}
