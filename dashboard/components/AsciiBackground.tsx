@@ -47,8 +47,8 @@ export const CreationOfAdamAscii = `
 
 export function AsciiBackground() {
   return (
-    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-[0.03]">
-      <pre className="text-[10px] md:text-[14px] leading-tight font-mono text-white whitespace-pre select-none scale-150">
+    <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none flex items-center justify-center opacity-20">
+      <pre className="text-[10px] md:text-[14px] leading-tight font-mono text-white/50 whitespace-pre select-none scale-150">
         {CreationOfAdamAscii}
       </pre>
     </div>
