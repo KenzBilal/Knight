@@ -222,16 +222,12 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
   const cta = content?.cta ?? DEFAULT_CTA;
 
   const revealRef = useScrollReveal();
-  const pageRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div ref={pageRef} className="relative min-h-screen bg-[#080808] overflow-hidden">
-      {/* Scroll-following path — full page, spring-smoothed, GPU composited */}
-      <ScrollPathDecoration
-        pageRef={pageRef}
-        className="absolute inset-0 w-full h-full pointer-events-none hidden lg:block z-0 mix-blend-screen"
-      />
-      
+    <div className="relative min-h-screen bg-[#080808] overflow-hidden">
+      {/* Canvas scroll path — GPU-composited, zero SVG repaint, true 60fps */}
+      <ScrollPathDecoration className="fixed inset-0 w-screen h-screen pointer-events-none hidden lg:block z-0 mix-blend-screen" />
+
       <Navbar />
 
       {/* ── Hero ── */}
