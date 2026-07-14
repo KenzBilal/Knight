@@ -28,8 +28,12 @@ export interface OrgConfig {
   auto_send_threshold: number;
   daily_email_limit: number;
   telegram_enabled: boolean;
+  telegram_mode: string | null;
   telegram_phone: string | null;
+  telegram_bot_token: string | null;
   telegram_admin_chat_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 /**

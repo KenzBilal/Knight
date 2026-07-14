@@ -73,23 +73,36 @@ scheduleMidnightCleanup();
 async function runDailyCleanup() {
   console.log('[Cleanup] Running daily cleanup for 30-day stale leads...');
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-  const { data } = await supabase
+  const { data, error: fetchError } = await supabase
     .from('companies')
     .select('id, org_id')
     .eq('status', 'PITCHED')
     .lt('created_at', thirtyDaysAgo);
 
+  if (fetchError) {
+    console.error('[Cleanup] Failed to fetch stale leads:', fetchError.message);
+    return;
+  }
+
   if (data && data.length > 0) {
     for (const company of data) {
-      await supabase.from('companies').update({ status: 'REJECTED' }).eq('id', company.id);
+      const { error: updateError } = await supabase.from('companies').update({ status: 'REJECTED' }).eq('id', company.id);
+      if (updateError) {
+        console.error(`[Cleanup] Failed to update company ${company.id}:`, updateError.message);
+        continue;
+      }
+
       const { data: audit } = await supabase.from('audits').select('id').eq('company_id', company.id).single();
       if (audit) {
-        await supabase.from('audit_results').insert({
+        const { error: insertError } = await supabase.from('audit_results').insert({
           audit_id: audit.id,
           category: 'REJECTED',
           raw_data: {},
           issues_found: { rejection_reason: 'No reply after 30 days' }
         });
+        if (insertError) {
+          console.error(`[Cleanup] Failed to insert audit result for company ${company.id}:`, insertError.message);
+        }
       }
     }
     console.log(`[Cleanup] Cleaned up ${data.length} stale leads.`);
@@ -165,11 +178,16 @@ async function handleJob(job) {
   const attempts = (job.attempts || 0) + 1;
   console.log(`[Job] ${job.type} ${job.id} | org: ${job.org_id} | attempt ${attempts}/${MAX_ATTEMPTS}`);
 
-  await supabase.from('jobs').update({
+  const { error: startError } = await supabase.from('jobs').update({
     status: 'RUNNING',
     started_at: new Date().toISOString(),
     attempts,
   }).eq('id', job.id);
+
+  if (startError) {
+    console.error(`[Job] Failed to mark job ${job.id} as RUNNING:`, startError.message);
+    return;
+  }
 
   try {
     // Wrap job with timeout
@@ -189,28 +207,41 @@ async function handleJob(job) {
 
     await Promise.race([jobPromise, timeoutPromise]);
 
-    await supabase.from('jobs').update({
+    const { error: completeError } = await supabase.from('jobs').update({
       status: 'COMPLETED',
       completed_at: new Date().toISOString(),
     }).eq('id', job.id);
+
+    if (completeError) {
+      console.error(`[Job] Failed to mark job ${job.id} as COMPLETED:`, completeError.message);
+    }
   } catch (error) {
     console.error(`[Job] ${job.id} failed (attempt ${attempts}):`, error.message);
 
     if (attempts >= MAX_ATTEMPTS) {
-      await supabase.from('jobs').update({
+      const { error: failError } = await supabase.from('jobs').update({
         status: 'FAILED_PERMANENTLY',
         error: error.message,
         completed_at: new Date().toISOString(),
       }).eq('id', job.id);
+
+      if (failError) {
+        console.error(`[Job] Failed to mark job ${job.id} as FAILED_PERMANENTLY:`, failError.message);
+      }
       console.error(`[Job] ${job.id} permanently failed after ${MAX_ATTEMPTS} attempts.`);
     } else {
       const retryDelay = RETRY_DELAYS_MS[attempts - 1] || RETRY_DELAYS_MS[RETRY_DELAYS_MS.length - 1];
       console.log(`[Job] ${job.id} will retry in ${retryDelay / 1000}s...`);
-      await supabase.from('jobs').update({
+      const { error: retryError } = await supabase.from('jobs').update({
         status: 'PENDING',
         error: error.message,
         attempts,
       }).eq('id', job.id);
+
+      if (retryError) {
+        console.error(`[Job] Failed to mark job ${job.id} for retry:`, retryError.message);
+      }
+
       setTimeout(() => {
         jobQueue.push({ ...job, attempts });
         processQueue();
@@ -291,13 +322,18 @@ async function handleDiscover(job) {
 
         if (website && !website.includes('google.com') && !website.includes('facebook.com')) {
           const cleanUrl = new URL(website).hostname.replace('www.', '');
-          await supabase.from('jobs').insert({
+          const { error: insertError } = await supabase.from('jobs').insert({
             org_id: job.org_id,
             type: 'SCRAPE',
             status: 'PENDING',
             payload: { target: cleanUrl, source: `discovery:${query}` }
           });
-          queued++;
+
+          if (insertError) {
+            console.error(`[Discover] Failed to insert SCRAPE job for ${cleanUrl}:`, insertError.message);
+          } else {
+            queued++;
+          }
         }
       } catch { try { await bizPage.close(); } catch {} }
     }
@@ -325,7 +361,7 @@ async function handleScrape(job) {
   const aiAnalysis = await analyzeWithCohere(auditData);
   const groqSuggestions = await analyzeWithGroq(auditData);
 
-  const { data: company } = await supabase.from('companies').insert({
+  const { data: company, error: companyError } = await supabase.from('companies').insert({
     org_id: orgId,
     name: aiAnalysis.companyName || job.payload.target,
     website_url: job.payload.target,
@@ -334,8 +370,12 @@ async function handleScrape(job) {
     status: 'NEW',
   }).select().single();
 
+  if (companyError) {
+    throw new Error(`Failed to create company: ${companyError.message}`);
+  }
+
   if (contacts.length > 0) {
-    await supabase.from('contacts').insert(
+    const { error: contactsError } = await supabase.from('contacts').insert(
       contacts.map((c, i) => ({
         org_id: orgId,
         company_id: company.id,
@@ -348,22 +388,34 @@ async function handleScrape(job) {
         is_primary: i === 0,
       }))
     );
+
+    if (contactsError) {
+      console.error(`[Scrape] Failed to insert contacts for ${company.name}:`, contactsError.message);
+    }
   }
 
-  const { data: audit } = await supabase.from('audits').insert({
+  const { data: audit, error: auditError } = await supabase.from('audits').insert({
     org_id: orgId,
     company_id: company.id,
     status: 'COMPLETED',
     total_score: auditData.score
   }).select().single();
 
-  await supabase.from('audit_results').insert({
+  if (auditError) {
+    throw new Error(`Failed to create audit: ${auditError.message}`);
+  }
+
+  const { error: auditResultError } = await supabase.from('audit_results').insert({
     org_id: orgId,
     audit_id: audit.id,
     category: 'AI_PITCH',
     raw_data: auditData,
     issues_found: { pitch: aiAnalysis.pitch, suggestions: groqSuggestions, issues: auditData.issues }
   });
+
+  if (auditResultError) {
+    console.error(`[Scrape] Failed to insert audit results for ${company.name}:`, auditResultError.message);
+  }
 
   console.log(`[Scrape] ${company.name} | Score: ${auditData.score} | Contacts: ${contacts.length}`);
 
@@ -427,14 +479,23 @@ async function handleScrape(job) {
         });
         if (error) throw error;
 
-        await supabase.from('emails').insert({
+        const { error: emailInsertError } = await supabase.from('emails').insert({
           org_id: orgId,
           company_id: company.id,
           direction: 'outbound',
           subject,
           body_text: body
         });
-        await supabase.from('companies').update({ status: 'PITCHED' }).eq('id', company.id);
+
+        if (emailInsertError) {
+          console.error('[Scrape] Failed to insert email record:', emailInsertError.message);
+        }
+
+        const { error: companyUpdateError } = await supabase.from('companies').update({ status: 'PITCHED' }).eq('id', company.id);
+        if (companyUpdateError) {
+          console.error('[Scrape] Failed to update company status:', companyUpdateError.message);
+        }
+
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
       } catch (err) {
         console.error('[Scrape] Auto-send failed:', err.message);
@@ -464,16 +525,24 @@ async function handleProcessReply(job) {
 
   if (intent?.includes('REJECTED')) {
     console.log('[ProcessReply] Intent: REJECTED');
-    await supabase.from('companies').update({ status: 'REJECTED', updated_at: new Date().toISOString() }).eq('id', company_id);
+    const { error: rejectError } = await supabase.from('companies').update({ status: 'REJECTED', updated_at: new Date().toISOString() }).eq('id', company_id);
+    if (rejectError) {
+      console.error('[ProcessReply] Failed to update company status:', rejectError.message);
+    }
+
     const { data: audit } = await supabase.from('audits').select('id').eq('company_id', company_id).single();
     if (audit) {
-      await supabase.from('audit_results').insert({
+      const { error: auditResultError } = await supabase.from('audit_results').insert({
         audit_id: audit.id,
         org_id: orgId,
         category: 'REJECTED',
         raw_data: {},
         issues_found: { rejection_reason: 'Rejected by client' }
       });
+
+      if (auditResultError) {
+        console.error('[ProcessReply] Failed to insert audit result:', auditResultError.message);
+      }
     }
     return;
   }

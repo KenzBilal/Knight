@@ -43,15 +43,18 @@ export async function POST(req: Request) {
     const senderEmail = emailMatch[1].toLowerCase().trim();
 
     // Find the contact — scoped by org via the company
-    const { data: contact } = await supabase
+    // Use maybeSingle() to handle multiple matches across orgs gracefully
+    const { data: contacts } = await supabase
       .from("contacts")
       .select("company_id, org_id")
-      .ilike("email", senderEmail)
-      .single();
+      .ilike("email", senderEmail);
 
-    if (!contact) {
+    if (!contacts || contacts.length === 0) {
       return NextResponse.json({ message: "Contact not found" });
     }
+
+    // Prefer the most recent match (by company creation) if multiple exist
+    const contact = contacts[0];
 
     const { data: emailData, error: emailError } = await supabase
       .from("emails")

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
-
+import { AsciiBackground } from "@/components/AsciiBackground";
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -33,11 +33,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6">
-      <div className="w-full max-w-md flex-1 flex flex-col justify-center">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden bg-black">
+      <AsciiBackground />
+      <div className="w-full max-w-md flex-1 flex flex-col justify-center relative z-10">
         <FadeIn>
           <div className="text-center mb-8">
-            <Link href="/" className="font-display text-2xl text-[#111] hover:text-[#444] transition-colors">Knight</Link>
+            <Link href="/" className="font-display text-2xl text-white hover:text-white/80 transition-colors">Knight</Link>
             <p className="text-sm text-[#888] mt-2">Create your account</p>
           </div>
         </FadeIn>
@@ -47,7 +48,7 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm text-[#666] mb-1.5">Name</label>
               <input type="text" required value={name} onChange={e => setName(e.target.value)} placeholder="Your name"
-                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all relative z-10" />
             </div>
           </FadeIn>
 
@@ -55,7 +56,7 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm text-[#666] mb-1.5">Email</label>
               <input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
-                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all relative z-10" />
             </div>
           </FadeIn>
 
@@ -63,13 +64,13 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm text-[#666] mb-1.5">Password</label>
               <input type="password" required minLength={8} value={password} onChange={e => setPassword(e.target.value)} placeholder="min. 8 characters"
-                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
+                className="w-full rounded-lg bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all relative z-10" />
             </div>
           </FadeIn>
 
           <FadeIn delay={250}>
             <button type="submit" disabled={loading}
-              className="w-full rounded-lg bg-[#111] text-white font-medium py-2.5 text-sm hover:bg-[#333] transition-all disabled:opacity-50 active:scale-[0.98]">
+              className="w-full rounded-lg bg-[#111] text-white font-medium py-2.5 text-sm hover:bg-[#333] transition-all disabled:opacity-50 active:scale-[0.98] relative z-10">
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -86,22 +87,22 @@ export default function SignupPage() {
         <FadeIn delay={300}>
           <p className="text-center text-sm text-[#888] mt-6">
             Already have an account?{" "}
-            <Link href="/auth/login" className="text-[#111] hover:underline transition-colors">Sign in</Link>
+            <Link href="/auth/login" className="text-white hover:underline transition-colors">Sign in</Link>
           </p>
         </FadeIn>
       </div>
 
       <FadeIn delay={400}>
-        <footer className="border-t border-[#ebebeb] py-6 w-full">
+        <footer className="border-t border-[#ebebeb]/10 py-6 w-full relative z-10">
           <div className="mx-auto max-w-6xl px-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-6">
                 <span className="font-display text-sm text-[#888]">Knight</span>
-                <Link href="/about" className="text-xs text-[#888] hover:text-[#111] transition-colors">About</Link>
-                <Link href="/contact" className="text-xs text-[#888] hover:text-[#111] transition-colors">Contact</Link>
-                <Link href="/privacy" className="text-xs text-[#888] hover:text-[#111] transition-colors">Privacy</Link>
-                <Link href="/terms" className="text-xs text-[#888] hover:text-[#111] transition-colors">Terms</Link>
-                <Link href="/refund" className="text-xs text-[#888] hover:text-[#111] transition-colors">Refund</Link>
+                <Link href="/about" className="text-xs text-[#888] hover:text-white transition-colors">About</Link>
+                <Link href="/contact" className="text-xs text-[#888] hover:text-white transition-colors">Contact</Link>
+                <Link href="/privacy" className="text-xs text-[#888] hover:text-white transition-colors">Privacy</Link>
+                <Link href="/terms" className="text-xs text-[#888] hover:text-white transition-colors">Terms</Link>
+                <Link href="/refund" className="text-xs text-[#888] hover:text-white transition-colors">Refund</Link>
               </div>
               <span className="text-xs text-[#888]">&copy; {new Date().getFullYear()} Knight. All rights reserved.</span>
             </div>
