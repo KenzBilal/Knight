@@ -5,9 +5,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Pricing — Knight AI Sales Agent",
   description:
-    "Simple, transparent pricing. Start free, upgrade when you're ready. Knight pays for itself with one closed client.",
+    "One closed deal pays for a year of Knight. Start free, no credit card required. Generate qualified leads and book more meetings with zero manual prospecting.",
 };
 
 // Revalidate every 60s — admin app also triggers on-demand revalidation on plan save
@@ -178,13 +178,12 @@ export default async function PricingPage() {
             Pricing
           </p>
           <h1 className="font-display text-4xl md:text-6xl font-bold text-white tracking-tight mb-5 animate-fade-up animate-delay-100">
-            One client pays for
+            One deal closed pays for
             <br />
-            <span className="text-[#525252]">a year of Knight.</span>
+            <span className="text-[#525252]">years of Knight.</span>
           </h1>
           <p className="text-base text-[#737373] leading-relaxed animate-fade-up animate-delay-200">
-            Start free. Upgrade when you&apos;re ready. Cancel anytime — no lock-in,
-            no contracts.
+            Start free. Upgrade as you grow. No contracts, no surprises — cancel anytime.
           </p>
         </div>
       </section>
@@ -211,9 +210,9 @@ export default async function PricingPage() {
         <div className="mx-auto max-w-3xl px-6">
           <div className="grid sm:grid-cols-3 gap-8 text-center">
             {[
-              { icon: "↩", title: "Cancel anytime", desc: "No contracts. Stop whenever you like, keep access until period ends." },
-              { icon: "🔑", title: "Your keys, your data", desc: "BYOK means AI costs go directly to providers. No markup." },
-              { icon: "⚡", title: "Live in 2 minutes", desc: "Paste your keys, set your niche, Knight starts finding leads." },
+              { icon: "↗️", title: "Real ROI, fast", desc: "One booked meeting from Knight pays for months of the subscription. The math is obvious." },
+              { icon: "🔑", title: "Your keys, your data", desc: "BYOK means AI costs go directly to providers at cost. No markup, no lock-in." },
+              { icon: "⚡", title: "Live in 2 minutes", desc: "Paste your keys, set your niche. Knight starts qualifying prospects before you finish reading this." },
             ].map((item) => (
               <div key={item.title}>
                 <p className="text-2xl mb-3">{item.icon}</p>
@@ -229,17 +228,16 @@ export default async function PricingPage() {
       <section className="border-t border-white/[0.04] py-24 text-center">
         <div className="mx-auto max-w-xl px-6">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">
-            Still unsure?
+            Not sure yet? Start free.
           </h2>
           <p className="text-[#525252] text-sm mb-8">
-            The free plan has no time limit. Try every feature with 50 leads and
-            50 emails per month — no card required.
+            The free plan has no time limit. Qualify 50 real leads, send 50 personalized emails, and see what automated outbound feels like — no card, no commitment.
           </p>
           <Link
             href="/auth/signup"
             className="btn-primary px-8 py-3.5 text-sm font-semibold"
           >
-            Create your free account
+            Generate my first leads free
           </Link>
         </div>
       </section>

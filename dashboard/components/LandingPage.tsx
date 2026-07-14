@@ -36,111 +36,115 @@ export interface LandingContent {
 
 // ─── Defaults ────────────────────────────────────────────────────────────────
 const DEFAULT_HERO: HeroContent = {
-  headline: "Your AI sales rep",
-  subheadline: "works 24/7.",
-  tagline: "AI-powered B2B sales automation",
+  headline: "Close more deals.",
+  subheadline: "Work less.",
+  tagline: "AI-powered B2B outbound — from prospect to booked meeting",
   description:
-    "Knight finds businesses that need your service, audits their website, writes a personalized pitch, and sends it — automatically.",
-  cta_primary: "Start free — no card required",
+    "Knight finds qualified leads, audits their websites, writes hyper-personalized pitches, and handles the entire email sequence — all on autopilot. You show up for the meeting.",
+  cta_primary: "Generate your first leads free",
   cta_secondary: "See how it works",
-  social_proof: "Free tier includes 50 leads and 50 emails per month",
+  social_proof: "No credit card required · Free plan includes 50 leads and 50 emails/month",
 };
 
 const DEFAULT_STATS: StatItem[] = [
-  { value: "30+", label: "Audit checks per site" },
-  { value: "24/7", label: "Runs without you" },
-  { value: "2 min", label: "Setup time" },
+  { value: "2 min", label: "From signup to first live campaign" },
+  { value: "30+", label: "Lead quality signals checked per prospect" },
+  { value: "24/7", label: "Pipeline generated while you sleep" },
 ];
 
 const DEFAULT_STEPS: StepItem[] = [
   {
     number: "01",
-    title: "Tell Knight who to target",
+    title: "Define your ideal customer",
     description:
-      "Enter a business type and location. Knight searches Google Maps and finds real businesses matching your niche.",
+      "Tell Knight your target business type and location. It searches Google Maps, qualifies real businesses, and builds a scored prospect list — in seconds, not hours.",
   },
   {
     number: "02",
-    title: "It audits every site",
+    title: "Knight qualifies every lead",
     description:
-      "Each lead gets a full 30-point website audit — SEO, performance, security, tech stack. Scored 0–100. Lower = more broken = hotter lead.",
+      "Each prospect gets a 30-point website audit across SEO, performance, and security. Leads with broken sites are your hottest opportunities — Knight finds them automatically.",
   },
   {
     number: "03",
-    title: "It pitches for you",
+    title: "Personalized outreach, sent for you",
     description:
-      "Knight writes a personalized cold email referencing specific problems it found, sends it, follows up, and handles replies — automatically.",
+      "Knight writes a cold email referencing exact problems it found on that prospect's site, sends it, follows up, handles replies, and books meetings — without you lifting a finger.",
   },
 ];
 
 const DEFAULT_FEATURES: FeatureItem[] = [
   {
-    icon: "🔍",
-    title: "Deep Website Audit",
+    icon: "🎯",
+    title: "Qualified Leads, Automatically",
     description:
-      "30+ checks across SEO, performance, security, and tech stack. Every lead gets scored before you spend a second on them.",
+      "Stop wasting time on prospects who aren't ready to buy. Knight scores every lead against 30+ signals so your outreach only goes to high-intent targets.",
   },
   {
     icon: "✍️",
-    title: "AI Pitch Generation",
+    title: "Pitches That Actually Convert",
     description:
-      "Gemini writes cold emails that reference specific issues on the prospect's site. Not templates. Actual context.",
+      "Forget generic templates. Every email Knight sends references specific, real issues found on that prospect's site — the kind of personalization that gets replies.",
   },
   {
-    icon: "📞",
-    title: "Autonomous Outreach",
+    icon: "📬",
+    title: "Full Outbound on Autopilot",
     description:
-      "Cold email with day 3 follow-up and day 7 breakup sequence. Telegram agent that holds real conversations. Runs 24/7 without you.",
+      "Initial email, day-3 follow-up, day-7 breakup. Knight runs your entire outbound sequence and handles incoming replies — generating pipeline around the clock.",
   },
   {
     icon: "💬",
-    title: "Smart Inbox",
+    title: "Replies Handled Intelligently",
     description:
-      "When a prospect replies, AI classifies the intent and drafts a contextual response. You review once and send.",
+      "When a prospect responds, Knight reads the intent, drafts the perfect reply, and presents it to you for one-click send. Never miss a hot lead again.",
   },
   {
-    icon: "📊",
-    title: "CRM Pipeline",
+    icon: "📈",
+    title: "Pipeline You Can See and Trust",
     description:
-      "Kanban board from discovery to closed. Drag cards between stages. Every deal tracked in one place.",
+      "Every prospect tracked from discovery to closed deal. A clean Kanban board gives you complete visibility without the complexity of bloated CRMs.",
   },
   {
     icon: "🔒",
-    title: "BYOK Security",
+    title: "Your Data Stays Yours",
     description:
-      "Your API keys, your data. Knight uses Cohere, Gemini, and OpenRouter — all with generous free tiers. Costs you near zero.",
+      "Knight runs on your own AI API keys (Gemini, Cohere, OpenRouter — all free tiers). Zero markup, zero data sharing. Your leads, your conversations, your business.",
   },
 ];
 
 const DEFAULT_FAQ: FaqItem[] = [
   {
+    q: "How quickly can I generate my first leads?",
+    a: "Most users have their first campaign running within 2 minutes of signing up. Set your target business type and location, connect your email, and Knight starts finding and qualifying leads immediately.",
+  },
+  {
+    q: "Do I need to know how to code or use AI?",
+    a: "No. Knight is a point-and-click product. You set your target, Knight handles the research, writing, and sending. If you can fill out a form, you can run Knight.",
+  },
+  {
+    q: "What makes the outreach personalized — not just a mail-merge?",
+    a: "Knight audits each prospect's website in real-time, finds actual problems (slow load times, missing SEO tags, security gaps), and references those specific issues in the email. The prospect sees you've done your homework — because the AI genuinely has.",
+  },
+  {
     q: "Do I need my own API keys?",
-    a: "Yes — and that's the point. Knight uses your Cohere, Gemini, and OpenRouter keys. All three have free tiers that cover hundreds of leads per day. You pay directly, nothing is marked up.",
-  },
-  {
-    q: "How does the website audit work?",
-    a: "Knight visits the target site with a headless browser, runs 30+ checks across SEO, performance, security, and tech stack, then scores it. Lower score means bigger problems — hotter lead.",
-  },
-  {
-    q: "Does the Telegram agent work automatically?",
-    a: "Yes. Once connected, it finds leads in Telegram groups, sends personalized pitches, handles replies using AI, and runs a 7-day drip sequence — completely on autopilot.",
-  },
-  {
-    q: "Can I cancel anytime?",
-    a: "Yes. No contracts, no cancellation fees. Cancel from your billing page and keep access until the end of your billing period.",
+    a: "Yes — and it's a feature, not a limitation. Your AI keys (Gemini, Cohere, OpenRouter) mean AI costs go directly to providers at cost, with no markup. All three offer free tiers that cover hundreds of leads per day. You keep full control and pay near-zero.",
   },
   {
     q: "What happens when a prospect replies?",
-    a: "Knight classifies the intent (interested vs. rejected). If interested, it drafts a contextual reply using Gemini. You review the draft and send with one click.",
+    a: "Knight detects the reply, classifies the intent (interested, rejected, or needs follow-up), and drafts a contextual response using your conversation history. You review the draft and send with one click — or let it handle the full thread.",
+  },
+  {
+    q: "Can I cancel anytime?",
+    a: "Yes, always. No contracts, no cancellation fees, no awkward calls. Cancel from your account page and keep full access until your current billing period ends.",
   },
 ];
 
 const DEFAULT_CTA: CtaContent = {
-  heading: "Stop doing sales",
-  subheading: "manually.",
+  heading: "Your pipeline shouldn't",
+  subheading: "depend on you.",
   description:
-    "Set it up in two minutes. Knight finds your first lead before you finish your coffee.",
-  button: "Create your free account",
+    "Set Knight up in two minutes. It finds prospects, qualifies them, writes the pitch, sends it, and follows up — all before your next coffee. You only show up to close.",
+  button: "Start for free — no card required",
 };
 
 // ─── Scroll reveal hook ───────────────────────────────────────────────────────
@@ -284,7 +288,7 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
               How it works
             </p>
             <h2 className="font-display text-3xl md:text-5xl font-700 text-white leading-tight">
-              Three steps to automated outreach
+              From zero to booked meeting — in three steps
             </h2>
           </div>
 
@@ -314,10 +318,10 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
         <div className="mx-auto max-w-6xl px-6" ref={revealRef}>
           <div className="text-center mb-20 reveal">
             <p className="text-xs font-mono text-[#3a3a3a] uppercase tracking-widest mb-3">
-              Features
+              What you get
             </p>
             <h2 className="font-display text-3xl md:text-5xl font-700 text-white leading-tight">
-              Everything to close deals
+              A complete outbound engine,<br className="hidden md:block" /> not just another tool
             </h2>
           </div>
 
@@ -347,10 +351,10 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
         <div className="mx-auto max-w-2xl px-6" ref={revealRef}>
           <div className="text-center mb-16 reveal">
             <p className="text-xs font-mono text-[#3a3a3a] uppercase tracking-widest mb-3">
-              FAQ
+              Common questions
             </p>
             <h2 className="font-display text-3xl md:text-4xl font-700 text-white">
-              Questions, answered
+              Everything you want to know
             </h2>
           </div>
 
