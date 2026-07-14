@@ -79,17 +79,17 @@ export function HeroVideo() {
               playsInline
             />
 
-            {/* Subtle dark overlay always present */}
-            <div className="absolute inset-0 bg-black/30" />
+            {/* Subtle dark overlay — visible only on hover */}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
 
-            {/* Play button — centered, always visible, pops on hover */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+            {/* Play button — centered, pops on hover */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
               <div className="w-[72px] h-[72px] rounded-full bg-white/[0.12] backdrop-blur-md border border-white/[0.2] flex items-center justify-center group-hover:bg-white/[0.22] group-hover:scale-110 transition-all duration-300 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
                 <svg className="w-7 h-7 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
               </div>
-              <span className="text-white/90 text-sm font-medium tracking-wide group-hover:text-white transition-colors">Demo video</span>
+              <span className="text-white font-medium tracking-wide drop-shadow-md">Demo video</span>
             </div>
           </div>
         </div>
