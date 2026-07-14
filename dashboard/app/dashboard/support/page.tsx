@@ -161,7 +161,7 @@ export default function SupportPage() {
       })
       .catch(() => {})
       .finally(() => setLoadingReplies(false));
-  }, [selectedTicket]);
+  }, [selectedTicket?.id]);
 
   // Poll replies every 5s
   useEffect(() => {

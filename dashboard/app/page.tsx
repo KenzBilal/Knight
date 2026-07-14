@@ -1,5 +1,4 @@
-import { Navbar } from "@/components/Navbar";
-import { Footer } from "@/components/Footer";
+
 import { LandingPage } from "@/components/LandingPage";
 import { createServiceClient } from "@/lib/supabase";
 

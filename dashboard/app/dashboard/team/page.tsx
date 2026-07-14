@@ -123,7 +123,6 @@ export default function TeamPage() {
 
   const currentUserRole = members.find((m) => m.email === currentUserEmail)?.role;
   const isOwner = currentUserRole === "owner";
-  const isAdmin = isOwner || currentUserRole === "admin";
 
   // ─── Invite ──────────────────────────────────────────────────────────────
   async function handleInvite(e: React.FormEvent) {
