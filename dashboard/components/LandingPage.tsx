@@ -4,6 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import {
+  HeroVideo,
+  InteractiveDemo,
+  AnimatedWorkflow,
+  Testimonials,
+  CaseStudies,
+  ROICalculator,
+  ComparisonTable,
+} from "@/components/LandingExtras";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface HeroContent {
@@ -264,6 +273,9 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
         </div>
       </section>
 
+      {/* ── Hero Video Preview ── */}
+      <HeroVideo />
+
       {/* ── Stats bar ── */}
       <section className="border-y border-white/[0.05] bg-[#0f0f0f]">
         <div className="mx-auto max-w-4xl px-6 py-10">
@@ -313,6 +325,12 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
         </div>
       </section>
 
+      {/* ── Animated Workflow ── */}
+      <AnimatedWorkflow />
+
+      {/* ── Interactive Demo ── */}
+      <InteractiveDemo />
+
       {/* ── Features ── */}
       <section id="features" className="py-28 md:py-36 border-t border-white/[0.04]">
         <div className="mx-auto max-w-6xl px-6" ref={revealRef}>
@@ -345,6 +363,18 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
           </div>
         </div>
       </section>
+
+      {/* ── Comparison Table ── */}
+      <ComparisonTable />
+
+      {/* ── Case Studies ── */}
+      <CaseStudies />
+
+      {/* ── ROI Calculator ── */}
+      <ROICalculator />
+
+      {/* ── Testimonials ── */}
+      <Testimonials />
 
       {/* ── FAQ ── */}
       <section id="faq" className="py-28 md:py-36 border-t border-white/[0.04]">
