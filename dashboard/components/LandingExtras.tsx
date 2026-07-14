@@ -158,16 +158,14 @@ export function HeroVideo() {
                   </svg>
                 </button>
               </div>
-              <div className="aspect-video bg-[#080808] flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 rounded-full bg-white/[0.06] border border-white/[0.1] flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-[#525252]" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
-                  </div>
-                  <p className="text-[#525252] text-sm">Demo video coming soon</p>
-                  <p className="text-[#3a3a3a] text-xs mt-1">Try the interactive demo below</p>
-                </div>
+              <div className="aspect-video bg-[#080808] flex items-center justify-center relative">
+                <video 
+                  src="/intro.mp4" 
+                  className="w-full h-full object-cover" 
+                  controls 
+                  autoPlay 
+                  playsInline 
+                />
               </div>
             </div>
           </div>
