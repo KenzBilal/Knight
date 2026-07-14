@@ -506,13 +506,13 @@ export function InteractiveDemo() {
 
 // ─── 3. ANIMATED WORKFLOW ─────────────────────────────────────────────────────
 const WORKFLOW_STEPS = [
-  { icon: "🗺️", label: "Lead Discovery", desc: "Google Maps scraped for qualified businesses" },
-  { icon: "🔍", label: "Website Audit", desc: "30+ signals checked, scored 0–100" },
-  { icon: "🤖", label: "AI Analysis", desc: "Gemini identifies exact pain points" },
-  { icon: "✍️", label: "Personalized Pitch", desc: "Email written around specific site issues" },
-  { icon: "📬", label: "Email Sequence", desc: "3-touch sequence sent automatically" },
-  { icon: "📨", label: "Reply Detection", desc: "Intent classified, response drafted" },
-  { icon: "📅", label: "Meeting Booked", desc: "Calendar invite confirmed" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>, label: "Lead Discovery", desc: "Google Maps scraped for qualified businesses" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>, label: "Website Audit", desc: "30+ signals checked, scored 0–100" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>, label: "AI Analysis", desc: "Gemini identifies exact pain points" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>, label: "Personalized Pitch", desc: "Email written around specific site issues" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>, label: "Email Sequence", desc: "3-touch sequence sent automatically" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, label: "Reply Detection", desc: "Intent classified, response drafted" },
+  { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>, label: "Meeting Booked", desc: "Calendar invite confirmed" },
 ];
 
 export function AnimatedWorkflow() {
@@ -782,6 +782,26 @@ export function CaseStudies() {
 }
 
 // ─── 6. ROI CALCULATOR ────────────────────────────────────────────────────────
+const Slider = ({
+  label, value, min, max, step, onChange, format,
+}: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (n: number) => void; format: (n: number) => string;
+}) => (
+  <div>
+    <div className="flex justify-between mb-2">
+      <label className="text-xs text-[#525252]">{label}</label>
+      <span className="text-xs text-white font-mono font-medium">{format(value)}</span>
+    </div>
+    <input
+      type="range"
+      min={min} max={max} step={step} value={value}
+      onChange={(e) => onChange(Number(e.target.value))}
+      className="w-full h-1 bg-white/[0.08] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
+    />
+  </div>
+);
+
 export function ROICalculator() {
   useReveal();
   const [prospects, setProspects] = useState(200);
@@ -794,26 +814,6 @@ export function ROICalculator() {
   const meetingsGenerated = Math.round((prospects * (closeRate / 100)) * 2.5);
   const revenueAdded = Math.round(meetingsGenerated * (closeRate / 100) * dealValue);
   const roiMultiple = Math.round(revenueAdded / 49);
-
-  const Slider = ({
-    label, value, min, max, step, onChange, format,
-  }: {
-    label: string; value: number; min: number; max: number; step: number;
-    onChange: (n: number) => void; format: (n: number) => string;
-  }) => (
-    <div>
-      <div className="flex justify-between mb-2">
-        <label className="text-xs text-[#525252]">{label}</label>
-        <span className="text-xs text-white font-mono font-medium">{format(value)}</span>
-      </div>
-      <input
-        type="range"
-        min={min} max={max} step={step} value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full h-1 bg-white/[0.08] rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:cursor-pointer"
-      />
-    </div>
-  );
 
   return (
     <section className="py-28 md:py-36 border-t border-white/[0.04] bg-[#0a0a0a]">
