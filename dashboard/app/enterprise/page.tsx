@@ -198,8 +198,8 @@ export default function EnterprisePage() {
               your exact workflow.
             </p>
             <Link
-              href="/contact-sales"
-              className="inline-flex items-center bg-white text-black px-6 py-3 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+              href="/contact"
+              className="inline-flex items-center justify-center h-11 px-8 rounded-full bg-white text-black font-medium text-[15px] hover:bg-white/90 transition-colors"
             >
               Talk to Sales
               <svg
@@ -357,8 +357,8 @@ export default function EnterprisePage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/contact-sales"
-                className="inline-flex items-center bg-white text-black px-6 py-3 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
+                href="/contact"
+                className="inline-flex items-center justify-center h-11 px-8 rounded-full bg-white text-black font-medium text-[15px] hover:bg-white/90 transition-colors"
               >
                 Contact Sales
                 <svg

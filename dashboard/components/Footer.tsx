@@ -9,8 +9,7 @@ const footerLinks = {
   ],
   Company: [
     { href: "/about", label: "About" },
-    { href: "/contact", label: "Contact" },
-    { href: "/contact-sales", label: "Contact Sales" },
+    { href: "/contact", label: "Contact Sales" },
   ],
   Trust: [
     { href: "/security", label: "Security" },
