@@ -67,22 +67,25 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       // Draw FULL glowing path into cache
       offCtx.clearRect(0, 0, W, H);
       offCtx.save();
-      offCtx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
+      
+      const scaleX = W / VIEWBOX_W;
+      const scaleY = H / VIEWBOX_H;
+      offCtx.scale(scaleX, scaleY);
 
       // Wide outer glow
       offCtx.shadowColor = "rgba(255,255,255,0.55)";
-      offCtx.shadowBlur = 28 * dpr;
+      offCtx.shadowBlur = 28 * scaleX; // shadowBlur is physical, needs actual scale
       offCtx.strokeStyle = "rgba(255,255,255,0.12)";
-      offCtx.lineWidth = 22 * dpr;
+      offCtx.lineWidth = 28; // no dpr here, scale() handles it
       offCtx.lineCap = "round";
       offCtx.lineJoin = "round";
       offCtx.stroke(path2D);
 
       // Sharp bright core
       offCtx.shadowColor = "rgba(255,255,255,0.95)";
-      offCtx.shadowBlur = 8 * dpr;
+      offCtx.shadowBlur = 8 * scaleX;
       offCtx.strokeStyle = "rgba(255,255,255,0.7)";
-      offCtx.lineWidth = 2.5 * dpr;
+      offCtx.lineWidth = 3;
       offCtx.stroke(path2D);
 
       offCtx.restore();
@@ -104,32 +107,33 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       const drawnLength = totalLength * progress;
       if (drawnLength < 0.5) return;
 
-      // Pass 1: Ghost track (faint path behind)
-      ctx.save();
-      ctx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 20 * dpr;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.stroke(path2D);
-      ctx.restore();
-
-      // Pass 2: Copy fully-glowing cache
+      // Pass 1: Copy fully-glowing cache
       ctx.globalCompositeOperation = "source-over";
       ctx.drawImage(offCanvas, 0, 0);
 
-      // Pass 3: Mask it out using a flat unblurred stroke + destination-in
+      // Pass 2: Mask it out using a flat unblurred stroke + destination-in
       ctx.globalCompositeOperation = "destination-in";
       ctx.save();
       ctx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
-      ctx.strokeStyle = "black"; // color doesn't matter, only alpha is used
-      ctx.lineWidth = 40 * dpr;  // must be thick enough to cover the widest glow
+      ctx.strokeStyle = "black"; // color doesn't matter, alpha used for mask
+      ctx.lineWidth = 60;  // thick enough to cover widest glow
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
       ctx.setLineDash([drawnLength, totalLength + 10]);
       ctx.stroke(path2D);
       ctx.restore();
       
+      // Pass 3: Ghost track (draw BEHIND the masked glow so it stays visible)
+      ctx.globalCompositeOperation = "destination-over";
+      ctx.save();
+      ctx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
+      ctx.strokeStyle = "rgba(255,255,255,0.05)";
+      ctx.lineWidth = 20; 
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke(path2D);
+      ctx.restore();
+
       // Reset
       ctx.globalCompositeOperation = "source-over";
     }
