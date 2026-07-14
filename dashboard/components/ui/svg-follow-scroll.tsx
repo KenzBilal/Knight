@@ -41,64 +41,22 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
     // ── Reuse Path2D — parsed once, drawn every frame ─────────────────────────
     const path2D = new Path2D(PATH_D);
 
-    let progress = 0;          // currently rendered progress (lerped)
-    let target = 0;            // scroll-derived target
-    let lastProgress = -1;     // skip draw if nothing changed
+    let progress = 0;
+    let target = 0;
+    let lastProgress = -1;
     let rafId: number;
     let alive = true;
 
-    // ── Offscreen cache ───────────────────────────────────────────────────────
-    // We draw the complex glowing path ONCE at 100% length.
-    const offCanvas = document.createElement("canvas");
-    const offCtx = offCanvas.getContext("2d", { alpha: true });
-
-    // ── Resize: physical pixels + rebuild cache ───────────────────────────────
     function resize() {
-      if (!canvas || !offCtx) return;
+      if (!canvas) return;
       const dpr = window.devicePixelRatio || 1;
-      const W = window.innerWidth * dpr;
-      const H = window.innerHeight * dpr;
-
-      canvas.width = W;
-      canvas.height = H;
-      offCanvas.width = W;
-      offCanvas.height = H;
-
-      // Draw FULL glowing path into cache
-      offCtx.clearRect(0, 0, W, H);
-      offCtx.save();
-      
-      const scaleX = W / VIEWBOX_W;
-      const scaleY = H / VIEWBOX_H;
-      offCtx.scale(scaleX, scaleY);
-
-      // Wide outer glow
-      offCtx.shadowColor = "rgba(255,255,255,0.55)";
-      offCtx.shadowBlur = 28 * scaleX; // shadowBlur is physical, needs actual scale
-      offCtx.strokeStyle = "rgba(255,255,255,0.12)";
-      offCtx.lineWidth = 28; // no dpr here, scale() handles it
-      offCtx.lineCap = "round";
-      offCtx.lineJoin = "round";
-      offCtx.stroke(path2D);
-
-      // Sharp bright core
-      offCtx.shadowColor = "rgba(255,255,255,0.95)";
-      offCtx.shadowBlur = 8 * scaleX;
-      offCtx.strokeStyle = "rgba(255,255,255,0.7)";
-      offCtx.lineWidth = 3;
-      offCtx.stroke(path2D);
-
-      offCtx.restore();
-
-      // Force redraw main canvas
-      lastProgress = -1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      lastProgress = -1; // force redraw
     }
 
-    // ── Draw: True 120fps mask reveal ─────────────────────────────────────────
-    // No blur math here. Just draw the ghost track, copy the cache, and mask it.
     function draw() {
       if (!canvas || !ctx) return;
-      const dpr = window.devicePixelRatio || 1;
       const W = canvas.width;
       const H = canvas.height;
 
@@ -107,35 +65,41 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       const drawnLength = totalLength * progress;
       if (drawnLength < 0.5) return;
 
-      // Pass 1: Copy fully-glowing cache
-      ctx.globalCompositeOperation = "source-over";
-      ctx.drawImage(offCanvas, 0, 0);
+      const scaleX = W / VIEWBOX_W;
+      const scaleY = H / VIEWBOX_H;
 
-      // Pass 2: Mask it out using a flat unblurred stroke + destination-in
-      ctx.globalCompositeOperation = "destination-in";
       ctx.save();
-      ctx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
-      ctx.strokeStyle = "black"; // color doesn't matter, alpha used for mask
-      ctx.lineWidth = 60;  // thick enough to cover widest glow
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.setLineDash([drawnLength, totalLength + 10]);
-      ctx.stroke(path2D);
-      ctx.restore();
-      
-      // Pass 3: Ghost track (draw BEHIND the masked glow so it stays visible)
-      ctx.globalCompositeOperation = "destination-over";
-      ctx.save();
-      ctx.scale(W / VIEWBOX_W, H / VIEWBOX_H);
+      ctx.scale(scaleX, scaleY);
+
+      // Pass 1: Ghost track (full length)
       ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 20; 
+      ctx.lineWidth = 20;
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
+      ctx.setLineDash([]);
+      ctx.shadowColor = "transparent";
+      ctx.shadowBlur = 0;
       ctx.stroke(path2D);
-      ctx.restore();
 
-      // Reset
-      ctx.globalCompositeOperation = "source-over";
+      const dashPattern: [number, number] = [drawnLength, totalLength + 10];
+
+      // Pass 2: Wide soft glow
+      ctx.shadowColor = "rgba(255,255,255,0.55)";
+      ctx.shadowBlur = 28 * scaleX; 
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.lineWidth = 28;
+      ctx.setLineDash(dashPattern);
+      ctx.stroke(path2D);
+
+      // Pass 3: Sharp bright core
+      ctx.shadowColor = "rgba(255,255,255,0.95)";
+      ctx.shadowBlur = 8 * scaleX;
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.lineWidth = 3;
+      ctx.setLineDash(dashPattern);
+      ctx.stroke(path2D);
+
+      ctx.restore();
     }
 
     // ── rAF loop: lerp + conditional draw ─────────────────────────────────────
