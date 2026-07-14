@@ -211,7 +211,12 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
   const hero = content?.hero ?? DEFAULT_HERO;
   const stats = content?.stats ?? DEFAULT_STATS;
   const steps = content?.steps ?? DEFAULT_STEPS;
-  const features = content?.features ?? DEFAULT_FEATURES;
+  // Always use DEFAULT_FEATURES for icons (SVGs) — merge text from DB if available
+  const features = DEFAULT_FEATURES.map((def, i) => ({
+    ...def,
+    title: content?.features?.[i]?.title ?? def.title,
+    description: content?.features?.[i]?.description ?? def.description,
+  }));
   const faq = content?.faq ?? DEFAULT_FAQ;
   const cta = content?.cta ?? DEFAULT_CTA;
 
@@ -349,7 +354,7 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
                 key={f.title}
                 className={`reveal reveal-delay-${(i % 3) + 1} card card-hover p-7 group`}
               >
-                <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center text-lg group-hover:bg-white/[0.07] transition-all duration-200 mb-5">
+                <div className="w-9 h-9 rounded-lg bg-white/[0.04] flex items-center justify-center text-[#737373] group-hover:text-white group-hover:bg-white/[0.07] transition-all duration-200 mb-5">
                   {f.icon}
                 </div>
                 <h3 className="font-display text-base font-600 text-white mb-2">

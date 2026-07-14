@@ -550,7 +550,7 @@ export function AnimatedWorkflow() {
                 </div>
 
                 {/* Icon node */}
-                <div className="absolute left-0 md:relative md:left-auto flex-shrink-0 w-12 h-12 rounded-full bg-[#111] border border-white/[0.1] flex items-center justify-center text-xl z-10">
+                <div className="absolute left-0 md:relative md:left-auto flex-shrink-0 w-12 h-12 rounded-full bg-[#111] border border-white/[0.1] flex items-center justify-center z-10 text-[#737373]">
                   {s.icon}
                 </div>
 
