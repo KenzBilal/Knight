@@ -172,10 +172,13 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         </div>
       )}
 
-      {/* User profile row — click to open menu */}
-      <div className="relative px-4 pb-4 border-t border-white/[0.06] pt-2">
+      {/* User profile row — hover to open menu */}
+      <div
+        className="relative px-4 pb-4 border-t border-white/[0.06] pt-2"
+        onMouseEnter={() => setMenuOpen(true)}
+        onMouseLeave={() => setMenuOpen(false)}
+      >
         <button
-          onClick={() => setMenuOpen((p) => !p)}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.04] transition-colors"
         >
           <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
@@ -192,7 +195,6 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         {menuOpen && (
           <div
             className="absolute bottom-full left-2 right-2 mb-2 bg-[#111] border border-white/[0.09] rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
-            onMouseLeave={() => setMenuOpen(false)}
           >
             <div className="p-1.5">
               {profileLinks.map(({ href, label, Icon }) => {
