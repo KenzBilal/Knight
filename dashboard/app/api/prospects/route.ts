@@ -23,6 +23,7 @@ export async function GET(req: Request) {
         industry,
         lead_score,
         status,
+        ai_pitch,
         created_at,
         contacts (
           id,
