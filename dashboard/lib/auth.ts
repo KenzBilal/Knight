@@ -14,6 +14,8 @@ export interface Org {
   plan: string;
 }
 
+export type UserRole = "owner" | "admin" | "member";
+
 export interface OrgConfig {
   id: string;
   org_id: string;
@@ -49,6 +51,24 @@ export async function getUser(): Promise<User | null> {
   const { data: { user } } = await serviceClient.auth.getUser(token);
   if (!user) return null;
   return { id: user.id, email: user.email!, name: user.user_metadata?.name };
+}
+
+/**
+ * Get the user's role in the org.
+ */
+export async function getUserRole(userId: string, orgId: string): Promise<UserRole> {
+  try {
+    const serviceClient = createServiceClient();
+    const { data } = await serviceClient
+      .from("org_members")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("org_id", orgId)
+      .single();
+    return (data?.role as UserRole) || "member";
+  } catch {
+    return "member";
+  }
 }
 
 /**

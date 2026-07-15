@@ -48,8 +48,8 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #ffffff;
-  color: #111111;
+  background-color: #080808;
+  color: #f5f5f5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -68,8 +68,8 @@ body {
 
 /* ─── Selection ────────────────────────────────────────────────────────────── */
 ::selection {
-  background-color: rgba(0, 0, 0, 0.08);
-  color: #111;
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
 
 /* ─── Scrollbar ────────────────────────────────────────────────────────────── */
@@ -78,19 +78,19 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: #0f0f0f;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: #2a2a2a;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #aaa;
+  background: #3a3a3a;
 }
 
 /* ─── Focus Ring ───────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid rgba(0,0,0,0.18);
+  outline: 2px solid rgba(255,255,255,0.18);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -133,6 +133,117 @@ body {
   mask-composite: exclude;
   pointer-events: none;
   z-index: 1;
+}
+
+/* ─── Dashboard Card — textured with smooth gradient borders ────────────────── */
+.dash-card {
+  position: relative;
+  border-radius: 12px;
+  background: #0a0a0a;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Smooth gradient border overlay */
+.dash-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.10) 0%,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.02) 50%,
+    rgba(255,255,255,0.05) 75%,
+    rgba(255,255,255,0.08) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Noise grain texture overlay */
+.dash-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: inherit;
+  z-index: 1;
+}
+
+/* Inner subtle glow on top edge */
+.dash-card-glow {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.04),
+    inset 0 0 0 0 rgba(255,255,255,0.02);
+}
+
+/* Hover state — smooth border brightening */
+.dash-card-hover {
+  transition: box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease;
+}
+.dash-card-hover:hover {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.08),
+    0 0 0 1px rgba(255,255,255,0.12),
+    0 4px 24px rgba(0,0,0,0.3);
+}
+
+/* ─── Stat Card — premium texture ──────────────────────────────────────────── */
+.stat-card {
+  position: relative;
+  border-radius: 12px;
+  background: linear-gradient(165deg, #0f0f0f 0%, #0a0a0a 100%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.08) 0%,
+    rgba(255,255,255,0.03) 30%,
+    rgba(255,255,255,0.01) 60%,
+    rgba(255,255,255,0.04) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stat-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: inherit;
+  z-index: 1;
+}
+
+.stat-card:hover {
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.06),
+    0 0 0 1px rgba(255,255,255,0.03),
+    0 8px 32px rgba(0,0,0,0.4);
 }
 
 /* ─── Hero Grid Background ─────────────────────────────────────────────────── */
@@ -283,17 +394,17 @@ body {
 .input-base {
   width: 100%;
   border-radius: 8px;
-  background: var(--color-ink-900);
-  border: 1px solid var(--color-line-medium);
+  background: #0f0f0f;
+  border: 1px solid rgba(255,255,255,0.09);
   padding: 10px 14px;
   font-size: 14px;
-  color: var(--color-paper-100);
+  color: #f5f5f5;
   font-family: var(--font-sans);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   outline: none;
 }
 .input-base::placeholder {
-  color: var(--color-paper-600);
+  color: #525252;
 }
 .input-base:focus {
   border-color: rgba(255,255,255,0.25);
@@ -363,18 +474,53 @@ body {
 
 /* ─── Card ─────────────────────────────────────────────────────────────────── */
 .card {
+  position: relative;
   border-radius: 12px;
-  background: var(--color-ink-900);
-  border: 1px solid var(--color-line-medium);
+  background: #0a0a0a;
   overflow: hidden;
+  isolation: isolate;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    160deg,
+    rgba(255,255,255,0.09) 0%,
+    rgba(255,255,255,0.03) 30%,
+    rgba(255,255,255,0.015) 60%,
+    rgba(255,255,255,0.05) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: inherit;
+  z-index: 1;
 }
 
 .card-hover {
-  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.16,1,0.3,1);
+  transition: box-shadow 0.4s cubic-bezier(0.16,1,0.3,1);
 }
 .card-hover:hover {
-  border-color: var(--color-line-strong);
-  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 0 rgba(255,255,255,0.06),
+    0 0 0 1px rgba(255,255,255,0.04),
+    0 4px 24px rgba(0,0,0,0.3);
 }
 
 /* ─── Divider ──────────────────────────────────────────────────────────────── */
@@ -400,10 +546,7 @@ body {
   animation: progress-fill 1s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ─── Dashboard (light theme) overrides ────────────────────────────────────── */
-/* These only affect elements inside the dashboard layout which sets bg-[#f4f4f4]. */
-/* The landing page continues to use the dark ink palette above. */
-
+/* ─── Spin animation ────────────────────────────────────────────────────────── */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }

@@ -11,10 +11,8 @@ interface EmailDomain {
   status: string;
 }
 
-const cardShadow = { boxShadow: "0 1px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)" };
-
 const inputCls =
-  "w-full rounded-xl bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] focus:bg-white transition-all";
+  "w-full rounded-xl input-base";
 
 export default function SettingsPage() {
   const [companyName, setCompanyName] = useState("");
@@ -128,25 +126,25 @@ export default function SettingsPage() {
         <form onSubmit={handleSave} className="space-y-5">
           {/* Company Profile */}
           <FadeIn delay={100}>
-            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
-              <h2 className="font-display text-base font-semibold text-[#111]">Company Profile</h2>
+            <div className="dash-card rounded-2xl p-6 space-y-4">
+              <h2 className="text-base font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>Company Profile</h2>
               <div>
-                <label className="block text-xs font-medium text-[#555] mb-1.5">Company name</label>
+                <label className="block text-xs font-medium text-[#525252] mb-1.5">Company name</label>
                 <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)}
                   placeholder="Your agency name" className={inputCls} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#555] mb-1.5">Website</label>
+                <label className="block text-xs font-medium text-[#525252] mb-1.5">Website</label>
                 <input type="text" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)}
                   placeholder="yoursite.com" className={inputCls} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#555] mb-1.5">Services (comma separated)</label>
+                <label className="block text-xs font-medium text-[#525252] mb-1.5">Services (comma separated)</label>
                 <input type="text" value={services} onChange={e => setServices(e.target.value)}
                   placeholder="web development, SEO, logo design" className={inputCls} />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#555] mb-1.5">Calendly link</label>
+                <label className="block text-xs font-medium text-[#525252] mb-1.5">Calendly link</label>
                 <input type="text" value={calendlyLink} onChange={e => setCalendlyLink(e.target.value)}
                   placeholder="https://calendly.com/yourname" className={inputCls} />
               </div>
@@ -155,20 +153,20 @@ export default function SettingsPage() {
 
           {/* Email Domain */}
           <FadeIn delay={200}>
-            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
-              <h2 className="font-display text-base font-semibold text-[#111]">Email Domain</h2>
+            <div className="dash-card rounded-2xl p-6 space-y-4">
+              <h2 className="text-base font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>Email Domain</h2>
               {domains.length > 0 && (
                 <div className="space-y-2">
                   {domains.map(d => (
-                    <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-[#f7f7f7] border border-[#f0f0f0]">
+                    <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-[#0f0f0f] dash-card">
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-green-500" : "bg-yellow-400"}`} />
-                        <span className="text-sm text-[#111]">{d.domain}</span>
-                        <span className="text-xs text-[#aaa] capitalize">{d.status}</span>
+                        <span className="text-sm text-white">{d.domain}</span>
+                        <span className="text-xs text-[#525252] capitalize">{d.status}</span>
                       </div>
                       {d.status === "pending" && (
                         <button type="button" onClick={() => handleVerifyDomain(d.id)}
-                          className="text-xs text-[#555] hover:text-[#111] font-medium transition-colors">Verify</button>
+                          className="text-xs text-[#a3a3a3] hover:text-white font-medium transition-colors">Verify</button>
                       )}
                     </div>
                   ))}
@@ -177,22 +175,22 @@ export default function SettingsPage() {
               <form onSubmit={handleAddDomain} className="flex gap-2">
                 <input type="text" value={newDomain} onChange={e => setNewDomain(e.target.value)}
                   placeholder="yourdomain.com"
-                  className="flex-1 rounded-xl bg-[#f7f7f7] border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#bbb] focus:outline-none focus:border-[#ccc] transition-all" />
+                  className="flex-1 rounded-xl input-base" />
                 <button type="submit" disabled={domainLoading || !newDomain}
-                  className="rounded-xl bg-[#111] text-white font-medium px-4 py-2.5 text-sm hover:bg-[#222] transition-all disabled:opacity-40 active:scale-[0.98]">
+                  className="rounded-xl bg-white text-[#080808] font-medium px-4 py-2.5 text-sm hover:bg-white/90 transition-all disabled:opacity-40 active:scale-[0.98]">
                   {domainLoading ? "Adding..." : "Add"}
                 </button>
               </form>
               {dnsRecords && (
-                <div className="rounded-xl bg-[#f7f7f7] border border-[#f0f0f0] p-4 space-y-3">
-                  <p className="text-xs font-medium text-[#555]">Add these DNS records:</p>
+                <div className="rounded-xl bg-[#0f0f0f] dash-card p-4 space-y-3">
+                  <p className="text-xs font-medium text-[#a3a3a3]">Add these DNS records:</p>
                   {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
                     <div key={key} className="text-xs">
-                      <p className="text-[#333] font-medium mb-1">{record.note}</p>
-                      <div className="flex gap-4 text-[#999]">
+                      <p className="text-white font-medium mb-1">{record.note}</p>
+                      <div className="flex gap-4 text-[#525252]">
                         <span>Type: {record.type}</span>
                         <span>Host: {record.host}</span>
-                        <span className="text-[#666] break-all">Value: {record.value}</span>
+                        <span className="text-[#3a3a3a] break-all">Value: {record.value}</span>
                       </div>
                     </div>
                   ))}
@@ -203,38 +201,38 @@ export default function SettingsPage() {
 
           {/* API Keys */}
           <FadeIn delay={300}>
-            <div className="bg-white rounded-2xl p-6 space-y-4" style={cardShadow}>
+            <div className="dash-card rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-base font-semibold text-[#111]">API Keys</h2>
+                <h2 className="text-base font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>API Keys</h2>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" checked={useCustomKeys} onChange={e => setUseCustomKeys(e.target.checked)} className="sr-only peer" />
-                  <div className="w-11 h-6 bg-[#e5e5e5] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#111]"></div>
+                  <div className="w-11 h-6 bg-white/[0.06] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#525252] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-white peer-checked:after:bg-[#080808]"></div>
                 </label>
               </div>
               {useCustomKeys && (
                 <div className="space-y-4 pt-1">
                   <div>
-                    <label className="block text-xs font-medium text-[#555] mb-1.5">Cohere</label>
+                    <label className="block text-xs font-medium text-[#525252] mb-1.5">Cohere</label>
                     <input type="password" value={cohereKey} onChange={e => setCohereKey(e.target.value)}
                       placeholder="Cohere API key" className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#555] mb-1.5">Gemini</label>
+                    <label className="block text-xs font-medium text-[#525252] mb-1.5">Gemini</label>
                     <input type="password" value={geminiKey} onChange={e => setGeminiKey(e.target.value)}
                       placeholder="Gemini API key" className={inputCls} />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-[#555] mb-1.5">OpenRouter</label>
+                    <label className="block text-xs font-medium text-[#525252] mb-1.5">OpenRouter</label>
                     <input type="password" value={openrouterKey} onChange={e => setOpenrouterKey(e.target.value)}
                       placeholder="OpenRouter API key" className={inputCls} />
                   </div>
                   <button type="button" onClick={handleSaveKeys}
-                    className="rounded-xl bg-[#111] text-white font-medium px-4 py-2 text-sm hover:bg-[#222] transition-all active:scale-[0.98]">
+                    className="rounded-xl bg-white text-[#080808] font-medium px-4 py-2 text-sm hover:bg-white/90 transition-all active:scale-[0.98]">
                     Save Keys
                   </button>
                 </div>
               )}
-              {!useCustomKeys && <p className="text-xs text-[#aaa]">Using Knight&apos;s built-in keys.</p>}
+              {!useCustomKeys && <p className="text-xs text-[#525252]">Using Knight&apos;s built-in keys.</p>}
             </div>
           </FadeIn>
 
@@ -242,7 +240,7 @@ export default function SettingsPage() {
 
           <FadeIn delay={500}>
             <button type="submit" disabled={saving}
-              className="rounded-xl bg-[#111] text-white font-medium px-5 py-2.5 text-sm hover:bg-[#222] transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]">
+              className="rounded-xl bg-white text-[#080808] font-medium px-5 py-2.5 text-sm hover:bg-white/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]">
               {saving ? "Saving..." : "Save Changes"}
             </button>
           </FadeIn>

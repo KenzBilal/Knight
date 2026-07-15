@@ -58,8 +58,8 @@ const Icons = {
     </svg>
   ),
   Lightning: (p: React.SVGProps<SVGSVGElement>) => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none" {...p}>
-      <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
+      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
     </svg>
   ),
 };
@@ -83,12 +83,16 @@ interface SidebarProps {
   orgPlan?: string;
   userEmail?: string;
   userName?: string;
+  userRole?: "owner" | "admin" | "member";
+  onClose?: () => void;
 }
 
-export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps) {
+export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "member", onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isFree = orgPlan === "free";
+  const isOwner = userRole === "owner";
+  const canManage = isOwner || userRole === "admin";
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -104,10 +108,10 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
     : userEmail ? userEmail[0].toUpperCase() : "K";
 
   return (
-    <aside className="w-[240px] h-full bg-transparent flex flex-col shrink-0 border-r border-white/20">
+    <aside className="w-[240px] h-full bg-[#080808] flex flex-col shrink-0 border-r border-white/[0.06]">
       {/* Logo */}
-      <div className="px-6 h-[80px] flex items-center border-b border-white/20">
-        <KnightLogo href="/dashboard" variant="light" size={28} />
+      <div className="px-6 h-[80px] flex items-center border-b border-white/[0.06]">
+        <KnightLogo href="/dashboard" variant="dark" size={28} />
       </div>
 
       {/* Main nav */}
@@ -118,13 +122,14 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
             <Link
               key={href}
               href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-[16px] text-[13px] font-semibold transition-all duration-200 group ${
+              onClick={onClose}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
                 active
-                  ? "bg-[#111] text-white shadow-md"
-                  : "text-[#777] hover:text-[#111] hover:bg-white/50"
+                  ? "bg-white/[0.08] text-white"
+                  : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
               }`}
             >
-              <Icon className={active ? "text-white" : "text-[#999] group-hover:text-[#555]"} />
+              <Icon className={active ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
               {label}
             </Link>
           );
@@ -134,61 +139,77 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
       {/* Upgrade to Pro card — only for free plan */}
       {isFree && (
         <div className="mx-3 mb-3">
-          <div className="rounded-2xl bg-[#111] p-4 text-white">
-            <p className="font-semibold text-sm mb-1 flex items-center gap-1.5">
-              <Icons.Lightning className="text-yellow-400" />
-              Upgrade to Pro
-            </p>
-            <p className="text-xs text-white/50 mb-4 leading-relaxed">
-              Unlock Telegram agent, unlimited leads and drip sequences.
-            </p>
-            <Link
-              href="/dashboard/billing"
-              className="block w-full text-center bg-white text-[#111] rounded-xl py-2 text-xs font-semibold hover:bg-[#f0f0f0] transition-colors"
-            >
-              Upgrade
-            </Link>
+          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-[1px]">
+            <div className="rounded-[11px] bg-[#0c0c0c] p-4">
+              <div className="mb-2.5">
+                <p className="text-[13px] font-semibold text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+                  Upgrade to Pro
+                </p>
+              </div>
+              <p className="text-[11px] text-[#525252] mb-3.5 leading-relaxed">
+                Telegram agent, unlimited leads & drip sequences.
+              </p>
+              <Link
+                href="/dashboard/billing"
+                className="flex items-center justify-center gap-1.5 w-full bg-white text-[#080808] rounded-lg py-2 text-[12px] font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
+              >
+                Upgrade
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
+                </svg>
+              </Link>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Bottom links */}
-      <div className="px-4 pb-4 border-t border-white/20 pt-4 space-y-1">
-        {bottomLinks.map(({ href, label, Icon }) => {
-          const active = isActive(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-[16px] text-[13px] font-semibold transition-all duration-200 group ${
-                active
-                  ? "bg-[#111] text-white shadow-md"
-                  : "text-[#777] hover:text-[#111] hover:bg-white/50"
-              }`}
-            >
-              <Icon className={active ? "text-white" : "text-[#999] group-hover:text-[#555]"} />
-              {label}
-            </Link>
-          );
-        })}
+      {/* Bottom links — team/settings/billing only for owner */}
+      <div className="px-4 pb-4 border-t border-white/[0.06] pt-4 space-y-1">
+        {bottomLinks
+          .filter(({ href }) => {
+            if (href === "/dashboard/team" && !isOwner) return false;
+            if (href === "/dashboard/settings" && !isOwner) return false;
+            if (href === "/dashboard/billing" && !isOwner) return false;
+            return true;
+          })
+          .map(({ href, label, Icon }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
+                  active
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
+                }`}
+              >
+                <Icon className={active ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
+                {label}
+              </Link>
+            );
+          })}
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-[16px] text-[13px] font-semibold text-[#777] hover:text-red-500 hover:bg-white/50 transition-all w-full group"
+          className="flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-all w-full group"
         >
-          <Icons.Logout className="text-[#999] group-hover:text-red-400" />
+          <Icons.Logout className="text-[#525252] group-hover:text-[#f87171]" />
           Log out
         </button>
       </div>
 
       {/* User row */}
-      <div className="px-6 py-5 border-t border-white/20 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#111] flex items-center justify-center flex-shrink-0 shadow-md">
-          <span className="text-[12px] font-bold text-white">{initials}</span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold text-[#111] truncate">{userName || userEmail || "Account"}</p>
-          <p className="text-[11px] font-medium text-[#777] capitalize">{orgPlan} plan</p>
+      <div className="px-4 py-4 border-t border-white/[0.06]">
+        <div className="flex items-center gap-3 px-2">
+          <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+            <span className="text-[11px] font-bold text-white">{initials}</span>
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
+            <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
+          </div>
         </div>
       </div>
     </aside>

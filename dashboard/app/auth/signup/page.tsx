@@ -34,13 +34,13 @@ export default function SignupPage() {
   return (
     <div className="flex-1 flex flex-col bg-white">
       {/* Form area — centered */}
-      <div className="flex-1 flex items-center justify-center px-8 sm:px-12 lg:px-14">
+      <div className="flex-1 flex items-center justify-center px-6 py-12 md:px-12 lg:px-14">
           <div className="w-full max-w-[360px]">
               <div className="mb-8">
-                <h1 className="text-[32px] font-display font-semibold text-[#111] tracking-tight leading-tight mb-2">
+                <h1 className="text-[28px] md:text-[32px] font-display font-semibold text-[#111] tracking-tight leading-tight mb-2">
                   Start for free
                 </h1>
-                <p className="text-[14px] text-[#888] leading-relaxed">
+                <p className="text-[13px] md:text-[14px] text-[#888] leading-relaxed">
                   No credit card required. Cancel anytime.
                 </p>
               </div>
@@ -124,7 +124,7 @@ export default function SignupPage() {
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-6 flex items-center gap-5">
+        <div className="px-6 md:px-8 py-5 md:py-6 flex items-center gap-5 border-t border-[#f0f0f0]">
           <Link href="/privacy" className="text-[11px] text-[#bbb] hover:text-[#888] transition-colors">Privacy</Link>
           <Link href="/terms" className="text-[11px] text-[#bbb] hover:text-[#888] transition-colors">Terms</Link>
           <Link href="/contact" className="text-[11px] text-[#bbb] hover:text-[#888] transition-colors">Contact</Link>

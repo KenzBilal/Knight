@@ -4,6 +4,120 @@ import { requireAuthFromToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
+function getPeriodRange(period: string): { start: Date; label: string } {
+  const now = new Date();
+  switch (period) {
+    case "Day": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 1);
+      return { start, label: "Day" };
+    }
+    case "Week": {
+      const start = new Date(now);
+      start.setDate(start.getDate() - 7);
+      return { start, label: "Week" };
+    }
+    case "Year": {
+      const start = new Date(now);
+      start.setFullYear(start.getFullYear() - 1);
+      return { start, label: "Year" };
+    }
+    case "Month":
+    default: {
+      const start = new Date(now);
+      start.setMonth(start.getMonth() - 1);
+      return { start, label: "Month" };
+    }
+  }
+}
+
+function buildChartData(companies: { created_at: string }[], period: string): { month: string; value: number }[] {
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const now = new Date();
+
+  if (period === "Day") {
+    // Last 24 hours by hour
+    const buckets: { label: string; count: number }[] = [];
+    for (let i = 23; i >= 0; i--) {
+      const h = new Date(now);
+      h.setHours(h.getHours() - i, 0, 0, 0);
+      const label = h.toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+      const nextH = new Date(h);
+      nextH.setHours(nextH.getHours() + 1);
+      const count = companies?.filter(c => {
+        const d = new Date(c.created_at);
+        return d >= h && d < nextH;
+      }).length || 0;
+      buckets.push({ label, count });
+    }
+    // Show every 4th label to avoid crowding
+    return buckets.map((b, i) => ({
+      month: i % 4 === 0 ? b.label : "",
+      value: b.count,
+    }));
+  }
+
+  if (period === "Week") {
+    // Last 7 days by day
+    const buckets: { label: string; count: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      const nextD = new Date(d);
+      nextD.setDate(nextD.getDate() + 1);
+      const label = dayNames[d.getDay()];
+      const count = companies?.filter(c => {
+        const cd = new Date(c.created_at);
+        return cd >= d && cd < nextD;
+      }).length || 0;
+      buckets.push({ label, count });
+    }
+    return buckets.map(b => ({ month: b.label, value: b.count }));
+  }
+
+  if (period === "Year") {
+    // Last 12 months by month
+    const buckets: { label: string; count: number }[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - i, 1);
+      d.setHours(0, 0, 0, 0);
+      const nextM = new Date(d);
+      nextM.setMonth(nextM.getMonth() + 1);
+      const label = monthNames[d.getMonth()];
+      const count = companies?.filter(c => {
+        const cd = new Date(c.created_at);
+        return cd >= d && cd < nextM;
+      }).length || 0;
+      buckets.push({ label, count });
+    }
+    return buckets.map(b => ({ month: b.label, value: b.count }));
+  }
+
+  // Month (default) — last 30 days by day
+  const buckets: { label: string; count: number }[] = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    d.setHours(0, 0, 0, 0);
+    const nextD = new Date(d);
+    nextD.setDate(nextD.getDate() + 1);
+    const label = `${d.getDate()}`;
+    const count = companies?.filter(c => {
+      const cd = new Date(c.created_at);
+      return cd >= d && cd < nextD;
+    }).length || 0;
+    buckets.push({ label, count });
+  }
+  // Show every 5th label
+  return buckets.map((b, i) => ({
+    month: i % 5 === 0 || i === buckets.length - 1 ? b.label : "",
+    value: b.count,
+  }));
+}
+
 export async function GET(req: Request) {
   try {
     const cookie = req.headers.get("cookie") || "";
@@ -11,9 +125,13 @@ export async function GET(req: Request) {
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
+    const url = new URL(req.url);
+    const period = url.searchParams.get("period") || "Month";
+    const { start: periodStart } = getPeriodRange(period);
+
     const supabase = createServiceClient();
 
-    // Get total prospects (companies)
+    // Get total prospects (all time)
     const { count: totalProspects } = await supabase
       .from("companies")
       .select("*", { count: "exact", head: true })
@@ -26,11 +144,7 @@ export async function GET(req: Request) {
       .eq("org_id", org.id)
       .eq("status", "RUNNING");
 
-    // Get emails sent this month
-    const periodStart = new Date();
-    periodStart.setDate(1);
-    periodStart.setHours(0, 0, 0, 0);
-
+    // Get emails sent in period
     const { count: emailsSent } = await supabase
       .from("emails")
       .select("*", { count: "exact", head: true })
@@ -38,46 +152,31 @@ export async function GET(req: Request) {
       .eq("direction", "outbound")
       .gte("created_at", periodStart.toISOString());
 
-    // Get replies received
+    // Get replies in period
     const { count: replies } = await supabase
       .from("emails")
       .select("*", { count: "exact", head: true })
       .eq("org_id", org.id)
-      .eq("direction", "inbound");
+      .eq("direction", "inbound")
+      .gte("created_at", periodStart.toISOString());
 
-    // Get recent activity (last 10 jobs)
+    // Get recent activity (last 10 jobs in period)
     const { data: recentJobs } = await supabase
       .from("jobs")
       .select("id, type, status, created_at, payload")
       .eq("org_id", org.id)
+      .gte("created_at", periodStart.toISOString())
       .order("created_at", { ascending: false })
       .limit(10);
 
-    // Fetch companies for chart
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
-    sixMonthsAgo.setDate(1);
-    sixMonthsAgo.setHours(0, 0, 0, 0);
-
+    // Fetch companies in period for chart
     const { data: companies } = await supabase
       .from("companies")
       .select("created_at")
       .eq("org_id", org.id)
-      .gte("created_at", sixMonthsAgo.toISOString());
+      .gte("created_at", periodStart.toISOString());
 
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const chartData = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(d.getMonth() - i);
-      const mName = monthNames[d.getMonth()];
-      const year = d.getFullYear();
-      const count = companies?.filter(c => {
-        const cDate = new Date(c.created_at);
-        return cDate.getMonth() === d.getMonth() && cDate.getFullYear() === year;
-      }).length || 0;
-      chartData.push({ month: mName, value: count });
-    }
+    const chartData = buildChartData(companies || [], period);
 
     return NextResponse.json({
       totalProspects: totalProspects || 0,

@@ -17,9 +17,14 @@ export default function AuthLayout({
 
   return (
     <div className="h-screen w-full overflow-hidden bg-white relative">
-      {/* ── Form panel (white) — behind sphere ──────────── */}
+      {/* ── Mobile: full-width form, no sphere ── */}
+      <div className="md:hidden h-full w-full bg-white relative z-10">
+        {children}
+      </div>
+
+      {/* ── Desktop: form panel (white) — behind sphere ── */}
       <motion.div
-        className="absolute top-0 bottom-0 right-0 z-0 flex flex-col bg-white"
+        className="hidden md:flex absolute top-0 bottom-0 right-0 z-0 flex-col bg-white"
         initial={false}
         animate={{
           width: formW,
@@ -30,9 +35,9 @@ export default function AuthLayout({
         {children}
       </motion.div>
 
-      {/* ── Sphere panel (black) — in front ──────────── */}
+      {/* ── Desktop: sphere panel (black) — in front ── */}
       <motion.div
-        className="absolute top-0 bottom-0 left-0 z-10"
+        className="hidden md:block absolute top-0 bottom-0 left-0 z-10"
         initial={false}
         animate={{
           x: isLogin ? 0 : formW,

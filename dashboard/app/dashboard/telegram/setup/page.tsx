@@ -50,7 +50,7 @@ export default function TelegramSetupPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-3xl">
       <div className="mb-6">
         <Link href="/dashboard/telegram" className="text-sm text-paper-400 hover:text-paper-200 transition-colors">
           ← Back to Telegram
