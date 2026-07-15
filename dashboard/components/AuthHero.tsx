@@ -3,41 +3,26 @@
 import { KnightLogo } from "@/components/KnightLogo";
 
 const ADAM_LINES = [
-  "                                                                        ",
-  "                            .,:;+?S##S?+:,.                            ",
-  "                        ,+S###############################S+,          ",
-  "                     ,?#######################################+.        ",
-  "                   ,?###########################################?       ",
-  "                  +###############################################+     ",
-  "                 ?##################################################?   ",
-  "                S####################################################S  ",
-  "               ?######################################################? ",
-  "              ,########################################################,",
-  "              S########################################################S",
-  "              #########################################################?",
-  "              S#######################################################S ",
-  "               ?#####################################################?  ",
-  "                +###################################################?   ",
-  "                 +#################################################?    ",
-  "              .,:?S###############################################S?,   ",
-  "           ,?S####################################################S+,   ",
-  "         +S###########S##############################################?  ",
-  "        ?#############+ ?S###########S+ +###########################S?  ",
-  "       +##############,   +?????????+   ,?###########################+  ",
-  "      ?###############,                  ,###########################?  ",
-  "     +################.                   .##########################S  ",
-  "    ,################S.     .,+??+,.       S#########################S  ",
-  "    ?################?   .+S#########S+.   ?#########################+  ",
-  "    S################S  .S#############S.  S##########################  ",
-  "    ####################S###############S###########################S#  ",
-  "    S###################################################################  ",
-  "    +###################################################################+ ",
-  "     S#################################################################S ",
-  "      ?###############################################################?  ",
-  "       +?S###########################################################S+  ",
-  "           .,+?S######################################S?+,.              ",
-  "                  .,:;+?SS######################SS?+:,.                 ",
-  "                                                                        ",
+  "                                                                                                                        ",
+  "                 . .,,,,,,....                                                                                          ",
+  "              .,,,,,,,,::;;;;;::,,,,....                                                                                ",
+  "     ...,,.,,,:::::,,,,:::,:::::,,,:::::;;::::.                                                                         ",
+  "..,:,,,,,,::;;+**??*****;,,..,,:,,...,,,,,:::+*:.                                                                       ",
+  ":::::::;;;++*?%%??????%%%+,,...,,:,,,;;;:,.,,,:++++;:.                                                      ............",
+  "::::::;;;+*?%??%%%%%%%%%%*:::,..,,,:;?%?*+*;::;;:::;+++;                                    ..................,,,,,,,,,,",
+  "::::;;;+*?%%%%%%SSSS?;,.  .::;;::,..,;?S?*?SSS##%?*++:;*+,                .           ..,,....,,,,,,,,,::::::::::::,,,,,",
+  ";;;++**?%%%%SSS##S+,        .,;;+:,,,:;**:;SSS%###SSS%;:;*;     .. ...,,:,,,,,...,,,,,,,,,,,,,,,:;::;;;++***+++;::,,,,,,",
+  "**??%%%%SSS###S?;.               ...,,,::+*?%#,:*#S%%#+.++?+  .:::;*+++**+++*+..,,:**+;,,,,,,,,,+?%%%*++++++++;;:::,,,,,",
+  "%%%SSSSS###S?;,                        .:::+*%+  *#S%#S. ,;+,  ..,,,.... ..,:::;**+*+,..,;;:,::+?%SSS%??????****+++;;;+;",
+  "SSSS#SSS?+:.                             ;?%?+%:  *#S%#:                      .;*;:,,;+*?%%*???%%%%%SSS%%%%%S%??********",
+  "#SS?+:,.                                 ,+:,::.  ,??+%*                  ..,::,:;+?%***%S%SSSS%SSSS?+:...,::;+++*???%%%",
+  "+:.                                                                       ,::::;*?*+%?::;****?%%%?;,.            . .,,,,",
+  "                                                                           .:+%%+;+?*::+%*+*+;:,.                       ",
+  "                                                                           .:*%*:+%, ;*??,                              ",
+  "                                                                           .:+%;+?,  ++?;                               ",
+  "                                                                            ,;?:+;   ,,:,                               ",
+  "                                                                            .,. .                                       ",
+  "                                                                                                                        ",
 ];
 
 function AsciiArt() {
@@ -123,26 +108,9 @@ function GridPattern() {
   );
 }
 
-const TESTIMONIALS = [
-  {
-    quote: "Knight transformed how we approach outbound. Pipeline up 3× in 90 days.",
-    author: "Sarah Chen",
-    role: "VP Sales, Acme Corp",
-  },
-  {
-    quote: "The AI finds angles our team would never think of. It's like hiring 10 SDRs.",
-    author: "Marcus Rivera",
-    role: "Founder, Scalepath",
-  },
-  {
-    quote: "Every prospect email feels handcrafted. Open rates jumped from 12% to 41%.",
-    author: "Priya Nair",
-    role: "Growth Lead, Nexus AI",
-  },
-];
+
 
 export function AuthHero({ mode }: { mode: "login" | "signup" }) {
-  const testimonial = TESTIMONIALS[mode === "login" ? 0 : 1];
 
   return (
     <div className="relative flex flex-col justify-between h-full p-10 lg:p-14 overflow-hidden bg-[#0a0a0a]">
@@ -195,36 +163,6 @@ export function AuthHero({ mode }: { mode: "login" | "signup" }) {
               ? "AI-powered outbound that finds your ideal prospects, writes perfect pitches, and books meetings while you sleep."
               : "Knight uses AI to research prospects, craft hyper-personalized outreach, and fill your calendar with qualified meetings."}
           </p>
-        </div>
-
-        {/* Testimonial */}
-        <div className="border border-white/8 bg-white/[0.04] backdrop-blur-sm rounded-2xl p-5 space-y-3">
-          <p className="text-sm text-white/60 leading-relaxed italic">
-            &ldquo;{testimonial.quote}&rdquo;
-          </p>
-          <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center text-white/70 text-xs font-semibold">
-              {testimonial.author[0]}
-            </div>
-            <div>
-              <p className="text-xs text-white/80 font-medium">{testimonial.author}</p>
-              <p className="text-xs text-white/35">{testimonial.role}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="flex items-center gap-6">
-          {[
-            { value: "3×", label: "Pipeline growth" },
-            { value: "41%", label: "Open rate avg" },
-            { value: "90d", label: "Time to results" },
-          ].map((stat) => (
-            <div key={stat.label} className="space-y-0.5">
-              <p className="text-xl font-semibold text-white">{stat.value}</p>
-              <p className="text-xs text-white/35">{stat.label}</p>
-            </div>
-          ))}
         </div>
       </div>
 
