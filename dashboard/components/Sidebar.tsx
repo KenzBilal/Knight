@@ -172,38 +172,22 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         </div>
       )}
 
-      {/* User profile row — hover to open menu */}
+      {/* User profile + menu container */}
       <div
         className="relative px-4 pb-4 border-t border-white/[0.06] pt-2"
         onMouseEnter={() => setMenuOpen(true)}
         onMouseLeave={() => setMenuOpen(false)}
       >
-        <button
-          className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.04] transition-colors"
-        >
-          <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
-            <span className="text-[11px] font-bold text-white">{initials}</span>
-          </div>
-          <div className="min-w-0 flex-1 text-left">
-            <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
-            <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
-          </div>
-          <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
-        </button>
-
-        {/* Popover menu */}
-        {menuOpen && (
-          <div
-            className="absolute bottom-full left-2 right-2 mb-2 bg-[#111] border border-white/[0.09] rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
-          >
-            <div className="p-1.5">
+        <div className={`bg-[#111] border border-white/[0.09] rounded-xl overflow-hidden transition-shadow ${menuOpen ? "shadow-2xl shadow-black/60" : ""}`}>
+          {/* Menu links */}
+          {menuOpen && (
+            <div className="p-1.5 border-b border-white/[0.06]">
               {profileLinks.map(({ href, label, Icon }) => {
                 const active = isActive(href);
                 return (
                   <Link
                     key={href}
                     href={href}
-                    onClick={() => setMenuOpen(false)}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
                       active
                         ? "bg-white/[0.08] text-white"
@@ -216,6 +200,24 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
                 );
               })}
             </div>
+          )}
+
+          {/* Profile row — always visible */}
+          <div className="px-3 py-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+                <span className="text-[11px] font-bold text-white">{initials}</span>
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
+                <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
+              </div>
+              <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+
+          {/* Logout — only visible when menu open */}
+          {menuOpen && (
             <div className="border-t border-white/[0.06] p-1.5">
               <button
                 onClick={handleLogout}
@@ -225,8 +227,8 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
                 Log out
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </aside>
   );
