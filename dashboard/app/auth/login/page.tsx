@@ -4,11 +4,6 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import { FadeIn } from "@/components/Animations";
-import { AuthHero } from "@/components/AuthHero";
-import Image from "next/image";
-
-// ─── All logic unchanged ─────────────────────────────────────────────────────
 
 function LoginForm() {
   const router = useRouter();
@@ -53,7 +48,7 @@ function LoginForm() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           placeholder="you@company.com"
-          className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:ring-3 focus:ring-black/[0.06] hover:border-[#ccc]"
+          className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] hover:border-[#ccc]"
         />
       </div>
 
@@ -73,14 +68,14 @@ function LoginForm() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           placeholder="••••••••"
-          className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:ring-3 focus:ring-black/[0.06] hover:border-[#ccc]"
+          className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] hover:border-[#ccc]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full mt-2 rounded-lg bg-[#111] text-white font-semibold py-3 text-[15px] tracking-tight transition-all duration-150 hover:bg-[#222] active:scale-[0.985] disabled:opacity-40 disabled:cursor-not-allowed"
+        className="w-full mt-2 rounded-xl bg-[#111] text-white font-semibold py-3 text-[15px] tracking-tight transition-all duration-150 hover:bg-[#222] hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.985] disabled:opacity-40 disabled:cursor-not-allowed"
       >
         {loading ? (
           <span className="flex items-center justify-center gap-2">
@@ -98,42 +93,21 @@ function LoginForm() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex">
-      {/* ── Left: Form panel ─────────────────────────────── */}
-      <div className="w-full lg:w-[42%] xl:w-[38%] flex-shrink-0 flex flex-col bg-white">
-        {/* Top nav */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-0">
-          <Link href="/" className="inline-flex items-center gap-2.5">
-            <Image src="/knight_logo.png" alt="Knight" width={28} height={28} className="rounded-[6px]" />
-            <span className="font-semibold text-[16px] text-[#111] tracking-tight">Knight</span>
-          </Link>
-          <Link
-            href="/auth/signup"
-            className="text-[13px] text-[#888] hover:text-[#111] transition-colors font-medium"
-          >
-            No account? <span className="text-[#111] font-semibold">Sign up</span>
-          </Link>
-        </div>
-
-        {/* Form area — centered */}
-        <div className="flex-1 flex items-center justify-center px-8 sm:px-12 lg:px-14">
+    <div className="flex-1 flex flex-col bg-white">
+      {/* Form area — centered */}
+      <div className="flex-1 flex items-center justify-center px-8 sm:px-12 lg:px-14">
           <div className="w-full max-w-[360px]">
-            <FadeIn>
               <div className="mb-8">
-                <h1 className="text-[28px] font-bold text-[#111] tracking-tight leading-tight mb-2">
+                <h1 className="text-[32px] font-display font-semibold text-[#111] tracking-tight leading-tight mb-2">
                   Welcome back
                 </h1>
                 <p className="text-[14px] text-[#888] leading-relaxed">
                   Sign in to your dashboard to continue.
                 </p>
               </div>
-            </FadeIn>
 
-            <FadeIn delay={80}>
               <Suspense fallback={
                 <div className="flex items-center justify-center py-12">
                   <svg className="animate-spin h-5 w-5 text-[#ccc]" viewBox="0 0 24 24">
@@ -144,16 +118,13 @@ export default function LoginPage() {
               }>
                 <LoginForm />
               </Suspense>
-            </FadeIn>
 
-            <FadeIn delay={180}>
               <p className="mt-6 text-center text-[13px] text-[#aaa]">
                 Don&apos;t have an account?{" "}
                 <Link href="/auth/signup" className="text-[#111] font-semibold hover:underline underline-offset-4">
                   Create one free
                 </Link>
               </p>
-            </FadeIn>
           </div>
         </div>
 
@@ -163,12 +134,6 @@ export default function LoginPage() {
           <Link href="/terms" className="text-[11px] text-[#bbb] hover:text-[#888] transition-colors">Terms</Link>
           <Link href="/contact" className="text-[11px] text-[#bbb] hover:text-[#888] transition-colors">Contact</Link>
         </div>
-      </div>
-
-      {/* ── Right: Hero panel (hidden on mobile) ──────────── */}
-      <div className="hidden lg:block flex-1">
-        <AuthHero mode="login" />
-      </div>
     </div>
   );
 }
