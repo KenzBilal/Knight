@@ -13,7 +13,17 @@ export async function GET(req: Request) {
 
     const supabase = createServiceClient();
 
-    // Get emails grouped by company
+    // Get emails grouped by company — join through companies for org filtering
+    const { data: companiesList } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("org_id", org.id);
+
+    const companyIds = (companiesList || []).map((c) => c.id);
+    if (companyIds.length === 0) {
+      return NextResponse.json({ threads: [] });
+    }
+
     const { data: emails } = await supabase
       .from("emails")
       .select(`
@@ -29,7 +39,7 @@ export async function GET(req: Request) {
           website_url
         )
       `)
-      .eq("org_id", org.id)
+      .in("company_id", companyIds)
       .order("created_at", { ascending: false });
 
     // Group by company

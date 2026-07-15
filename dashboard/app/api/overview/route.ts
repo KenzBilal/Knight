@@ -144,21 +144,32 @@ export async function GET(req: Request) {
       .eq("org_id", org.id)
       .eq("status", "RUNNING");
 
+    // Get company IDs for this org (emails don't have org_id, join through companies)
+    const { data: orgCompanies } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("org_id", org.id);
+    const companyIds = (orgCompanies || []).map((c) => c.id);
+
     // Get emails sent in period
-    const { count: emailsSent } = await supabase
-      .from("emails")
-      .select("*", { count: "exact", head: true })
-      .eq("org_id", org.id)
-      .eq("direction", "outbound")
-      .gte("created_at", periodStart.toISOString());
+    const { count: emailsSent } = companyIds.length > 0
+      ? await supabase
+          .from("emails")
+          .select("*", { count: "exact", head: true })
+          .in("company_id", companyIds)
+          .eq("direction", "outbound")
+          .gte("created_at", periodStart.toISOString())
+      : { count: 0 };
 
     // Get replies in period
-    const { count: replies } = await supabase
-      .from("emails")
-      .select("*", { count: "exact", head: true })
-      .eq("org_id", org.id)
-      .eq("direction", "inbound")
-      .gte("created_at", periodStart.toISOString());
+    const { count: replies } = companyIds.length > 0
+      ? await supabase
+          .from("emails")
+          .select("*", { count: "exact", head: true })
+          .in("company_id", companyIds)
+          .eq("direction", "inbound")
+          .gte("created_at", periodStart.toISOString())
+      : { count: 0 };
 
     // Get recent activity (last 10 jobs in period)
     const { data: recentJobs } = await supabase
