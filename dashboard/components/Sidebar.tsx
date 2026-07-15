@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { KnightLogo } from "@/components/KnightLogo";
@@ -92,13 +93,14 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const router = useRouter();
   const isFree = orgPlan === "free";
   const isOwner = userRole === "owner";
-  const canManage = isOwner || userRole === "admin";
+  const [menuOpen, setMenuOpen] = useState(false);
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
   }
 
   async function handleLogout() {
+    setMenuOpen(false);
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/auth/login");
   }
@@ -106,6 +108,13 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const initials = userName
     ? userName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
     : userEmail ? userEmail[0].toUpperCase() : "K";
+
+  const profileLinks = bottomLinks.filter(({ href }) => {
+    if (href === "/dashboard/team" && !isOwner) return false;
+    if (href === "/dashboard/settings" && !isOwner) return false;
+    if (href === "/dashboard/billing" && !isOwner) return false;
+    return true;
+  });
 
   return (
     <aside className="w-[240px] h-full bg-[#080808] flex flex-col shrink-0 border-r border-white/[0.06]">
@@ -163,54 +172,59 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         </div>
       )}
 
-      {/* Bottom links — team/settings/billing only for owner */}
-      <div className="px-4 pb-4 border-t border-white/[0.06] pt-4 space-y-1">
-        {bottomLinks
-          .filter(({ href }) => {
-            if (href === "/dashboard/team" && !isOwner) return false;
-            if (href === "/dashboard/settings" && !isOwner) return false;
-            if (href === "/dashboard/billing" && !isOwner) return false;
-            return true;
-          })
-          .map(({ href, label, Icon }) => {
-            const active = isActive(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={onClose}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
-                  active
-                    ? "bg-white/[0.08] text-white"
-                    : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
-                }`}
-              >
-                <Icon className={active ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
-                {label}
-              </Link>
-            );
-          })}
-
+      {/* User profile row — click to open menu */}
+      <div className="relative px-4 pb-4 border-t border-white/[0.06] pt-2">
         <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-all w-full group"
+          onClick={() => setMenuOpen((p) => !p)}
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-white/[0.04] transition-colors"
         >
-          <Icons.Logout className="text-[#525252] group-hover:text-[#f87171]" />
-          Log out
-        </button>
-      </div>
-
-      {/* User row */}
-      <div className="px-4 py-4 border-t border-white/[0.06]">
-        <div className="flex items-center gap-3 px-2">
           <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
             <span className="text-[11px] font-bold text-white">{initials}</span>
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 text-left">
             <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
             <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
           </div>
-        </div>
+          <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        {/* Popover menu */}
+        {menuOpen && (
+          <div
+            className="absolute bottom-full left-2 right-2 mb-2 bg-[#111] border border-white/[0.09] rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <div className="p-1.5">
+              {profileLinks.map(({ href, label, Icon }) => {
+                const active = isActive(href);
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                      active
+                        ? "bg-white/[0.08] text-white"
+                        : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
+                    }`}
+                  >
+                    <Icon className={active ? "text-white" : "text-[#525252]"} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
+            <div className="border-t border-white/[0.06] p-1.5">
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-colors w-full"
+              >
+                <Icons.Logout className="text-[#525252]" />
+                Log out
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </aside>
   );
