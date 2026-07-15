@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/Sidebar";
 import { DashboardContent } from "@/components/DashboardContent";
 import { getUser, getOrg } from "@/lib/auth";
-import { AbstractBackground } from "@/components/AbstractBackground";
 
 export default async function DashboardLayout({
   children,
@@ -16,13 +15,14 @@ export default async function DashboardLayout({
   if (!org) redirect("/auth/signup");
 
   return (
-    <div className="relative flex h-screen w-full overflow-hidden p-4 sm:p-6 lg:p-8">
-      <AbstractBackground />
+    <div className="flex h-screen overflow-hidden bg-[#e5e5e5] relative items-center justify-center p-4">
+      {/* Sleek abstract gradient background */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(circle at 0% 0%, #ffffff 0%, transparent 50%), radial-gradient(circle at 100% 100%, #d4d4d4 0%, transparent 50%)',
+      }} />
       
-      {/* The main glass container */}
-      <div 
-        className="flex flex-1 overflow-hidden bg-white/40 backdrop-blur-[60px] rounded-[32px] sm:rounded-[40px] border border-white/60 shadow-[0_8px_32px_rgba(0,0,0,0.04)]"
-      >
+      {/* Glassmorphic App Container */}
+      <div className="flex w-full h-full max-w-[1600px] bg-white/60 backdrop-blur-2xl rounded-[40px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] overflow-hidden border border-white/60 relative z-10">
         <Sidebar
           orgPlan={org.plan}
           userEmail={user.email}

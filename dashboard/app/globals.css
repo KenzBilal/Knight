@@ -78,7 +78,7 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: #f5f5f5;
 }
 ::-webkit-scrollbar-thumb {
   background: #d4d4d4;
@@ -86,14 +86,6 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #aaa;
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.custom-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
 }
 
 /* ─── Focus Ring ───────────────────────────────────────────────────────────── */
