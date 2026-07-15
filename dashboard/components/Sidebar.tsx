@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { KnightLogo } from "@/components/KnightLogo";
 
 // ─── Inline SVG Icons ────────────────────────────────────────────────────────
@@ -81,9 +81,8 @@ interface SidebarProps {
   userName?: string;
 }
 
-export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps) {
+export function Sidebar(_props: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
