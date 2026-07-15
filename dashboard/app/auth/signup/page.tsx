@@ -37,13 +37,13 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex lg:flex-row-reverse">
       {/* ── Left hero (hidden on mobile) ──────────────── */}
       <div className="hidden lg:flex lg:w-[58%] xl:w-[60%] flex-shrink-0">
         <AuthHero mode="signup" />
       </div>
 
-      {/* ── Right auth panel ──────────────────────────── */}
+      {/* ── Left auth panel ──────────────────────────── */}
       <div className="flex-1 flex flex-col min-h-screen bg-white">
         {/* Mobile top brand */}
         <div className="lg:hidden flex items-center justify-between px-6 py-5 border-b border-neutral-100">
