@@ -51,8 +51,6 @@ export async function POST(req: Request) {
 
     const subscriptionId = data.id;
     const variantId = data.attributes.variant_id?.toString();
-    const _status = data.attributes.status;
-    const _renewsAt = data.attributes.renews_at;
     const endsAt = data.attributes.ends_at;
 
     switch (eventName) {

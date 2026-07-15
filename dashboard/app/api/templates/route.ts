@@ -138,7 +138,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({ templates, defaults: false });
-  } catch (_error) {
+  } catch {
     return NextResponse.json({ templates: DEFAULT_TEMPLATES, defaults: true });
   }
 }

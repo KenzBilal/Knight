@@ -161,7 +161,7 @@ export default function SupportPage() {
       })
       .catch(() => {})
       .finally(() => setLoadingReplies(false));
-  }, [selectedTicket?.id]);
+  }, [selectedTicket]);
 
   // Poll replies every 5s
   useEffect(() => {
@@ -186,7 +186,7 @@ export default function SupportPage() {
     };
     const interval = setInterval(poll, 5000);
     return () => clearInterval(interval);
-  }, [selectedTicket?.id, selectedTicket?.status]);
+  }, [selectedTicket]);
 
   // Poll ticket list every 10s
   useEffect(() => {
