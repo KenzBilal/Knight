@@ -101,31 +101,45 @@ export default function PitchesPage() {
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
           {/* List */}
-          <div className="md:col-span-1 space-y-2">
-            {companies.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelected(c)}
-                className={`w-full text-left rounded-lg p-4 transition-all duration-150 dash-card ${
-                  selected?.id === c.id
-                    ? "bg-white/[0.06]"
-                    : "hover:bg-white/[0.04]"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-semibold text-[#a3a3a3]">{c.name?.[0]}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-white truncate">{c.name}</span>
-                      <ScoreBadge score={c.lead_score} />
+          <div className="md:col-span-1 space-y-1">
+            <p className="text-[11px] font-medium text-[#525252] uppercase tracking-wider px-2 mb-2">
+              {companies.length} pitches
+            </p>
+            {companies.map((c) => {
+              const isActive = selected?.id === c.id;
+              const statusColors: Record<string, string> = {
+                PITCHED: "border-l-[#60a5fa]",
+                REPLIED: "border-l-[#4ade80]",
+                REJECTED: "border-l-[#f87171]",
+                NEW: "border-l-[#525252]",
+              };
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelected(c)}
+                  className={`w-full text-left rounded-lg p-4 transition-all duration-150 border-l-2 ${
+                    isActive
+                      ? `bg-white/[0.06] ${statusColors[c.status] || "border-l-[#525252]"}`
+                      : `border-l-transparent hover:bg-white/[0.04] hover:border-l-white/[0.08]`
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                      isActive ? "bg-white/[0.1]" : "bg-white/[0.06]"
+                    }`}>
+                      <span className="text-xs font-semibold text-[#a3a3a3]">{c.name?.[0]}</span>
                     </div>
-                    <p className="text-xs text-[#525252] truncate mt-0.5">{c.industry}</p>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-[13px] font-medium truncate block ${isActive ? "text-white" : "text-[#a3a3a3]"}`}>
+                        {c.name}
+                      </span>
+                      <p className="text-[11px] text-[#525252] truncate mt-0.5">{c.industry}</p>
+                    </div>
+                    <ScoreBadge score={c.lead_score} />
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
 
           {/* Detail */}
@@ -138,7 +152,7 @@ export default function PitchesPage() {
                     <h2 className="text-base font-bold text-white">{selected.name}</h2>
                     <StatusBadge status={selected.status} />
                   </div>
-                  <p className="text-xs text-[#525252] mb-1">{selected.industry} · {selected.website_url}</p>
+                  <p className="text-xs text-[#525252]">{selected.industry} · {selected.website_url}</p>
                 </div>
 
                 {/* Pitch content */}
