@@ -62,7 +62,7 @@ export function DashboardContent({
   }
 
   return (
-    <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-transparent rounded-r-[40px]">
+    <main className="flex-1 flex flex-col h-full min-w-0 overflow-hidden bg-transparent">
       {/* Unseen reply notification popup */}
       {showPopup && unseenCount > 0 && (
         <div className="mx-8 mt-6 bg-white border border-[#f0f0f0] rounded-[24px] px-6 py-5 flex items-center gap-4 shadow-[0_4px_24px_rgba(0,0,0,0.04)] absolute top-0 right-0 z-50">
