@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { KnightLogo } from "@/components/KnightLogo";
 
 const ADAM_LINES = [
   "                                                                        ",
@@ -47,8 +47,8 @@ function AsciiArt() {
       aria-hidden="true"
     >
       <pre
-        className="text-[5px] sm:text-[6px] md:text-[7px] leading-[1.1] font-mono text-white/[0.055] whitespace-pre animate-float"
-        style={{ letterSpacing: "0.05em" }}
+        className="text-[9px] sm:text-[11px] md:text-[13px] leading-[1.15] font-mono text-white/[0.12] whitespace-pre animate-float"
+        style={{ letterSpacing: "0.08em" }}
       >
         {ADAM_LINES.join("\n")}
       </pre>
@@ -164,14 +164,7 @@ export function AuthHero({ mode }: { mode: "login" | "signup" }) {
 
       {/* Content */}
       <div className="relative z-10">
-        <div className="inline-flex items-center gap-2">
-          <div className="w-5 h-5 rounded bg-white/90 flex items-center justify-center">
-            <svg viewBox="0 0 20 20" fill="none" className="w-3 h-3">
-              <path d="M10 2L13 8H17L13.5 12L15 18L10 15L5 18L6.5 12L3 8H7L10 2Z" fill="#0a0a0a"/>
-            </svg>
-          </div>
-          <span className="text-white/90 font-semibold text-base tracking-tight">Knight</span>
-        </div>
+        <KnightLogo href="/" variant="dark" size={28} />
       </div>
 
       <div className="relative z-10 flex flex-col gap-8">

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
 import { AuthHero } from "@/components/AuthHero";
+import { KnightLogo } from "@/components/KnightLogo";
 
 // ─── All logic unchanged ────────────────────────────────────────────────────
 
@@ -117,9 +118,7 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col min-h-screen bg-white">
         {/* Mobile top brand */}
         <div className="lg:hidden flex items-center justify-between px-6 py-5 border-b border-neutral-100">
-          <Link href="/" className="font-display text-lg font-semibold text-neutral-900 tracking-tight">
-            Knight
-          </Link>
+          <KnightLogo href="/" variant="light" size={26} />
           <Link href="/auth/signup" className="text-sm text-neutral-500 hover:text-neutral-900 transition-colors font-medium">
             Sign up
           </Link>
@@ -132,14 +131,7 @@ export default function LoginPage() {
             <FadeIn>
               <div className="mb-10">
                 {/* Desktop logo */}
-                <Link href="/" className="hidden lg:inline-flex items-center gap-2 mb-10 group">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center transition-transform duration-200 group-hover:scale-95">
-                    <svg viewBox="0 0 20 20" fill="none" className="w-4 h-4">
-                      <path d="M10 2L13 8H17L13.5 12L15 18L10 15L5 18L6.5 12L3 8H7L10 2Z" fill="white"/>
-                    </svg>
-                  </div>
-                  <span className="font-semibold text-neutral-900 text-base tracking-tight">Knight</span>
-                </Link>
+                <KnightLogo href="/" variant="light" size={26} className="mb-10" />
 
                 <h2 className="text-[28px] sm:text-[32px] font-semibold text-neutral-900 tracking-tight leading-tight">
                   Welcome back

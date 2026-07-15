@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { KnightLogo } from "@/components/KnightLogo";
 
 
 // ─── Inline SVG Icons ────────────────────────────────────────────────────────
@@ -106,9 +107,7 @@ export function Sidebar({ orgPlan = "free", userEmail, userName }: SidebarProps)
     <aside className="w-[220px] h-screen bg-white flex flex-col shrink-0" style={{ boxShadow: '1px 0 0 0 #f0f0f0' }}>
       {/* Logo */}
       <div className="px-5 h-[70px] flex items-center border-b border-[#f0f0f0]">
-        <Link href="/dashboard" className="font-display text-[22px] font-bold text-[#0a0a0a] tracking-tight">
-          Knight
-        </Link>
+        <KnightLogo href="/dashboard" variant="light" size={26} />
       </div>
 
       {/* Main nav */}
