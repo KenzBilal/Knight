@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Link from "next/link";
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface OverviewData {
@@ -96,25 +96,19 @@ const Icons = {
 
 // ─── Component Helpers ────────────────────────────────────────────────────────
 
-function formatJobType(t: string) {
-  const m: Record<string, string> = {
-    DISCOVER: "Discovery", SCRAPE: "Audit", AUDIT: "Audit",
-    PITCH: "Pitch", EMAIL: "Email", PROCESS_REPLY: "Reply",
-  };
-  return m[t] || t;
-}
+
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [data, setData] = useState<OverviewData | null>(null);
-  const [loading, setLoading] = useState(true);
+
 
   const fetchData = useCallback(async () => {
     try {
       const res = await fetch("/api/overview");
       if (res.ok) setData(await res.json());
     } catch { /* silent */ }
-    finally { setLoading(false); }
+
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -345,7 +339,7 @@ export default function DashboardPage() {
                 </button>
               </div>
               <div>
-                <p className="text-[15px] font-medium text-[#111] leading-snug mb-4">Doctor's appointment on Tuesday</p>
+                <p className="text-[15px] font-medium text-[#111] leading-snug mb-4">Doctor&apos;s appointment on Tuesday</p>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#999]">02.09.2023</span>
                   <button className="w-10 h-10 border-[1.5px] border-[#111] text-[#111] rounded-[12px] flex items-center justify-center hover:bg-[#f5f5f5] transition-colors">
@@ -392,7 +386,7 @@ export default function DashboardPage() {
                 <span className="text-[7px] font-bold">1/6</span>
               </div>
             </div>
-            <p className="text-[12px] text-white/40 leading-relaxed font-medium">Done: Develop a new plan for Alina's education; Print a new timetable; Buy ...</p>
+            <p className="text-[12px] text-white/40 leading-relaxed font-medium">Done: Develop a new plan for Alina&apos;s education; Print a new timetable; Buy ...</p>
           </div>
 
           {/* Project Card 2 */}
