@@ -70,14 +70,14 @@ const mainLinks = [
   { href: "/dashboard/prospects", label: "Prospects",  Icon: Icons.Prospects },
   { href: "/dashboard/inbox",     label: "Inbox",      Icon: Icons.Inbox },
   { href: "/dashboard/audits",    label: "Audits",     Icon: Icons.Audits },
-  { href: "/dashboard/pitches",   label: "Pitches",    Icon: Icons.Pitches },
   { href: "/dashboard/telegram",  label: "Telegram",   Icon: Icons.Telegram },
 ];
 
-const bottomLinks = [
-  { href: "/dashboard/team",    label: "Team",    Icon: Icons.Team },
-  { href: "/dashboard/settings", label: "Settings", Icon: Icons.Settings },
-  { href: "/dashboard/billing",  label: "Billing",  Icon: Icons.Billing },
+const profileMenuLinks = [
+  { href: "/dashboard/pitches",   label: "Pitches",    Icon: Icons.Pitches },
+  { href: "/dashboard/team",      label: "Team",       Icon: Icons.Team },
+  { href: "/dashboard/settings",  label: "Settings",   Icon: Icons.Settings },
+  { href: "/dashboard/billing",   label: "Billing",    Icon: Icons.Billing },
 ];
 
 interface SidebarProps {
@@ -109,10 +109,8 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
     ? userName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
     : userEmail ? userEmail[0].toUpperCase() : "K";
 
-  const profileLinks = bottomLinks.filter(({ href }) => {
+  const profileLinks = profileMenuLinks.filter(({ href }) => {
     if (href === "/dashboard/team" && !isOwner) return false;
-    if (href === "/dashboard/settings" && !isOwner) return false;
-    if (href === "/dashboard/billing" && !isOwner) return false;
     return true;
   });
 
@@ -172,62 +170,60 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         </div>
       )}
 
-      {/* User profile + menu container */}
+      {/* User profile — fixed at bottom, menu expands above */}
       <div
-        className="relative px-4 pb-4 border-t border-white/[0.06] pt-2"
+        className="relative px-4 pb-4 pt-2 mt-auto"
         onMouseEnter={() => setMenuOpen(true)}
         onMouseLeave={() => setMenuOpen(false)}
       >
-        <div className={`bg-[#111] border border-white/[0.09] rounded-xl overflow-hidden transition-shadow ${menuOpen ? "shadow-2xl shadow-black/60" : ""}`}>
-          {/* Menu links */}
-          {menuOpen && (
-            <div className="p-1.5 border-b border-white/[0.06]">
-              {profileLinks.map(({ href, label, Icon }) => {
-                const active = isActive(href);
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                      active
-                        ? "bg-white/[0.08] text-white"
-                        : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
-                    }`}
-                  >
-                    <Icon className={active ? "text-white" : "text-[#525252]"} />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Profile row — always visible */}
-          <div className="px-3 py-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
-                <span className="text-[11px] font-bold text-white">{initials}</span>
+        {/* Menu — absolutely positioned above the profile */}
+        {menuOpen && (
+          <div className="absolute bottom-full left-0 right-0 px-4 pb-2">
+            <div className="bg-[#111] border border-white/[0.09] rounded-xl overflow-hidden shadow-2xl shadow-black/60">
+              <div className="p-1.5">
+                {profileLinks.map(({ href, label, Icon }) => {
+                  const active = isActive(href);
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
+                        active
+                          ? "bg-white/[0.08] text-white"
+                          : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
+                      }`}
+                    >
+                      <Icon className={active ? "text-white" : "text-[#525252]"} />
+                      {label}
+                    </Link>
+                  );
+                })}
               </div>
-              <div className="min-w-0 flex-1 text-left">
-                <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
-                <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
+              <div className="border-t border-white/[0.06] p-1.5">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-colors w-full"
+                >
+                  <Icons.Logout className="text-[#525252]" />
+                  Log out
+                </button>
               </div>
-              <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
           </div>
+        )}
 
-          {/* Logout — only visible when menu open */}
-          {menuOpen && (
-            <div className="border-t border-white/[0.06] p-1.5">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-colors w-full"
-              >
-                <Icons.Logout className="text-[#525252]" />
-                Log out
-              </button>
+        {/* Profile row — always in the same spot */}
+        <div className="bg-[#111] border border-white/[0.09] rounded-xl px-3 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+              <span className="text-[11px] font-bold text-white">{initials}</span>
             </div>
-          )}
+            <div className="min-w-0 flex-1 text-left">
+              <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
+              <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
+            </div>
+            <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
       </div>
     </aside>
