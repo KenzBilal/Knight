@@ -32,8 +32,8 @@ function AsciiArt() {
       aria-hidden="true"
     >
       <pre
-        className="text-[9px] sm:text-[11px] md:text-[13px] leading-[1.15] font-mono text-white/[0.12] whitespace-pre animate-float"
-        style={{ letterSpacing: "0.08em" }}
+        className="text-[10px] sm:text-[13px] md:text-[16px] leading-[1.05] font-mono text-white/40 whitespace-pre animate-float font-bold"
+        style={{ letterSpacing: "0.05em" }}
       >
         {ADAM_LINES.join("\n")}
       </pre>
@@ -137,13 +137,6 @@ export function AuthHero({ mode }: { mode: "login" | "signup" }) {
 
       <div className="relative z-10 flex flex-col gap-8">
         <div className="space-y-5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-xs text-white/60 tracking-wide font-medium">
-              {mode === "login" ? "Trusted by 500+ sales teams" : "Join 500+ growing companies"}
-            </span>
-          </div>
-
           <h1 className="text-4xl lg:text-5xl xl:text-6xl font-semibold text-white leading-[1.05] tracking-tight">
             {mode === "login" ? (
               <>
