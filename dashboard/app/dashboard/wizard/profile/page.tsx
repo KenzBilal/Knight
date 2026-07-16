@@ -7,17 +7,33 @@ import { toast } from "sonner";
 
 const STEPS = [
   { id: "welcome", title: "Welcome" },
-  { id: "company", title: "Company Info" },
+  { id: "company", title: "Company" },
   { id: "services", title: "Services" },
   { id: "preview", title: "Preview" },
   { id: "done", title: "Done" },
 ];
 
 const SERVICE_SUGGESTIONS = [
-  "Web Design", "Web Development", "SEO", "PPC Advertising", "Social Media Marketing",
-  "Content Marketing", "Logo Design", "Brand Identity", "Email Marketing", "Copywriting",
-  "Video Production", "Photography", "App Development", "UI/UX Design", "Graphic Design",
-  "Business Consulting", "Financial Planning", "Legal Services", "Accounting", "Recruiting",
+  "Web Design",
+  "Web Development",
+  "SEO",
+  "PPC Advertising",
+  "Social Media Marketing",
+  "Content Marketing",
+  "Logo Design",
+  "Brand Identity",
+  "Email Marketing",
+  "Copywriting",
+  "Video Production",
+  "Photography",
+  "App Development",
+  "UI/UX Design",
+  "Graphic Design",
+  "Business Consulting",
+  "Financial Planning",
+  "Legal Services",
+  "Accounting",
+  "Recruiting",
 ];
 
 export default function ProfileWizardPage() {
@@ -31,20 +47,27 @@ export default function ProfileWizardPage() {
   const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
-    fetch("/api/config").then(r => r.json()).then(data => {
-      if (data.company_name) setCompanyName(data.company_name);
-      if (data.company_website) setCompanyWebsite(data.company_website);
-      if (data.services_offered) setServices(data.services_offered);
-    }).catch(() => {});
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.company_name) setCompanyName(data.company_name);
+        if (data.company_website) setCompanyWebsite(data.company_website);
+        if (data.services_offered) setServices(data.services_offered);
+      })
+      .catch(() => {});
   }, []);
 
   function toggleService(service: string) {
-    setServices(prev => prev.includes(service) ? prev.filter(s => s !== service) : [...prev, service]);
+    setServices((prev) =>
+      prev.includes(service)
+        ? prev.filter((s) => s !== service)
+        : [...prev, service]
+    );
   }
 
   function addCustomService() {
     if (customService && !services.includes(customService)) {
-      setServices(prev => [...prev, customService]);
+      setServices((prev) => [...prev, customService]);
       setCustomService("");
     }
   }
@@ -54,10 +77,21 @@ export default function ProfileWizardPage() {
     const promise = fetch("/api/config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ company_name: companyName, company_website: companyWebsite, services_offered: services }),
-    }).then(async res => { if (!res.ok) throw new Error("Failed"); return res.json(); });
+      body: JSON.stringify({
+        company_name: companyName,
+        company_website: companyWebsite,
+        services_offered: services,
+      }),
+    }).then(async (res) => {
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    });
 
-    toast.promise(promise, { loading: "Saving...", success: "Saved!", error: "Failed" });
+    toast.promise(promise, {
+      loading: "Saving...",
+      success: "Saved!",
+      error: "Failed",
+    });
     await promise;
     setSaving(false);
     setCompleted(true);
@@ -66,26 +100,67 @@ export default function ProfileWizardPage() {
 
   if (completed) {
     return (
-      <WizardLayout title="Company Profile" steps={STEPS} currentStep={step} onStepChange={setStep} backHref="/dashboard">
-        <WizardComplete title="Profile Complete!" description="Knight now knows about your business." icon="🏢"
-          onContinue={() => router.push("/dashboard")} onSetupMore={() => router.push("/dashboard/wizard/calendly")} />
+      <WizardLayout
+        title="Company Profile"
+        steps={STEPS}
+        currentStep={step}
+        onStepChange={setStep}
+        backHref="/dashboard"
+      >
+        <WizardComplete
+          title="Profile Complete!"
+          description="Knight now knows about your business."
+          icon="🏢"
+          onContinue={() => router.push("/dashboard")}
+          onSetupMore={() => router.push("/dashboard/wizard/calendly")}
+        />
       </WizardLayout>
     );
   }
 
   return (
-    <WizardLayout title="Company Profile" subtitle="Tell Knight about your business" steps={STEPS} currentStep={step} onStepChange={setStep} backHref="/dashboard"
-      onComplete={step === 3 ? handleComplete : undefined} completeLabel="Save Profile" isSubmitting={saving}>
+    <WizardLayout
+      title="Company Profile"
+      subtitle="Tell Knight about your business"
+      steps={STEPS}
+      currentStep={step}
+      onStepChange={setStep}
+      backHref="/dashboard"
+      onComplete={step === 3 ? handleComplete : undefined}
+      completeLabel="Save Profile"
+      isSubmitting={saving}
+    >
       {step === 0 && (
-        <WizardCard title="Welcome" description="Let's set up your company" icon={<span className="text-2xl">🚀</span>}>
-          <div className="space-y-4">
-            <p className="text-sm text-[#a3a3a3]">Knight uses your company info to generate personalized pitches.</p>
-            <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 space-y-2">
-              <p className="text-xs text-[#525252] font-medium">We&apos;ll ask for:</p>
-              <div className="text-xs text-[#a3a3a3] space-y-1">
-                <p>1. Company name & website</p>
-                <p>2. Services you offer</p>
-                <p>3. Preview</p>
+        <WizardCard
+          title="Welcome"
+          description="Let's set up your company"
+          icon={
+            <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.631 8.41m5.96 5.96a14.926 14.926 0 01-5.841 2.58m-.119-8.54a6 6 0 00-7.381 5.84h4.8m2.581-5.84a14.927 14.927 0 00-2.58 5.84m2.699 2.7c-.103.021-.207.041-.311.06a15.09 15.09 0 01-2.448-2.448 14.9 14.9 0 01.06-.312m-2.24 2.39a4.493 4.493 0 00-1.757 4.306 4.493 4.493 0 004.306-1.758M16.5 9a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z" />
+            </svg>
+          }
+        >
+          <div className="space-y-5">
+            <p className="text-[13px] text-[#525252] leading-relaxed">
+              Knight uses your company info to generate personalized pitches.
+            </p>
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
+              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-3">
+                We&apos;ll ask for
+              </p>
+              <div className="text-[13px] text-[#525252] space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3a3a3a]">1.</span>
+                  <span>Company name & website</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3a3a3a]">2.</span>
+                  <span>Services you offer</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[#3a3a3a]">3.</span>
+                  <span>Preview</span>
+                </div>
               </div>
             </div>
           </div>
@@ -93,50 +168,115 @@ export default function ProfileWizardPage() {
       )}
 
       {step === 1 && (
-        <WizardCard title="Company Information" description="Your business details" icon={<span className="text-2xl">🏢</span>}>
-          <div className="space-y-4">
+        <WizardCard
+          title="Company Information"
+          description="Your business details"
+          icon={
+            <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+            </svg>
+          }
+        >
+          <div className="space-y-5">
             <div>
-              <label className="block text-sm text-[#a3a3a3] mb-1.5">Company Name <span className="text-[#f87171]">*</span></label>
-              <input type="text" value={companyName} onChange={e => setCompanyName(e.target.value)} placeholder="Your agency name"
-                className="w-full input-base rounded-xl px-4 py-2.5 text-sm" />
+              <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
+                Company Name <span className="text-[#f87171]">*</span>
+              </label>
+              <input
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="Your agency name"
+                className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200"
+              />
             </div>
             <div>
-              <label className="block text-sm text-[#a3a3a3] mb-1.5">Website</label>
-              <input type="url" value={companyWebsite} onChange={e => setCompanyWebsite(e.target.value)} placeholder="https://yoursite.com"
-                className="w-full input-base rounded-xl px-4 py-2.5 text-sm" />
+              <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
+                Website
+              </label>
+              <input
+                type="url"
+                value={companyWebsite}
+                onChange={(e) => setCompanyWebsite(e.target.value)}
+                placeholder="https://yoursite.com"
+                className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200"
+              />
             </div>
           </div>
         </WizardCard>
       )}
 
       {step === 2 && (
-        <WizardCard title="Your Services" description="What do you offer?" icon={<span className="text-2xl">🛠</span>}>
-          <div className="space-y-4">
+        <WizardCard
+          title="Your Services"
+          description="What do you offer?"
+          icon={
+            <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11.42 15.17l-5.1-5.1m0 0L11.42 4.97m-5.1 5.1H21M3 3v18" />
+            </svg>
+          }
+        >
+          <div className="space-y-5">
             <div className="flex flex-wrap gap-2">
-              {SERVICE_SUGGESTIONS.map(service => (
-                <button key={service} onClick={() => toggleService(service)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                    services.includes(service) ? "bg-white text-[#080808]" : "bg-white/[0.06] text-[#a3a3a3] hover:bg-white/[0.1] border border-white/[0.08]"
-                  }`}>
-                  {services.includes(service) ? "✓ " : ""}{service}
+              {SERVICE_SUGGESTIONS.map((service) => (
+                <button
+                  key={service}
+                  onClick={() => toggleService(service)}
+                  className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all duration-150 ${
+                    services.includes(service)
+                      ? "bg-white text-[#080808]"
+                      : "bg-white/[0.04] text-[#525252] hover:bg-white/[0.06] hover:text-[#a3a3a3] border border-white/[0.06]"
+                  }`}
+                >
+                  {services.includes(service) && (
+                    <svg className="w-3 h-3 inline-block mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                  )}
+                  {service}
                 </button>
               ))}
             </div>
             <div className="flex gap-2">
-              <input type="text" value={customService} onChange={e => setCustomService(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustomService())}
+              <input
+                type="text"
+                value={customService}
+                onChange={(e) => setCustomService(e.target.value)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && (e.preventDefault(), addCustomService())
+                }
                 placeholder="Add custom service..."
-                className="flex-1 input-base rounded-xl px-4 py-2 text-sm" />
-              <button type="button" onClick={addCustomService} disabled={!customService}
-                className="rounded-xl bg-white/[0.06] text-[#a3a3a3] font-medium px-4 py-2 text-sm hover:bg-white/[0.1] transition-colors disabled:opacity-50 border border-white/[0.08]">Add</button>
+                className="flex-1 rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-2.5 text-[13px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200"
+              />
+              <button
+                type="button"
+                onClick={addCustomService}
+                disabled={!customService}
+                className="rounded-xl bg-white/[0.04] text-[#525252] font-medium text-[12px] px-4 py-2.5 hover:bg-white/[0.06] hover:text-white transition-colors disabled:opacity-30 border border-white/[0.06]"
+              >
+                Add
+              </button>
             </div>
             {services.length > 0 && (
-              <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-3">
-                <p className="text-xs text-[#525252] mb-2">Selected ({services.length}):</p>
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
+                <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-3">
+                  Selected ({services.length})
+                </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {services.map(s => (
-                    <span key={s} className="flex items-center gap-1 px-2 py-1 rounded-full bg-white/[0.06] text-[#a3a3a3] text-xs">
-                      {s}<button onClick={() => toggleService(s)} className="hover:text-white">×</button>
+                  {services.map((s) => (
+                    <span
+                      key={s}
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/[0.04] text-[#a3a3a3] text-[12px] border border-white/[0.06]"
+                    >
+                      {s}
+                      <button
+                        onClick={() => toggleService(s)}
+                        className="hover:text-white transition-colors ml-0.5"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -147,18 +287,50 @@ export default function ProfileWizardPage() {
       )}
 
       {step === 3 && (
-        <WizardCard title="Preview" description="How Knight will introduce your business" icon={<span className="text-2xl">👁</span>}>
-          <div className="space-y-4">
-            <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-6">
-              <div className="text-xs text-[#3a3a3a] mb-3">Email preview:</div>
-              <div className="space-y-3 text-sm text-[#a3a3a3]">
+        <WizardCard
+          title="Preview"
+          description="How Knight will introduce your business"
+          icon={
+            <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          }
+        >
+          <div className="space-y-5">
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-6">
+              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-4">
+                Email preview
+              </p>
+              <div className="space-y-3 text-[13px] text-[#525252]">
                 <p>Hi {"{{contact_name}}"},</p>
-                <p>I&apos;m from <strong className="text-white">{companyName || "Your Company"}</strong>.
-                  {services.length > 0 && <> We specialize in {services.slice(0, 3).join(", ")}.</>}
+                <p>
+                  I&apos;m from{" "}
+                  <strong className="text-white">
+                    {companyName || "Your Company"}
+                  </strong>
+                  .
+                  {services.length > 0 && (
+                    <>
+                      {" "}We specialize in{" "}
+                      {services.slice(0, 3).join(", ")}.
+                    </>
+                  )}
                 </p>
-                <p>I noticed your website could use improvements. Would you be open to a quick chat?</p>
-                <p>Best,<br />Your Name</p>
-                {companyWebsite && <p className="text-xs text-[#525252]">{companyWebsite}</p>}
+                <p>
+                  I noticed your website could use improvements. Would you be
+                  open to a quick chat?
+                </p>
+                <p>
+                  Best,
+                  <br />
+                  Your Name
+                </p>
+                {companyWebsite && (
+                  <p className="text-[12px] text-[#3a3a3a] mt-2">
+                    {companyWebsite}
+                  </p>
+                )}
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FadeIn } from "./Animations";
+import { useEffect, useState } from "react";
 
 interface WizardStep {
   id: string;
@@ -38,116 +38,137 @@ export function WizardLayout({
 }: WizardLayoutProps) {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === steps.length - 1;
+  const progress = ((currentStep + 1) / steps.length) * 100;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <div className="p-4 sm:p-6 md:p-8">
-      <div className="max-w-3xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen p-4 sm:p-6 md:p-8 lg:p-10">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-10">
           <Link
             href={backHref}
-            className="text-sm text-[#525252] hover:text-white transition-colors inline-flex items-center gap-1.5"
+            className="group text-[13px] text-[#525252] hover:text-white transition-all duration-200 inline-flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            <svg className="w-4 h-4 transition-transform duration-200 group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
             </svg>
             {backLabel}
           </Link>
-          <span className="text-xs text-[#525252]">
-            Step {currentStep + 1} of {steps.length}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-[11px] font-medium text-[#3a3a3a] uppercase tracking-widest">
+              {currentStep + 1} / {steps.length}
+            </span>
+          </div>
         </div>
 
-        <FadeIn>
-          <div className="mb-8">
-            <div className="mb-6">
-              <h1 className="font-display text-2xl text-white">{title}</h1>
-              {subtitle && <p className="text-sm text-[#525252] mt-1">{subtitle}</p>}
-            </div>
-
-            <div className="flex items-center gap-2">
-              {steps.map((step, i) => (
-                <div key={step.id} className="flex items-center gap-2 flex-1">
-                  <button
-                    onClick={() => i <= currentStep && onStepChange(i)}
-                    disabled={i > currentStep}
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all flex-shrink-0 ${
-                      i < currentStep
-                        ? "bg-white text-[#080808]"
-                        : i === currentStep
-                        ? "bg-white/20 text-white ring-2 ring-white/30"
-                        : "bg-white/[0.06] text-[#525252]"
-                    } ${i <= currentStep ? "cursor-pointer hover:scale-105" : "cursor-not-allowed"}`}
-                  >
-                    {i < currentStep ? "✓" : i + 1}
-                  </button>
-                  {i < steps.length - 1 && (
-                    <div className={`h-0.5 flex-1 rounded-full transition-colors ${
-                      i < currentStep ? "bg-white" : "bg-white/[0.06]"
-                    }`} />
-                  )}
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-start gap-2 mt-3">
-              {steps.map((step, i) => (
-                <div key={step.id} className="flex-1 text-center">
-                  <p className={`text-xs font-medium ${
-                    i <= currentStep ? "text-[#a3a3a3]" : "text-[#3a3a3a]"
-                  }`}>
-                    {step.title}
-                  </p>
-                </div>
-              ))}
-            </div>
+        {/* Progress Bar */}
+        <div className="mb-10">
+          <div className="h-[2px] bg-white/[0.04] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-white rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progress}%` }}
+            />
           </div>
-        </FadeIn>
+          <div className="flex justify-between mt-4">
+            {steps.map((step, i) => (
+              <button
+                key={step.id}
+                onClick={() => i <= currentStep && onStepChange(i)}
+                disabled={i > currentStep}
+                className={`text-[11px] font-medium transition-all duration-200 ${
+                  i < currentStep
+                    ? "text-[#a3a3a3] cursor-pointer hover:text-white"
+                    : i === currentStep
+                    ? "text-white"
+                    : "text-[#2a2a2a] cursor-not-allowed"
+                }`}
+              >
+                {step.title}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        <FadeIn delay={100}>
-          <div className="min-h-[400px]">
+        {/* Title */}
+        <div className="mb-10">
+          <h1 className="text-[28px] sm:text-[32px] font-display font-semibold text-white tracking-tight leading-tight">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="text-[15px] text-[#525252] mt-2 leading-relaxed">
+              {subtitle}
+            </p>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="min-h-[320px]">
+          <div
+            className={`transition-all duration-300 ease-out ${
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+            }`}
+            key={currentStep}
+          >
             {children}
           </div>
-        </FadeIn>
+        </div>
 
-        <FadeIn delay={200}>
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-white/[0.06]">
-            <button
-              onClick={() => onStepChange(currentStep - 1)}
-              disabled={isFirstStep}
-              className={`rounded-xl border font-medium px-5 py-2.5 text-sm transition-all ${
-                isFirstStep
-                  ? "border-white/[0.06] text-[#3a3a3a] cursor-not-allowed opacity-50"
-                  : "border-white/[0.12] text-[#a3a3a3] hover:bg-white/[0.04] hover:text-white active:scale-[0.98]"
-              }`}
-            >
+        {/* Footer */}
+        <div className="flex items-center justify-between mt-12 pt-8 border-t border-white/[0.04]">
+          <button
+            onClick={() => onStepChange(currentStep - 1)}
+            disabled={isFirstStep}
+            className={`group text-[13px] font-medium transition-all duration-200 ${
+              isFirstStep
+                ? "text-[#1f1f1f] cursor-not-allowed"
+                : "text-[#525252] hover:text-white cursor-pointer"
+            }`}
+          >
+            <span className="inline-flex items-center gap-1.5">
+              <svg className={`w-3.5 h-3.5 transition-transform duration-200 ${!isFirstStep ? "group-hover:-translate-x-0.5" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+              </svg>
               Previous
-            </button>
+            </span>
+          </button>
 
-            {isLastStep ? (
-              <button
-                onClick={onComplete}
-                disabled={isSubmitting}
-                className="rounded-xl bg-white text-[#080808] font-semibold px-6 py-2.5 text-sm hover:bg-white/90 transition-all disabled:opacity-50 active:scale-[0.98] flex items-center gap-2"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-[#080808]/30 border-t-[#080808] rounded-full animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  completeLabel
-                )}
-              </button>
-            ) : (
-              <button
-                onClick={() => onStepChange(currentStep + 1)}
-                className="rounded-xl bg-white text-[#080808] font-semibold px-6 py-2.5 text-sm hover:bg-white/90 transition-all active:scale-[0.98]"
-              >
-                Continue
-              </button>
-            )}
-          </div>
-        </FadeIn>
+          {isLastStep ? (
+            <button
+              onClick={onComplete}
+              disabled={isSubmitting}
+              className="group relative inline-flex items-center gap-2 rounded-xl bg-white text-[#080808] font-semibold text-[14px] px-7 py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-[#080808]/20 border-t-[#080808] rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  {completeLabel}
+                  <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </>
+              )}
+            </button>
+          ) : (
+            <button
+              onClick={() => onStepChange(currentStep + 1)}
+              className="group relative inline-flex items-center gap-2 rounded-xl bg-white text-[#080808] font-semibold text-[14px] px-7 py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98]"
+            >
+              Continue
+              <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -165,19 +186,26 @@ export function WizardCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="dash-card rounded-xl p-6">
-      <div className="flex items-start gap-4 mb-6">
-        {icon && (
-          <div className="w-12 h-12 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-            {icon}
+    <div className="relative rounded-2xl bg-[#0c0c0c] border border-white/[0.04] overflow-hidden">
+      {/* Subtle gradient accent on top */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.08] to-transparent" />
+      
+      <div className="p-6 sm:p-7">
+        <div className="flex items-start gap-4 mb-6">
+          {icon && (
+            <div className="w-11 h-11 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center flex-shrink-0">
+              {icon}
+            </div>
+          )}
+          <div className="pt-0.5">
+            <h2 className="text-[17px] font-semibold text-white tracking-tight">{title}</h2>
+            {description && (
+              <p className="text-[13px] text-[#525252] mt-1 leading-relaxed">{description}</p>
+            )}
           </div>
-        )}
-        <div>
-          <h2 className="font-display text-lg text-white">{title}</h2>
-          {description && <p className="text-sm text-[#525252] mt-1">{description}</p>}
         </div>
+        {children}
       </div>
-      {children}
     </div>
   );
 }
@@ -198,25 +226,43 @@ export function WizardComplete({
   onSetupMore?: () => void;
 }) {
   return (
-    <div className="dash-card rounded-xl p-8 text-center">
-      <div className="text-5xl mb-4">{icon || "✓"}</div>
-      <h2 className="font-display text-2xl text-white mb-2">{title}</h2>
-      <p className="text-sm text-[#525252] mb-8 max-w-md mx-auto">{description}</p>
-      <div className="flex gap-3 justify-center">
-        <button
-          onClick={onContinue}
-          className="rounded-xl bg-white text-[#080808] font-semibold px-6 py-2.5 text-sm hover:bg-white/90 transition-colors"
-        >
-          {continueLabel}
-        </button>
-        {onSetupMore && (
+    <div className="relative rounded-2xl bg-[#0c0c0c] border border-white/[0.04] overflow-hidden text-center">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#4ade80]/20 to-transparent" />
+      
+      <div className="p-8 sm:p-10">
+        {/* Success icon */}
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#4ade80]/10 border border-[#4ade80]/20 mb-6">
+          <svg className="w-8 h-8 text-[#4ade80]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+
+        <h2 className="text-[24px] font-display font-semibold text-white mb-2 tracking-tight">
+          {title}
+        </h2>
+        <p className="text-[14px] text-[#525252] mb-8 max-w-sm mx-auto leading-relaxed">
+          {description}
+        </p>
+
+        <div className="flex gap-3 justify-center">
           <button
-            onClick={onSetupMore}
-            className="rounded-xl border border-white/[0.12] text-[#a3a3a3] font-medium px-6 py-2.5 text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
+            onClick={onContinue}
+            className="group inline-flex items-center gap-2 rounded-xl bg-white text-[#080808] font-semibold text-[14px] px-7 py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98]"
           >
-            Setup More
+            {continueLabel}
+            <svg className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+            </svg>
           </button>
-        )}
+          {onSetupMore && (
+            <button
+              onClick={onSetupMore}
+              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] text-[#a3a3a3] font-medium text-[14px] px-7 py-3 transition-all duration-200 hover:bg-white/[0.03] hover:text-white hover:border-white/[0.12]"
+            >
+              Setup More
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
