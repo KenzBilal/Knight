@@ -1,8 +1,8 @@
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
-const API_ID = 2040;
-const API_HASH = "b18441a1ff607e10a989891a5462e627";
+const API_ID = 32257424;
+const API_HASH = "4ae0738ebf40cd4b1d5da92f6454667c";
 
 export const apiCredentials = { apiId: API_ID, apiHash: API_HASH };
 
