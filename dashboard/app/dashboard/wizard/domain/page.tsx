@@ -78,14 +78,14 @@ export default function DomainWizardPage() {
       {step === 0 && (
         <WizardCard title="Why Verify?" description="Improve email deliverability" icon={<span className="text-2xl">✉️</span>}>
           <div className="space-y-4">
-            <p className="text-sm text-[#666]">
-              By default, Knight sends from <code className="text-[#111]">onboarding@resend.dev</code>.
-              Verifying your domain sends from <code className="text-[#111]">you@yourdomain.com</code>.
+            <p className="text-sm text-[#a3a3a3]">
+              By default, Knight sends from <code className="text-[#4ade80]">onboarding@resend.dev</code>.
+              Verifying your domain sends from <code className="text-white">you@yourdomain.com</code>.
             </p>
-            <div className="rounded-lg bg-white border border-[#ebebeb] p-4 space-y-2">
-              <div className="flex items-center gap-2 text-xs text-[#666]"><span className="text-green-500">✓</span> Higher inbox placement</div>
-              <div className="flex items-center gap-2 text-xs text-[#666]"><span className="text-green-500">✓</span> Professional sender identity</div>
-              <div className="flex items-center gap-2 text-xs text-[#666]"><span className="text-green-500">✓</span> Better open rates</div>
+            <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 space-y-2">
+              <div className="flex items-center gap-2 text-xs text-[#a3a3a3]"><span className="text-[#4ade80]">✓</span> Higher inbox placement</div>
+              <div className="flex items-center gap-2 text-xs text-[#a3a3a3]"><span className="text-[#4ade80]">✓</span> Professional sender identity</div>
+              <div className="flex items-center gap-2 text-xs text-[#a3a3a3]"><span className="text-[#4ade80]">✓</span> Better open rates</div>
             </div>
           </div>
         </WizardCard>
@@ -97,21 +97,21 @@ export default function DomainWizardPage() {
             {domains.length > 0 && (
               <div className="space-y-2">
                 {domains.map(d => (
-                  <div key={d.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-[#ebebeb]">
+                  <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                     <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-green-500" : "bg-yellow-500"}`} />
-                      <span className="text-sm text-[#111]">{d.domain}</span>
+                      <span className={`w-2 h-2 rounded-full ${d.status === "verified" ? "bg-[#4ade80]" : "bg-[#fbbf24]"}`} />
+                      <span className="text-sm text-white">{d.domain}</span>
                     </div>
-                    {d.status === "pending" && <button onClick={() => handleVerify(d.id)} disabled={loading} className="text-xs text-[#666] hover:text-[#111]">Verify</button>}
+                    {d.status === "pending" && <button onClick={() => handleVerify(d.id)} disabled={loading} className="text-xs text-[#525252] hover:text-white transition-colors">Verify</button>}
                   </div>
                 ))}
               </div>
             )}
             <form onSubmit={handleAddDomain} className="flex gap-2">
               <input type="text" value={domain} onChange={e => setDomain(e.target.value)} placeholder="yourdomain.com"
-                className="flex-1 rounded-lg bg-white border border-[#ebebeb] px-4 py-2.5 text-sm text-[#111] placeholder:text-[#888] focus:outline-none focus:border-neutral-600 transition-all" />
+                className="flex-1 input-base rounded-xl px-4 py-2.5 text-sm" />
               <button type="submit" disabled={loading || !domain}
-                className="rounded-lg bg-[#111] text-white font-medium px-4 py-2.5 text-sm hover:bg-[#333] transition-all disabled:opacity-50 active:scale-[0.98]">
+                className="rounded-xl bg-white text-[#080808] font-semibold px-4 py-2.5 text-sm hover:bg-white/90 transition-all disabled:opacity-50 active:scale-[0.98]">
                 {loading ? "Adding..." : "Add Domain"}
               </button>
             </form>
@@ -123,26 +123,26 @@ export default function DomainWizardPage() {
         <WizardCard title="DNS Records" description="Add these to your domain registrar" icon={<span className="text-2xl">⚙️</span>}>
           <div className="space-y-4">
             {dnsRecords && (
-              <div className="rounded-lg bg-white border border-[#ebebeb] p-4 space-y-3">
+              <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4 space-y-3">
                 {Object.entries(dnsRecords).map(([key, record]: [string, any]) => (
                   <div key={key} className="text-xs">
-                    <p className="text-[#444] font-medium mb-1">{record.note}</p>
-                    <div className="flex gap-4 text-[#888]"><span>Type: {record.type}</span><span>Host: {record.host}</span></div>
-                    <p className="text-[#666] break-all mt-1">Value: {record.value}</p>
+                    <p className="text-[#a3a3a3] font-medium mb-1">{record.note}</p>
+                    <div className="flex gap-4 text-[#525252]"><span>Type: {record.type}</span><span>Host: {record.host}</span></div>
+                    <p className="text-[#a3a3a3] break-all mt-1">Value: {record.value}</p>
                   </div>
                 ))}
               </div>
             )}
-            <div className="rounded-lg bg-white border border-[#ebebeb] p-4">
-              <p className="text-xs text-[#888] mb-2">How to add DNS records:</p>
-              <ol className="text-xs text-[#666] space-y-1 list-decimal list-inside">
+            <div className="rounded-xl bg-white/[0.04] border border-white/[0.06] p-4">
+              <p className="text-xs text-[#525252] mb-2">How to add DNS records:</p>
+              <ol className="text-xs text-[#a3a3a3] space-y-1 list-decimal list-inside">
                 <li>Log in to your domain registrar</li>
                 <li>Find DNS management</li>
                 <li>Add each record above</li>
                 <li>Wait 5-30 minutes for propagation</li>
               </ol>
             </div>
-            <button onClick={() => setStep(3)} className="rounded-lg bg-[#111] text-white font-medium px-5 py-2.5 text-sm hover:bg-[#333] transition-colors">
+            <button onClick={() => setStep(3)} className="rounded-xl bg-white text-[#080808] font-semibold px-5 py-2.5 text-sm hover:bg-white/90 transition-colors">
               I&apos;ve Added DNS Records
             </button>
           </div>
@@ -153,16 +153,16 @@ export default function DomainWizardPage() {
         <WizardCard title="Verify" description="Check your DNS records" icon={<span className="text-2xl">🔍</span>}>
           <div className="space-y-4">
             {domains.filter(d => d.status === "pending").map(d => (
-              <div key={d.id} className="flex items-center justify-between p-4 rounded-lg bg-white border border-[#ebebeb]">
+              <div key={d.id} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.04] border border-white/[0.06]">
                 <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-yellow-500" />
+                  <span className="w-3 h-3 rounded-full bg-[#fbbf24]" />
                   <div>
-                    <p className="text-sm text-[#111] font-medium">{d.domain}</p>
-                    <p className="text-xs text-[#888]">Pending verification</p>
+                    <p className="text-sm text-white font-medium">{d.domain}</p>
+                    <p className="text-xs text-[#525252]">Pending verification</p>
                   </div>
                 </div>
                 <button onClick={() => handleVerify(d.id)} disabled={loading}
-                  className="rounded-lg bg-[#111] text-white font-medium px-4 py-2 text-sm hover:bg-[#333] transition-colors">
+                  className="rounded-xl bg-white text-[#080808] font-semibold px-4 py-2 text-sm hover:bg-white/90 transition-colors">
                   {loading ? "Checking..." : "Verify Domain"}
                 </button>
               </div>
