@@ -3,6 +3,7 @@ import { getAuthClient, deleteAuthClient } from "@/lib/telegram-auth";
 import { requireAuthFromToken } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase";
 import { Api } from "telegram";
+import { computeCheck } from "telegram/Password.js";
 
 export const dynamic = "force-dynamic";
 
@@ -77,9 +78,13 @@ export async function POST(req: Request) {
         }
 
         try {
+          // Get account password settings to compute SRP check
+          const accountPassword = await client.invoke(new Api.account.GetPassword());
+          const passwordCheck = await computeCheck(accountPassword, password);
+
           await client.invoke(
             new Api.auth.CheckPassword({
-              password: password,
+              password: passwordCheck,
             })
           );
 
