@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { AuthHero } from "@/components/AuthHero";
+import { useState, useEffect, useRef } from "react";
 
 export default function AuthLayout({
   children,
@@ -14,6 +15,36 @@ export default function AuthLayout({
 
   const formW = 480;
   const slide = [0.32, 0.72, 0, 1];
+  const SLIDE_MS = 550;
+
+  // Delay content swap so text doesn't change before white panel hides
+  const [displayedChildren, setDisplayedChildren] = useState(children);
+  const [contentVisible, setContentVisible] = useState(true);
+  const prevPathname = useRef(pathname);
+  const swapTimer = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => {
+    if (pathname !== prevPathname.current) {
+      const slidingOut = prevPathname.current === "/auth/login";
+
+      // Fade out immediately
+      setContentVisible(false);
+
+      // Sliding out (login→signup): longer delay so content appears after panel is hidden
+      // Sliding in (signup→login): shorter delay so content appears as panel enters
+      const delay = slidingOut ? SLIDE_MS * 0.7 : SLIDE_MS * 0.35;
+
+      swapTimer.current = setTimeout(() => {
+        setDisplayedChildren(children);
+        requestAnimationFrame(() => setContentVisible(true));
+      }, delay);
+
+      prevPathname.current = pathname;
+      return () => { if (swapTimer.current) clearTimeout(swapTimer.current); };
+    } else {
+      setDisplayedChildren(children);
+    }
+  }, [pathname, children]);
 
   return (
     <div className="h-screen w-full overflow-hidden bg-white relative">
@@ -32,7 +63,13 @@ export default function AuthLayout({
         }}
         transition={{ duration: 0.55, ease: slide }}
       >
-        {children}
+        <motion.div
+          className="flex-1 flex flex-col"
+          animate={{ opacity: contentVisible ? 1 : 0 }}
+          transition={{ duration: 0.15 }}
+        >
+          {displayedChildren}
+        </motion.div>
       </motion.div>
 
       {/* ── Desktop: sphere panel (black) — in front ── */}
