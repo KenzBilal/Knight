@@ -1,21 +1,18 @@
 import { NextResponse } from "next/server";
-import { requireAuthFromToken } from "@/lib/auth";
+import { requireTelegramAuth, TELEGRAM_API_ID, TELEGRAM_API_HASH } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
 export const dynamic = "force-dynamic";
 
-const API_ID = parseInt(process.env.TELEGRAM_API_ID || "32257424");
-const API_HASH = process.env.TELEGRAM_API_HASH || "4ae0738ebf40cd4b1d5da92f6454667c";
 const KNIGHT_BOT_TOKEN = process.env.KNIGHT_BOT_TOKEN;
 
 export async function POST(req: Request) {
+  let userClient: TelegramClient | null = null;
+  let knightBot: TelegramClient | null = null;
   try {
-    const cookie = req.headers.get("cookie") || "";
-    const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { org } = await requireTelegramAuth(req);
 
     if (!KNIGHT_BOT_TOKEN) {
       return NextResponse.json({ error: "Knight bot not configured" }, { status: 500 });
@@ -33,10 +30,10 @@ export async function POST(req: Request) {
     }
 
     // Use the user's session to get their own info
-    const userClient = new TelegramClient(
+    userClient = new TelegramClient(
       new StringSession(config.telegram_session),
-      API_ID,
-      API_HASH,
+      TELEGRAM_API_ID,
+      TELEGRAM_API_HASH,
       { connectionRetries: 3 }
     );
     await userClient.connect();
@@ -44,9 +41,10 @@ export async function POST(req: Request) {
     const username = me.username || me.firstName || "user";
     const userId = me.id;
     await userClient.disconnect();
+    userClient = null;
 
     // Connect Knight bot
-    const knightBot = new TelegramClient(new StringSession(""), API_ID, API_HASH, {
+    knightBot = new TelegramClient(new StringSession(""), TELEGRAM_API_ID, TELEGRAM_API_HASH, {
       connectionRetries: 3,
     });
     await knightBot.start({ botAuthToken: KNIGHT_BOT_TOKEN });
@@ -74,10 +72,14 @@ _You can manage everything from your dashboard._`,
     }
 
     await knightBot.disconnect();
+    knightBot = null;
 
     return NextResponse.json({ ok: true });
   } catch (error: any) {
     console.error("[CONFIRM] Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  } finally {
+    if (userClient) userClient.disconnect().catch(() => {});
+    if (knightBot) knightBot.disconnect().catch(() => {});
   }
 }

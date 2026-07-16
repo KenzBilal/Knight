@@ -28,7 +28,8 @@ export async function POST(req: Request) {
     // Verify webhook signature
     if (!verifySignature(rawBody, signature)) {
       console.error("Invalid webhook signature");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      // Return 400 (not 401/500) so LemonSqueezy doesn't retry indefinitely
+      return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     const event = JSON.parse(rawBody);
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
         const plan = variantId ? await getPlanFromVariant(variantId) : "free";
         
         // Update org with subscription details
-        await supabase
+        const { error: updateError } = await supabase
           .from("orgs")
           .update({
             plan: plan,
@@ -69,6 +70,10 @@ export async function POST(req: Request) {
           })
           .eq("id", orgId);
 
+        if (updateError) {
+          console.error(`[LemonSqueezy Webhook] Failed to update org ${orgId}:`, updateError.message);
+        }
+
         console.log(`[LemonSqueezy Webhook] Org ${orgId} updated to plan: ${plan}`);
         break;
       }
@@ -77,13 +82,16 @@ export async function POST(req: Request) {
         // Keep the plan active until ends_at
         // Only downgrade when subscription expires
         if (endsAt) {
-          await supabase
+          const { error: cancelError } = await supabase
             .from("orgs")
             .update({
               lemon_subscription_ends_at: endsAt,
               updated_at: new Date().toISOString(),
             })
             .eq("id", orgId);
+          if (cancelError) {
+            console.error(`[LemonSqueezy Webhook] Failed to update cancelled org ${orgId}:`, cancelError.message);
+          }
         }
         console.log(`[LemonSqueezy Webhook] Subscription cancelled for org ${orgId}, ends at: ${endsAt}`);
         break;
@@ -91,7 +99,7 @@ export async function POST(req: Request) {
 
       case "subscription_expired": {
         // Downgrade to free plan
-        await supabase
+        const { error: expireError } = await supabase
           .from("orgs")
           .update({
             plan: "free",
@@ -100,6 +108,10 @@ export async function POST(req: Request) {
             updated_at: new Date().toISOString(),
           })
           .eq("id", orgId);
+
+        if (expireError) {
+          console.error(`[LemonSqueezy Webhook] Failed to downgrade org ${orgId}:`, expireError.message);
+        }
 
         console.log(`[LemonSqueezy Webhook] Org ${orgId} downgraded to free (subscription expired)`);
         break;

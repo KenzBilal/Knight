@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface TelegramLead {
   id: string;
@@ -15,16 +16,18 @@ interface TelegramLead {
 
 interface TelegramConfig {
   telegram_mode: string | null;
-  telegram_phone: string | null;
   telegram_bot_token: string | null;
-  telegram_username: string | null;
-  telegram_session: string | null;
+  telegram_connected: boolean;
 }
 
 export default function TelegramPage() {
   const [config, setConfig] = useState<TelegramConfig | null>(null);
   const [leads, setLeads] = useState<TelegramLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/config")
@@ -32,28 +35,49 @@ export default function TelegramPage() {
       .then(data => { setConfig(data); setLoading(false); })
       .catch(() => setLoading(false));
 
-    fetch("/api/telegram/leads")
-      .then(r => r.json())
-      .then(data => { if (data.leads) setLeads(data.leads); })
-      .catch(() => {});
+    fetchLeads(1);
   }, []);
 
-  const connected = !!(config?.telegram_session) || config?.telegram_mode === "userbot" || config?.telegram_mode === "normal";
+  function fetchLeads(p: number) {
+    fetch(`/api/telegram/leads?page=${p}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.leads) {
+          setLeads(data.leads);
+          setTotal(data.total || 0);
+          setHasMore(data.hasMore || false);
+          setPage(data.page || 1);
+        }
+      })
+      .catch(() => {});
+  }
+
+  const connected = config?.telegram_connected === true;
   const mode = config?.telegram_mode;
   const pendingLeads = leads.filter(l => l.status === "NEEDS_APPROVAL" || l.status === "PENDING");
   const approvedLeads = leads.filter(l => l.status === "APPROVED");
 
   async function handleAction(leadId: string, action: "approve" | "decline") {
+    setActionLoading(leadId);
     try {
-      await fetch("/api/telegram/action", {
+      const res = await fetch("/api/telegram/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ leadId, action }),
       });
-      const res = await fetch("/api/telegram/leads");
       const data = await res.json();
-      if (data.leads) setLeads(data.leads);
-    } catch {}
+      if (!res.ok) {
+        toast.error(data.error || "Action failed");
+        return;
+      }
+      toast.success(action === "approve" ? "Lead approved" : "Lead declined");
+      // Refresh leads
+      fetchLeads(page);
+    } catch {
+      toast.error("Failed to perform action");
+    } finally {
+      setActionLoading(null);
+    }
   }
 
   if (loading) {
@@ -118,8 +142,8 @@ export default function TelegramPage() {
                     {mode === "userbot" ? "Userbot" : "Bot"}
                   </span>
                 </p>
-                <p className="text-xs text-[#525252] mt-0.5" style={{ fontFamily: "var(--font-mono)" }}>
-                  {config?.telegram_username ? `@${config.telegram_username}` : config?.telegram_phone || "connected"}
+                <p className="text-xs text-[#525252] mt-0.5">
+                  Telegram active
                 </p>
               </div>
             </div>
@@ -135,7 +159,7 @@ export default function TelegramPage() {
             {[
               { label: "Pending", value: pendingLeads.length, color: "text-white" },
               { label: "Approved", value: approvedLeads.length, color: "text-[#4ade80]" },
-              { label: "Total", value: leads.length, color: "text-white" },
+              { label: "Total", value: total, color: "text-white" },
             ].map(stat => (
               <div key={stat.label} className="dash-card rounded-2xl p-5">
                 <p className="text-xs text-[#525252] mb-1">{stat.label}</p>
@@ -149,48 +173,74 @@ export default function TelegramPage() {
             {leads.length === 0 ? (
               <p className="text-sm text-[#525252]">No leads yet. Knight will start finding them automatically.</p>
             ) : (
-              <div className="space-y-2">
-                {leads.slice(0, 10).map((lead) => (
-                  <div key={lead.id} className="flex items-center justify-between p-3.5 dash-card-glow rounded-xl hover:bg-white/[0.04] transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-semibold text-[#a3a3a3]">
-                          {(lead.full_name || lead.username || "?")[0].toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          {lead.full_name || lead.username || "Unknown"}
-                        </p>
-                        <p className="text-xs text-[#525252]">
-                          {lead.category || "Unknown"} · {new Date(lead.created_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        lead.status === "APPROVED"  ? "bg-[#4ade80]/10 text-[#4ade80]" :
-                        lead.status === "REJECTED"  ? "bg-white/[0.06] text-[#525252]" :
-                        "bg-[#facc15]/10 text-[#facc15]"
-                      }`}>
-                        {lead.status}
-                      </span>
-                      {lead.status === "NEEDS_APPROVAL" && (
-                        <div className="flex gap-1">
-                          <button onClick={() => handleAction(lead.id, "approve")}
-                            className="w-7 h-7 rounded-lg bg-[#4ade80]/10 text-[#4ade80] hover:bg-[#4ade80]/20 font-medium transition-colors flex items-center justify-center">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                          </button>
-                          <button onClick={() => handleAction(lead.id, "decline")}
-                            className="w-7 h-7 rounded-lg bg-[#f87171]/10 text-[#f87171] hover:bg-[#f87171]/20 font-medium transition-colors flex items-center justify-center">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                          </button>
+              <>
+                <div className="space-y-2">
+                  {leads.map((lead) => (
+                    <div key={lead.id} className="flex items-center justify-between p-3.5 dash-card-glow rounded-xl hover:bg-white/[0.04] transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-semibold text-[#a3a3a3]">
+                            {(lead.full_name || lead.username || "?")[0].toUpperCase()}
+                          </span>
                         </div>
-                      )}
+                        <div>
+                          <p className="text-sm font-semibold text-white">
+                            {lead.full_name || lead.username || "Unknown"}
+                          </p>
+                          <p className="text-xs text-[#525252]">
+                            {lead.category || "Unknown"} · {new Date(lead.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                          lead.status === "APPROVED"  ? "bg-[#4ade80]/10 text-[#4ade80]" :
+                          lead.status === "REJECTED"  ? "bg-white/[0.06] text-[#525252]" :
+                          "bg-[#facc15]/10 text-[#facc15]"
+                        }`}>
+                          {lead.status}
+                        </span>
+                        {lead.status === "NEEDS_APPROVAL" && (
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleAction(lead.id, "approve")}
+                              disabled={actionLoading === lead.id}
+                              className="w-7 h-7 rounded-lg bg-[#4ade80]/10 text-[#4ade80] hover:bg-[#4ade80]/20 font-medium transition-colors flex items-center justify-center disabled:opacity-50"
+                            >
+                              {actionLoading === lead.id ? (
+                                <div className="w-3 h-3 border border-[#4ade80]/30 border-t-[#4ade80] rounded-full animate-spin" />
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleAction(lead.id, "decline")}
+                              disabled={actionLoading === lead.id}
+                              className="w-7 h-7 rounded-lg bg-[#f87171]/10 text-[#f87171] hover:bg-[#f87171]/20 font-medium transition-colors flex items-center justify-center disabled:opacity-50"
+                            >
+                              {actionLoading === lead.id ? (
+                                <div className="w-3 h-3 border border-[#f87171]/30 border-t-[#f87171] rounded-full animate-spin" />
+                              ) : (
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="flex justify-center mt-4">
+                    <button
+                      onClick={() => fetchLeads(page + 1)}
+                      className="text-[13px] font-medium text-[#525252] hover:text-white transition-colors px-4 py-2"
+                    >
+                      Load more
+                    </button>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </>

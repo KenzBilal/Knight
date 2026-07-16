@@ -53,15 +53,26 @@ function getActiveKeysForProvider(provider) {
   const now = new Date();
   return _keysCache.filter(k => {
     if (k.provider !== provider) return false;
-    if (!k.is_active) return false;
-    // Re-enable if cooldown expired
+    // Check cooldown expiry FIRST (before filtering !is_active)
+    // so temporarily rate-limited keys can auto-recover.
     if (k.disabled_until && new Date(k.disabled_until) <= now) {
+      // Cooldown expired — re-enable in memory and DB async
       k.is_active = true;
       k.disabled_until = null;
       k.error_count = 0;
+      supabase.from('ai_keys').update({
+        is_active: true,
+        disabled_until: null,
+        error_count: 0,
+      }).eq('id', k.id).then(({ error }) => {
+        if (error) console.warn(`[AI Hub] Failed to re-enable key ${k.id}: ${error.message}`);
+      });
       return true;
     }
+    // Key is still within cooldown window
     if (k.disabled_until) return false;
+    // Key is permanently inactive (manually disabled)
+    if (!k.is_active) return false;
     return true;
   });
 }

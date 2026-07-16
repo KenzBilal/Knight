@@ -1,15 +1,12 @@
 import { NextResponse } from "next/server";
-import { createClient, apiCredentials, setAuthClient } from "@/lib/telegram-auth";
-import { requireAuthFromToken } from "@/lib/auth";
+import { createClient, apiCredentials, setAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  let client: ReturnType<typeof createClient> | null = null;
   try {
-    const cookie = req.headers.get("cookie") || "";
-    const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { org } = await requireTelegramAuth(req);
 
     const { phone } = await req.json();
     if (!phone) {
@@ -17,17 +14,19 @@ export async function POST(req: Request) {
     }
 
     // Create client and KEEP it connected — must use same client for signIn
-    const client = createClient();
+    client = createClient();
     await client.connect();
 
     const sentCode = await client.sendCode(apiCredentials, phone);
 
-    // Store client in memory for verify step
-    setAuthClient(org.id, client);
+    // Store client + phoneCodeHash in memory (server-side, not exposed to client)
+    setAuthClient(org.id, client, sentCode.phoneCodeHash, phone);
+
+    // Mark client as stored so finally doesn't disconnect it
+    client = null;
 
     return NextResponse.json({
       ok: true,
-      phoneCodeHash: sentCode.phoneCodeHash,
       message: "SMS code sent to your Telegram",
     });
   } catch (error: any) {
@@ -35,5 +34,8 @@ export async function POST(req: Request) {
       { error: error.message || "Failed to send code" },
       { status: 500 }
     );
+  } finally {
+    // Disconnect client if it wasn't stored (failure case)
+    if (client) client.disconnect().catch(() => {});
   }
 }

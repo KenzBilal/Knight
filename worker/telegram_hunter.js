@@ -96,7 +96,8 @@ Example: ["crypto vip signals group", "NEET exam question bank", "dropshipping b
 // ─── Extract Contact Info from Telegram Bio/Posts ─────────────────────────────
 export function extractContactInfo(text) {
   const emailMatch = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  const phoneMatch = text.match(/\+?[0-9]{10,14}/);
+  // Improved phone regex: match +XX XXXXX XXXXX patterns, avoid dates/order numbers
+  const phoneMatch = text.match(/(?:\+?[1-9]\d{0,2}[\s.-]?)?\(?\d{3,5}\)?[\s.-]?\d{3,5}[\s.-]?\d{3,5}/);
   const instaMatch = text.match(/(?:instagram\.com\/|@)([a-zA-Z0-9._]{2,30})/i);
   const websiteMatch = text.match(/https?:\/\/(?!t\.me)[^\s]+/);
   const locationMatch = text.match(/(?:based in|location:|from|city:)\s*([A-Za-z ,]+)/i);
@@ -110,8 +111,28 @@ export function extractContactInfo(text) {
   };
 }
 
+// ─── Flood-wait backoff helper ────────────────────────────────────────────────
+async function withFloodBackoff(fn, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (err.message?.includes('FLOOD') && i < maxRetries - 1) {
+        const waitMs = Math.min(60000 * Math.pow(2, i), 300000); // 1min, 2min, 4min max
+        console.warn(`[HUNTER] Flood wait. Retrying in ${waitMs / 1000}s...`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
 // ─── Strategy A: Mass Group Extraction ────────────────────────────────────────
-export async function processTelegramChannel(channel, participants, sendPitchFn, orgId) {
+const MAX_PROCESS_RUNTIME_MS = 25 * 60 * 1000; // 25 minutes max
+
+export async function processTelegramChannel(channel, participants, sendPitchFn, orgId, supabaseClient) {
+  const supabaseInstance = supabaseClient || supabase;
   const config = await getOrgConfig(orgId);
   const dailyLimit = config.daily_email_limit || 20;
   let dmCount = await getDailyDMCount(orgId);
@@ -123,7 +144,7 @@ export async function processTelegramChannel(channel, participants, sendPitchFn,
 
   if (contacts.website) {
     console.log(`[HUNTER] Bio website found: ${contacts.website} → routing to main scraper`);
-    await supabase.from('jobs').insert({
+    await supabaseInstance.from('jobs').insert({
       org_id: orgId,
       type: 'SCRAPE',
       status: 'PENDING',
@@ -155,9 +176,9 @@ export async function processTelegramChannel(channel, participants, sendPitchFn,
     if (lead) {
       const clientName = participant.firstName || participant.username || '';
       const pitch = await generateInitialPitch(category, channelName, clientName, orgId);
-      await sendPitchFn(chatId, pitch);
+      await withFloodBackoff(() => sendPitchFn(chatId, pitch));
 
-      await supabase.from('telegram_leads').update({
+      await supabaseInstance.from('telegram_leads').update({
         status: 'ACTIVE',
         pitch_sent_at: new Date().toISOString(),
       }).eq('id', lead.id);
@@ -165,8 +186,11 @@ export async function processTelegramChannel(channel, participants, sendPitchFn,
       dmCount++;
       console.log(`[HUNTER] Pitched ${participant.username || chatId} (${category}) [${dmCount}/${dailyLimit}]`);
 
-      const delay = (30 + Math.random() * 15) * 60 * 1000;
-      await new Promise(r => setTimeout(r, delay));
+      // Throttle between DMs using a short, safe delay (3-6 seconds)
+      // Long delays (30-45 min) must not block this loop.
+      // Flood protection is handled by withFloodBackoff above.
+      const safeDelay = (3 + Math.random() * 3) * 1000;
+      await new Promise(r => setTimeout(r, safeDelay));
     }
   }
 }

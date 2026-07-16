@@ -51,6 +51,19 @@ supabase
       }
     }
   })
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs' }, (payload) => {
+    // Pick up manually-retried jobs (admin sets status back to PENDING)
+    if (payload.new.status === 'PENDING' && payload.old.status !== 'PENDING') {
+      if (jobQueue.find(j => j.id === payload.new.id)) return; // already queued
+      if (jobQueue.length >= MAX_QUEUE_SIZE) {
+        console.warn(`[Worker] Queue full. Dropping retried job ${payload.new.id}.`);
+      } else {
+        console.log(`[Job] Retried job ${payload.new.id} (${payload.new.type}) picked up`);
+        jobQueue.push(payload.new);
+        processQueue();
+      }
+    }
+  })
   .subscribe(async () => {
     console.log('[Knight Worker] Connected to Supabase realtime');
     await fetchPendingJobs();
@@ -96,6 +109,7 @@ async function runDailyCleanup() {
       if (audit) {
         const { error: insertError } = await supabase.from('audit_results').insert({
           audit_id: audit.id,
+          org_id: company.org_id,
           category: 'REJECTED',
           raw_data: {},
           issues_found: { rejection_reason: 'No reply after 30 days' }
@@ -201,11 +215,13 @@ async function handleJob(job) {
       }
     })();
 
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Job timed out after ${JOB_TIMEOUT_MS / 1000}s`)), JOB_TIMEOUT_MS)
-    );
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error(`Job timed out after ${JOB_TIMEOUT_MS / 1000}s`)), JOB_TIMEOUT_MS);
+    });
 
     await Promise.race([jobPromise, timeoutPromise]);
+    clearTimeout(timeoutId);
 
     const { error: completeError } = await supabase.from('jobs').update({
       status: 'COMPLETED',
@@ -268,7 +284,7 @@ async function getDefaultTemplate(orgId, type) {
     .eq('org_id', orgId)
     .eq('type', type)
     .eq('is_default', true)
-    .single();
+    .maybeSingle();
   return data;
 }
 

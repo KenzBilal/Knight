@@ -39,8 +39,13 @@ export async function POST(req: Request) {
     }
 
     const { from, subject, text } = payload.data;
-    const emailMatch = from.match(/<([^>]+)>/) || [null, from];
-    const senderEmail = emailMatch[1].toLowerCase().trim();
+    // Parse sender email safely — "Name <email>" or bare "email"
+    const angleMatch = from.match(/<([^>]+)>/);
+    const senderEmail = (angleMatch ? angleMatch[1] : from).toLowerCase().trim();
+    if (!senderEmail || !senderEmail.includes('@')) {
+      console.warn('[Resend webhook] Could not parse sender email from:', from);
+      return NextResponse.json({ message: "Invalid sender email" });
+    }
 
     // Find the contact — scoped by org via the company
     // Use maybeSingle() to handle multiple matches across orgs gracefully

@@ -197,7 +197,7 @@ create table if not exists public.drafts (
 create table if not exists public.telegram_leads (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references public.orgs(id) on delete cascade,
-  chat_id bigint unique,
+  chat_id bigint not null,
   username text,
   full_name text,
   phone text,
@@ -210,9 +210,11 @@ create table if not exists public.telegram_leads (
   status text not null default 'PENDING',
   ai_summary text,
   chat_history jsonb default '[]'::jsonb,
+  admin_msg_id bigint,
   pitch_sent_at timestamptz,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  unique(org_id, chat_id)
 );
 
 create index if not exists telegram_leads_org_idx on public.telegram_leads(org_id);
@@ -485,10 +487,10 @@ create policy "org_members_select_own" on public.org_members
 create policy "org_members_insert_admin" on public.org_members
   for insert with check (
     exists (
-      select 1 from public.org_members
-      where org_members.org_id = org_members.org_id
-      and org_members.user_id = auth.uid()
-      and org_members.role in ('owner', 'admin')
+      select 1 from public.org_members as om
+      where om.org_id = org_members.org_id
+      and om.user_id = auth.uid()
+      and om.role in ('owner', 'admin')
     )
   );
 
@@ -496,10 +498,10 @@ create policy "org_members_insert_admin" on public.org_members
 create policy "org_members_update_owner" on public.org_members
   for update using (
     exists (
-      select 1 from public.org_members
-      where org_members.org_id = org_members.org_id
-      and org_members.user_id = auth.uid()
-      and org_members.role = 'owner'
+      select 1 from public.org_members as om
+      where om.org_id = org_members.org_id
+      and om.user_id = auth.uid()
+      and om.role = 'owner'
     )
   );
 
@@ -507,10 +509,10 @@ create policy "org_members_update_owner" on public.org_members
 create policy "org_members_delete_owner" on public.org_members
   for delete using (
     exists (
-      select 1 from public.org_members
-      where org_members.org_id = org_members.org_id
-      and org_members.user_id = auth.uid()
-      and org_members.role = 'owner'
+      select 1 from public.org_members as om
+      where om.org_id = org_members.org_id
+      and om.user_id = auth.uid()
+      and om.role = 'owner'
     )
   );
 
@@ -654,6 +656,30 @@ create policy "drafts_select_own" on public.drafts
 create policy "drafts_insert_service" on public.drafts
   for insert to service_role with check (true);
 
+-- DRAFTS: users can update (approve/reject) their own org drafts
+create policy "drafts_update_own" on public.drafts
+  for update using (
+    exists (
+      select 1 from public.emails
+      join public.companies on companies.id = emails.company_id
+      join public.org_members on org_members.org_id = companies.org_id
+      where emails.id = drafts.email_id
+      and org_members.user_id = auth.uid()
+    )
+  );
+
+-- DRAFTS: users can delete their own org drafts
+create policy "drafts_delete_own" on public.drafts
+  for delete using (
+    exists (
+      select 1 from public.emails
+      join public.companies on companies.id = emails.company_id
+      join public.org_members on org_members.org_id = companies.org_id
+      where emails.id = drafts.email_id
+      and org_members.user_id = auth.uid()
+    )
+  );
+
 -- TELEGRAM_LEADS: users can see leads for their own org
 create policy "telegram_leads_all_own" on public.telegram_leads
   for all using (
@@ -761,13 +787,13 @@ create policy "org_invites_delete_admin" on public.org_invites
 create policy "plans_select_all" on public.plans
   for select using (true);
 
--- AI_KEYS: service role only
+-- AI_KEYS: service role only (never expose system keys to clients)
 create policy "ai_keys_service_role" on public.ai_keys
-  for all using (true);
+  for all to service_role using (true);
 
 -- AI_CONFIG: service role only
 create policy "ai_config_service_role" on public.ai_config
-  for all using (true);
+  for all to service_role using (true);
 
 -- SUPPORT TICKETS: users can see their own tickets
 create policy "support_tickets_select_own" on public.support_tickets
@@ -809,11 +835,11 @@ create policy "support_replies_insert_own" on public.support_replies
 
 -- LANDING_CONTENT: service role only (admin-managed)
 create policy "landing_content_service_role" on public.landing_content
-  for all using (true);
+  for all to service_role using (true);
 
--- CONTACT_SUBMISSIONS: anyone can insert (public contact form)
+-- CONTACT_SUBMISSIONS: anyone (anon + authenticated) can insert (public contact form)
 create policy "contact_submissions_insert_anon" on public.contact_submissions
-  for insert to anon with check (true);
+  for insert with check (true);
 
 -- CONTACT_SUBMISSIONS: service role can read
 create policy "contact_submissions_select_service" on public.contact_submissions

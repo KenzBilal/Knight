@@ -4,6 +4,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/**
+ * Strip markdown code fences from AI output before JSON.parse.
+ * AI models sometimes wrap JSON in ```json ... ``` blocks.
+ */
+function stripJsonFences(text) {
+  return text.trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+}
+
 export async function fetchLighthouseData(url, attempt = 1) {
   const MAX_RETRIES = 3;
   const BACKOFF_MS = [5000, 15000, 45000];
@@ -332,7 +340,7 @@ Return a JSON object with exactly these keys:
 
   console.log('[Semantic] Extracting business data...');
   const result = await complete('semantic_extract', messages, { responseFormat: 'json' });
-  return JSON.parse(result.content);
+  return JSON.parse(stripJsonFences(result.content));
 }
 
 export async function analyzeWithCohere(auditData) {
@@ -368,7 +376,7 @@ export async function analyzeWithCohere(auditData) {
 
   try {
     const result = await complete('audit_pitch', messages, { responseFormat: 'json' });
-    return JSON.parse(result.content);
+    return JSON.parse(stripJsonFences(result.content));
   } catch (e) {
     console.error('[AI Hub] audit_pitch failed:', e.message);
     return { companyName: auditData.url, pitch: 'AI analysis failed.', leadScore: 50 };

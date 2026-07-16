@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { requireAuthFromToken } from "@/lib/auth";
+import { requireTelegramAuth, TELEGRAM_API_ID, TELEGRAM_API_HASH } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
 export const dynamic = "force-dynamic";
 
-const API_ID = parseInt(process.env.TELEGRAM_API_ID || "32257424");
-const API_HASH = process.env.TELEGRAM_API_HASH || "4ae0738ebf40cd4b1d5da92f6454667c";
+const MAX_USERNAME_ATTEMPTS = 10;
 
-// Generate username variations from company name
 function generateUsernames(companyName: string): string[] {
   const base = companyName
     .toLowerCase()
@@ -34,34 +32,30 @@ function generateUsernames(companyName: string): string[] {
     `${base}service`,
   ];
 
-  // Also try with numbers
   for (let i = 1; i <= 5; i++) {
     variations.push(`${base}${i}`);
     variations.push(`${base}bot${i}`);
   }
 
-  return [...new Set(variations)];
+  return [...new Set(variations)].slice(0, MAX_USERNAME_ATTEMPTS);
 }
 
-// Wait for BotFather response
 async function waitForResponse(
   client: TelegramClient,
   botFatherId: any,
+  lastMsgId: number,
   timeoutMs: number = 10000
-): Promise<string> {
+): Promise<{ text: string; msgId: number }> {
   const startTime = Date.now();
-  let lastMessage = "";
 
   while (Date.now() - startTime < timeoutMs) {
     await new Promise((r) => setTimeout(r, 1000));
 
     try {
-      const messages = await client.getMessages(botFatherId, { limit: 1 });
-      if (messages.length > 0) {
-        const msg = messages[0];
-        if (msg.message && msg.message !== lastMessage) {
-          lastMessage = msg.message;
-          return msg.message;
+      const messages = await client.getMessages(botFatherId, { limit: 5 });
+      for (const msg of messages) {
+        if (msg.id > lastMsgId && msg.message) {
+          return { text: msg.message, msgId: msg.id };
         }
       }
     } catch {}
@@ -71,11 +65,9 @@ async function waitForResponse(
 }
 
 export async function POST(req: Request) {
+  let client: TelegramClient | null = null;
   try {
-    const cookie = req.headers.get("cookie") || "";
-    const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { org } = await requireTelegramAuth(req);
 
     const supabase = createServiceClient();
     const { data: config } = await supabase
@@ -91,38 +83,40 @@ export async function POST(req: Request) {
     const companyName = config.company_name || "MyBot";
     const usernames = generateUsernames(companyName);
 
-    // Connect using user's session
-    const client = new TelegramClient(
+    client = new TelegramClient(
       new StringSession(config.telegram_session),
-      API_ID,
-      API_HASH,
+      TELEGRAM_API_ID,
+      TELEGRAM_API_HASH,
       { connectionRetries: 3 }
     );
     await client.connect();
 
     try {
-      // Find BotFather
       const botFather = await client.getEntity("BotFather");
       const botFatherId = botFather.id;
+
+      // Get current max message ID before starting
+      const existingMsgs = await client.getMessages(botFatherId, { limit: 1 });
+      let lastMsgId = existingMsgs.length > 0 ? existingMsgs[0].id : 0;
 
       // Send /newbot command
       await client.sendMessage(botFatherId, { message: "/newbot" });
       await new Promise((r) => setTimeout(r, 2000));
 
-      // Wait for "What name do you want for your bot?"
-      const namePrompt = await waitForResponse(client, botFatherId);
-      if (!namePrompt.includes("name")) {
-        throw new Error("Unexpected BotFather response: " + namePrompt.slice(0, 100));
+      const nameResponse = await waitForResponse(client, botFatherId, lastMsgId);
+      lastMsgId = nameResponse.msgId;
+      if (!nameResponse.text.includes("name")) {
+        throw new Error("Unexpected BotFather response: " + nameResponse.text.slice(0, 100));
       }
 
-      // Send bot name (company name)
+      // Send bot name
       await client.sendMessage(botFatherId, { message: companyName });
       await new Promise((r) => setTimeout(r, 2000));
 
-      // Wait for username prompt
-      const usernamePrompt = await waitForResponse(client, botFatherId);
-      if (!usernamePrompt.includes("username")) {
-        throw new Error("Unexpected BotFather response: " + usernamePrompt.slice(0, 100));
+      const usernameResponse = await waitForResponse(client, botFatherId, lastMsgId);
+      lastMsgId = usernameResponse.msgId;
+      if (!usernameResponse.text.includes("username")) {
+        throw new Error("Unexpected BotFather response: " + usernameResponse.text.slice(0, 100));
       }
 
       // Try username variations
@@ -134,20 +128,16 @@ export async function POST(req: Request) {
           await client.sendMessage(botFatherId, { message: username });
           await new Promise((r) => setTimeout(r, 2000));
 
-          const response = await waitForResponse(client, botFatherId, 5000);
+          const response = await waitForResponse(client, botFatherId, lastMsgId, 5000);
+          lastMsgId = response.msgId;
 
-          // Check if successful (contains a token)
-          const tokenMatch = response.match(
-            /(\d+:[A-Za-z0-9_-]{35})/
-          );
+          const tokenMatch = response.text.match(/(\d+:[A-Za-z0-9_-]{35})/);
           if (tokenMatch) {
             botToken = tokenMatch[1];
             successfulUsername = username;
             break;
           }
 
-          // If username taken, BotFather says something like "Sorry, this username is already taken"
-          // Continue to next variation
           console.log(`[CREATE-BOT] Username @${username} taken, trying next...`);
         } catch (err) {
           console.log(`[CREATE-BOT] Failed for @${username}, trying next...`);
@@ -156,6 +146,7 @@ export async function POST(req: Request) {
 
       if (!botToken) {
         await client.disconnect();
+        client = null;
         return NextResponse.json(
           { error: "Could not create bot - all username variations taken" },
           { status: 400 }
@@ -173,7 +164,7 @@ export async function POST(req: Request) {
 
       if (error) throw error;
 
-      // Send confirmation to user
+      // Send confirmation to user (without bot token in message)
       try {
         const me = await client.getMe();
         await client.sendMessage(me.id, {
@@ -183,7 +174,6 @@ Your Telegram bot has been created automatically:
 
 **Name:** ${companyName}
 **Username:** @${successfulUsername}
-**Token:** \`${botToken}\`
 
 The bot is now connected to Knight and ready to use.
 
@@ -194,18 +184,23 @@ _You can manage bot settings from your dashboard._`,
       }
 
       await client.disconnect();
+      client = null;
 
       return NextResponse.json({
         ok: true,
         username: successfulUsername,
-        token: botToken,
       });
     } catch (err: any) {
-      await client.disconnect();
+      if (client) {
+        await client.disconnect();
+        client = null;
+      }
       throw err;
     }
   } catch (error: any) {
     console.error("[CREATE-BOT] Error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
+  } finally {
+    if (client) client.disconnect().catch(() => {});
   }
 }

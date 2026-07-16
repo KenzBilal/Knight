@@ -20,10 +20,19 @@ export async function POST(req: Request) {
       user: { id: data.user.id, email: data.user.email, name: data.user.user_metadata?.name },
     });
 
+    // access_token expires in 1 hour — match cookie maxAge to JWT expiry
     response.cookies.set("knight_token", data.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60, // 1 hour — matches Supabase JWT expiry
+      path: "/",
+    });
+
+    // Store refresh_token separately so middleware can silently refresh sessions
+    response.cookies.set("knight_refresh", data.session.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
     });
 

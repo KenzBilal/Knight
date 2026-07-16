@@ -61,14 +61,12 @@ function setupRealtimeListener(orgId) {
         const newStatus = payload.new.status;
         const lead = payload.new;
 
-        // A. Lead was Approved
         if (newStatus === 'APPROVED' && !processedApprovals.has(lead.id)) {
           processedApprovals.add(lead.id);
           console.log(`[ADMIN REMOTE] Lead ${lead.id} approved via dashboard`);
           if (processedApprovals.size > 1000) processedApprovals.clear();
         }
 
-        // B. Lead was Rejected
         if (newStatus === 'REJECTED' && !processedRejections.has(lead.id)) {
           processedRejections.add(lead.id);
           console.log(`[ADMIN REMOTE] Lead ${lead.id} rejected via dashboard`);
@@ -87,18 +85,19 @@ export async function initAdminRemote(client, orgId) {
   const adminUsername = config.telegram_admin_chat_id;
   const botToken = config.telegram_bot_token;
 
-  // If no bot token, just set up Realtime for dashboard updates
   if (!adminUsername || !botToken) {
     console.log(`[ADMIN REMOTE] Org ${orgId}: No Telegram bot configured. Notifications will only appear in dashboard.`);
     setupRealtimeListener(orgId);
     return;
   }
 
-  // Connect admin bot for this org
   let adminBot = null;
   try {
-    const API_ID = parseInt(process.env.TELEGRAM_API_ID || '2040');
-    const API_HASH = process.env.TELEGRAM_API_HASH || 'b18441a1ff607e10a989891a5462e627';
+    const API_ID = parseInt(process.env.TELEGRAM_API_ID);
+    const API_HASH = process.env.TELEGRAM_API_HASH;
+    if (!API_ID || !API_HASH) {
+      throw new Error('TELEGRAM_API_ID and TELEGRAM_API_HASH required');
+    }
     const { TelegramClient } = await import('telegram');
     const { StringSession } = await import('telegram/sessions/index.js');
     adminBot = new TelegramClient(new StringSession(''), API_ID, API_HASH, { connectionRetries: 5 });
@@ -111,7 +110,6 @@ export async function initAdminRemote(client, orgId) {
     return;
   }
 
-  // Listen for Supabase DB Changes
   const processedApprovals = new Set();
   const processedRejections = new Set();
 
@@ -135,8 +133,8 @@ export async function initAdminRemote(client, orgId) {
               message: adminMsg,
               buttons: [
                 [
-                  Button.inline('✅ Approve', Buffer.from(`approve_${lead.id}`)),
-                  Button.inline('❌ Decline', Buffer.from(`decline_${lead.id}`))
+                  Button.inline('✅ Approve', Buffer.from(`approve_${lead.id}_${orgId}`)),
+                  Button.inline('❌ Decline', Buffer.from(`decline_${lead.id}_${orgId}`))
                 ]
               ]
             });
@@ -198,14 +196,24 @@ export async function initAdminRemote(client, orgId) {
     const data = event.data.toString();
     if (!data.startsWith('approve_') && !data.startsWith('decline_')) return;
 
-    const action = data.split('_')[0];
-    const leadId = data.substring(action.length + 1);
+    const parts = data.split('_');
+    const action = parts[0];
+    const leadId = parts[1];
+    const callbackOrgId = parts[2];
+
+    // Verify org_id matches to prevent cross-org actions
+    if (callbackOrgId !== orgId) {
+      console.warn(`[ADMIN REMOTE] Org mismatch: callback says ${callbackOrgId}, expected ${orgId}`);
+      await event.answer({ message: "Permission denied." });
+      return;
+    }
 
     try {
       await supabase
         .from('telegram_leads')
-        .update({ status: action === 'approve' ? 'APPROVED' : 'REJECTED' })
-        .eq('id', leadId);
+        .update({ status: action === 'approve' ? 'APPROVED' : 'REJECTED', updated_at: new Date().toISOString() })
+        .eq('id', leadId)
+        .eq('org_id', orgId);
 
       await event.answer({ message: `Marked as ${action.toUpperCase()}` });
     } catch (e) {

@@ -42,10 +42,16 @@ export function WizardLayout({
   const isLastStep = currentStep === steps.length - 1;
   const progress = ((currentStep + 1) / steps.length) * 100;
   const [mounted, setMounted] = useState(false);
+  const [transitionDirection, setTransitionDirection] = useState<"forward" | "back">("forward");
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  function handleStepChange(newStep: number) {
+    setTransitionDirection(newStep > currentStep ? "forward" : "back");
+    onStepChange(newStep);
+  }
 
   return (
     <div className="min-h-screen p-4 sm:p-6 md:p-8 lg:p-10">
@@ -80,7 +86,7 @@ export function WizardLayout({
             {steps.map((step, i) => (
               <button
                 key={step.id}
-                onClick={() => i <= currentStep && onStepChange(i)}
+                onClick={() => i <= currentStep && handleStepChange(i)}
                 disabled={i > currentStep}
                 className={`text-[11px] font-medium transition-all duration-200 ${
                   i < currentStep
@@ -108,22 +114,22 @@ export function WizardLayout({
           )}
         </div>
 
-        {/* Content */}
+        {/* Content with step transition animation */}
         <div className="min-h-[320px]">
           <div
             className={`transition-all duration-300 ease-out ${
               mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-            }`}
+            } ${transitionDirection === "forward" ? "animate-[slideInRight_0.3s_ease-out]" : "animate-[slideInLeft_0.3s_ease-out]"}`}
             key={currentStep}
           >
             {children}
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer — only render the Finish button if onComplete is provided AND isLastStep */}
         <div className="flex items-center justify-between mt-12 pt-8 border-t border-white/[0.04]">
           <button
-            onClick={() => onStepChange(currentStep - 1)}
+            onClick={() => handleStepChange(currentStep - 1)}
             disabled={isFirstStep}
             className={`group text-[13px] font-medium transition-all duration-200 ${
               isFirstStep
@@ -139,7 +145,7 @@ export function WizardLayout({
             </span>
           </button>
 
-          {isLastStep ? (
+          {isLastStep && onComplete ? (
             <button
               onClick={onComplete}
               disabled={isSubmitting}
@@ -159,9 +165,9 @@ export function WizardLayout({
                 </>
               )}
             </button>
-          ) : !hideNext ? (
+          ) : !hideNext && !isLastStep ? (
             <button
-              onClick={() => onStepChange(currentStep + 1)}
+              onClick={() => handleStepChange(currentStep + 1)}
               className="group relative inline-flex items-center gap-2 rounded-xl bg-white text-[#080808] font-semibold text-[14px] px-7 py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98]"
             >
               Continue

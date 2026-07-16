@@ -1,0 +1,6 @@
+  warning: could not transcribe /home/kenz/Projects/Knight/admin-app/assets/sounds/error.wav: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
+  warning: could not transcribe /home/kenz/Projects/Knight/admin-app/assets/sounds/notification.wav: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
+  warning: could not transcribe /home/kenz/Projects/Knight/admin-app/assets/sounds/success.wav: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
+  warning: could not transcribe /home/kenz/Projects/Knight/admin-app/assets/sounds/warning.wav: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
+  warning: could not transcribe /home/kenz/Projects/Knight/dashboard/public/intro.mp4: Video transcription requires faster-whisper. Run: pip install 'graphifyy[video]'
+[]

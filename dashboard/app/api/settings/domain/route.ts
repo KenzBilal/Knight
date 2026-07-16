@@ -78,7 +78,7 @@ export async function POST(req: Request) {
       .select("id")
       .eq("org_id", org.id)
       .eq("domain", domain.toLowerCase())
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return NextResponse.json({ error: "Domain already added" }, { status: 400 });

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAuthClient, deleteAuthClient } from "@/lib/telegram-auth";
-import { requireAuthFromToken } from "@/lib/auth";
+import { getAuthEntry, deleteAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
 import { Api } from "telegram";
 import { computeCheck } from "telegram/Password.js";
@@ -9,27 +8,23 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   try {
-    const cookie = req.headers.get("cookie") || "";
-    const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { org } = await requireTelegramAuth(req);
 
-    const { code, password, phone, phoneCodeHash } = await req.json();
-    if (!code || !phone || !phoneCodeHash) {
-      return NextResponse.json(
-        { error: "Code, phone, and phoneCodeHash required" },
-        { status: 400 }
-      );
+    const { code, password } = await req.json();
+    if (!code) {
+      return NextResponse.json({ error: "Code required" }, { status: 400 });
     }
 
-    // Get the SAME client from start step — auth state is tied to it
-    const client = getAuthClient(org.id);
-    if (!client) {
+    // Get the auth entry (client + phoneCodeHash + phone) from server-side store
+    const entry = getAuthEntry(org.id);
+    if (!entry) {
       return NextResponse.json(
         { error: "Session expired. Please request a new code." },
         { status: 400 }
       );
     }
+
+    const { client, phoneCodeHash, phone } = entry;
 
     try {
       // Use raw API to sign in with the code
@@ -48,12 +43,12 @@ export async function POST(req: Request) {
       const supabase = createServiceClient();
       const { error } = await supabase
         .from("org_config")
-        .upsert({
-          org_id: org.id,
+        .update({
           telegram_session: sessionString,
           telegram_phone: phone,
           updated_at: new Date().toISOString(),
-        });
+        })
+        .eq("org_id", org.id);
 
       if (error) throw error;
 
@@ -76,7 +71,6 @@ export async function POST(req: Request) {
         }
 
         try {
-          // Get account password settings to compute SRP check
           const accountPassword = await client.invoke(new Api.account.GetPassword());
           const passwordCheck = await computeCheck(accountPassword, password);
 
@@ -91,14 +85,16 @@ export async function POST(req: Request) {
           const username = me.username || me.firstName || phone;
 
           const supabase = createServiceClient();
-          await supabase
+          const { error } = await supabase
             .from("org_config")
-            .upsert({
-              org_id: org.id,
+            .update({
               telegram_session: sessionString,
               telegram_phone: phone,
               updated_at: new Date().toISOString(),
-            });
+            })
+            .eq("org_id", org.id);
+
+          if (error) throw error;
 
           deleteAuthClient(org.id);
 

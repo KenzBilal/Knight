@@ -59,14 +59,19 @@ export async function getUser(): Promise<User | null> {
 export async function getUserRole(userId: string, orgId: string): Promise<UserRole> {
   try {
     const serviceClient = createServiceClient();
-    const { data } = await serviceClient
+    const { data, error } = await serviceClient
       .from("org_members")
       .select("role")
       .eq("user_id", userId)
       .eq("org_id", orgId)
-      .single();
+      .maybeSingle();
+    if (error) {
+      console.error("[getUserRole] DB error:", error.message);
+      return "member";
+    }
     return (data?.role as UserRole) || "member";
-  } catch {
+  } catch (err) {
+    console.error("[getUserRole] Exception:", err);
     return "member";
   }
 }
@@ -81,7 +86,7 @@ export async function getOrg(userId: string): Promise<Org | null> {
     .from("org_members")
     .select("org_id, orgs(id, name, slug, plan)")
     .eq("user_id", userId)
-    .single();
+    .maybeSingle();
 
   if (!member?.orgs) return null;
   return member.orgs as unknown as Org;
@@ -96,7 +101,7 @@ export async function getOrgConfig(orgId: string): Promise<OrgConfig | null> {
     .from("org_config")
     .select("*")
     .eq("org_id", orgId)
-    .single();
+    .maybeSingle();
 
   return data as unknown as OrgConfig | null;
 }

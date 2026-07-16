@@ -373,6 +373,49 @@ async function connectOrgUserbot(orgId, sessionString) {
     await processSniperMessage(chatId, username, text, groupName, sendFn, orgId);
   }, new NewMessage({}));
 
+  // ─── Daily Hunter for dynamically-loaded orgs ────────────────────────────
+  const runDailyHunt = async () => {
+    console.log(`[HUNTER] Starting daily hunt for org ${orgId}...`);
+    const keywords = await generateSearchKeywords();
+    console.log('[HUNTER] Keywords:', keywords);
+
+    for (const keyword of keywords) {
+      try {
+        const results = await client.invoke({
+          _: 'messages.searchGlobal',
+          q: keyword,
+          filter: { _: 'inputMessagesFilterEmpty' },
+          minDate: 0, maxDate: 0, offsetRate: 0, offsetId: 0, limit: 5,
+        });
+
+        for (const chat of (results?.chats || [])) {
+          try {
+            const participants = await client.getParticipants(chat, { limit: 100 });
+            await processTelegramChannel(chat, participants, sendFn, orgId);
+          } catch (err) {
+            console.warn(`[HUNTER] Could not get participants for ${chat.title}:`, err.message);
+          }
+        }
+      } catch (err) {
+        console.warn(`[HUNTER] Search failed for "${keyword}":`, err.message);
+      }
+    }
+  };
+
+  // Clear any existing intervals for this org before creating new ones
+  if (orgIntervals.has(orgId)) {
+    const old = orgIntervals.get(orgId);
+    clearInterval(old.cleanup);
+    clearInterval(old.dailyHunt);
+  }
+
+  const cleanupId = setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
+  const dailyHuntId = setInterval(runDailyHunt, 24 * 60 * 60 * 1000);
+  orgIntervals.set(orgId, { cleanup: cleanupId, dailyHunt: dailyHuntId });
+
+  // Run initial hunt
+  runDailyHunt().catch(err => console.error(`[HUNTER] Initial hunt failed for org ${orgId}:`, err.message));
+
   // Initialize admin remote
   await initAdminRemote(client, orgId);
 }

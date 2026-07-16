@@ -38,7 +38,7 @@ export async function checkLimits(
     .from("plans")
     .select("lead_limit, email_limit")
     .eq("id", plan)
-    .single();
+    .maybeSingle();
 
   const limits = planData || FALLBACK_LIMITS[plan] || FALLBACK_LIMITS.free;
   const limitField = ACTION_TO_FIELD[action] as keyof typeof limits;
@@ -60,7 +60,7 @@ export async function checkLimits(
     .select(usageField)
     .eq("org_id", orgId)
     .eq("period_start", periodStart.toISOString().split("T")[0])
-    .single();
+    .maybeSingle();
 
   const currentUsage = (usage as unknown as Record<string, number>)?.[usageField] || 0;
 
@@ -96,7 +96,7 @@ export async function getUsage(orgId: string): Promise<{ leads: number; emails: 
     .select("leads_searched, emails_sent")
     .eq("org_id", orgId)
     .eq("period_start", periodStart.toISOString().split("T")[0])
-    .single();
+    .maybeSingle();
 
   return {
     leads: usage?.leads_searched || 0,

@@ -185,9 +185,10 @@ Mention 1-2 of these exact technical flaws or suggestions casually in your next 
 
   const { reply, isClosing, isHardReject } = await generateReply(lead, augmentedUserMessage, orgId);
 
+  // Store ORIGINAL user message in chat history, not the augmented version
   const updatedHistory = [
     ...(lead.chat_history || []),
-    { role: 'user', content: augmentedUserMessage },
+    { role: 'user', content: userMessage },
     { role: 'assistant', content: reply },
   ];
 
@@ -199,6 +200,9 @@ Mention 1-2 of these exact technical flaws or suggestions casually in your next 
       ['not interested', 'no thanks'].some(k => m.content.toLowerCase().includes(k)));
 
     if (prevRejection) {
+      // Send goodbye message BEFORE deleting the lead row
+      const goodbyeMsg = "thanks for your time — no worries at all. feel free to reach out if you ever change your mind!";
+      await sendMessageFn(chatId, goodbyeMsg);
       await supabase.from('telegram_leads').delete().eq('id', lead.id);
       return;
     }
@@ -235,8 +239,55 @@ Mention 1-2 of these exact technical flaws or suggestions casually in your next 
 async function notifyAdmin(lead, summary, orgId) {
   const config = await getOrgConfig(orgId);
   const adminNumber = config.telegram_admin_chat_id;
-  if (!adminNumber) return;
-  console.log(`[AGENT] NOTIFY ADMIN (${adminNumber}):\n${summary}\n\nReply "approve" or "decline"`);
+  if (!adminNumber) {
+    console.log(`[AGENT] No admin chat ID for org ${orgId}. Approval request will appear in dashboard.`);
+    return;
+  }
+
+  const botToken = config.telegram_bot_token;
+  if (!botToken) {
+    console.log(`[AGENT] No bot token for org ${orgId}. Cannot send admin notification.`);
+    return;
+  }
+
+  try {
+    const { TelegramClient } = await import('telegram');
+    const { StringSession } = await import('telegram/sessions/index.js');
+    const { Button } = await import('telegram/tl/custom/button.js');
+
+    const API_ID = parseInt(process.env.TELEGRAM_API_ID);
+    const API_HASH = process.env.TELEGRAM_API_HASH;
+
+    const adminBot = new TelegramClient(new StringSession(''), API_ID, API_HASH, { connectionRetries: 2 });
+    await adminBot.start({ botAuthToken: botToken });
+
+    const adminMsg = `🚨 **New Lead Ready for Review**
+
+👤 ${lead.full_name || lead.username || 'Unknown'}
+🏢 ${lead.category || 'Unknown'}
+💬 "${summary || 'Needs review'}"
+
+✅ Approve or ❌ Decline below:`;
+
+    const sent = await adminBot.sendMessage(adminNumber, {
+      message: adminMsg,
+      buttons: [
+        [
+          Button.inline('✅ Approve', Buffer.from(`approve_${lead.id}_${orgId}`)),
+          Button.inline('❌ Decline', Buffer.from(`decline_${lead.id}_${orgId}`))
+        ]
+      ]
+    });
+
+    // Save admin_msg_id for editing later
+    await supabase.from('telegram_leads').update({ admin_msg_id: sent.id }).eq('id', lead.id);
+
+    await adminBot.disconnect();
+    console.log(`[AGENT] Sent approval request to admin for lead ${lead.id}`);
+  } catch (e) {
+    console.error(`[AGENT] Failed to send admin notification:`, e.message);
+    console.log(`[AGENT] Approval request for lead ${lead.id} is in dashboard.`);
+  }
 }
 
 // ─── Automated Drip Sequence ──────────────────────────────────────────────────

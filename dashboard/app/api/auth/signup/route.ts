@@ -41,7 +41,14 @@ export async function POST(req: Request) {
     response.cookies.set("knight_token", session.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 60 * 60, // 1 hour — matches Supabase JWT expiry
+      path: "/",
+    });
+
+    response.cookies.set("knight_refresh", session.session.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
     });
 
