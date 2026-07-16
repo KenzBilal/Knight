@@ -21,11 +21,14 @@ export async function POST(req: Request) {
 
     const sentCode = await client.sendCode(apiCredentials, phone);
 
-    setPendingAuth(org.id, {
-      client,
-      phoneCodeHash: sentCode.phoneCodeHash,
+    // Save to DB (persists across requests)
+    await setPendingAuth(org.id, {
       phone,
+      phoneCodeHash: sentCode.phoneCodeHash,
     });
+
+    // Disconnect client - we'll create a new one in verify
+    await client.disconnect();
 
     return NextResponse.json({
       ok: true,

@@ -14,34 +14,47 @@ export function createClient(sessionString?: string) {
   });
 }
 
-// In-memory store for pending auth state (keyed by orgId)
-const pendingAuth = new Map<string, {
-  client: TelegramClient;
-  phoneCodeHash: string;
-  phone: string;
-  createdAt: number;
-}>();
+// Store pending auth in DB instead of memory (persists across requests)
+import { createServiceClient } from "./supabase";
 
-export function setPendingAuth(orgId: string, data: {
-  client: TelegramClient;
-  phoneCodeHash: string;
+export async function setPendingAuth(orgId: string, data: {
   phone: string;
+  phoneCodeHash: string;
 }) {
-  pendingAuth.set(orgId, { ...data, createdAt: Date.now() });
+  const supabase = createServiceClient();
+  await supabase.from("org_config").upsert({
+    org_id: orgId,
+    telegram_pending_phone: data.phone,
+    telegram_pending_code_hash: data.phoneCodeHash,
+    updated_at: new Date().toISOString(),
+  });
 }
 
-export function getPendingAuth(orgId: string) {
-  const data = pendingAuth.get(orgId);
-  if (!data) return null;
-  if (Date.now() - data.createdAt > 5 * 60 * 1000) {
-    pendingAuth.delete(orgId);
+export async function getPendingAuth(orgId: string) {
+  const supabase = createServiceClient();
+  const { data } = await supabase
+    .from("org_config")
+    .select("telegram_pending_phone, telegram_pending_code_hash")
+    .eq("org_id", orgId)
+    .single();
+
+  if (!data?.telegram_pending_phone || !data?.telegram_pending_code_hash) {
     return null;
   }
-  return data;
+
+  return {
+    phone: data.telegram_pending_phone,
+    phoneCodeHash: data.telegram_pending_code_hash,
+  };
 }
 
-export function deletePendingAuth(orgId: string) {
-  pendingAuth.delete(orgId);
+export async function deletePendingAuth(orgId: string) {
+  const supabase = createServiceClient();
+  await supabase.from("org_config").update({
+    telegram_pending_phone: null,
+    telegram_pending_code_hash: null,
+    updated_at: new Date().toISOString(),
+  }).eq("org_id", orgId);
 }
 
 export const TELEGRAM_API_ID = API_ID;
