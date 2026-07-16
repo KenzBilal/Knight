@@ -19,6 +19,7 @@ export default function TelegramWizardPage() {
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState<TelegramMode>(null);
   const [phone, setPhone] = useState("");
+  const [phoneCodeHash, setPhoneCodeHash] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
@@ -38,6 +39,7 @@ export default function TelegramWizardPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send code");
+      setPhoneCodeHash(data.phoneCodeHash);
       toast.success("Code sent! Check your Telegram.");
       setStep(2);
     } catch (err: any) {
@@ -54,7 +56,12 @@ export default function TelegramWizardPage() {
       const res = await fetch("/api/telegram/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, password: password || undefined }),
+        body: JSON.stringify({
+          code,
+          password: password || undefined,
+          phone,
+          phoneCodeHash,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {

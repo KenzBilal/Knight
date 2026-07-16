@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getPendingAuth, deletePendingAuth, apiCredentials, createClient } from "@/lib/telegram-auth";
+import { apiCredentials, createClient } from "@/lib/telegram-auth";
 import { requireAuthFromToken } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase";
 
@@ -12,16 +12,10 @@ export async function POST(req: Request) {
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
-    const { code, password } = await req.json();
-    if (!code) {
-      return NextResponse.json({ error: "Verification code required" }, { status: 400 });
-    }
-
-    // Get pending auth from DB (persists across requests)
-    const pending = await getPendingAuth(org.id);
-    if (!pending) {
+    const { code, password, phone, phoneCodeHash } = await req.json();
+    if (!code || !phone || !phoneCodeHash) {
       return NextResponse.json(
-        { error: "No pending auth. Please request a new code." },
+        { error: "Code, phone, and phoneCodeHash required" },
         { status: 400 }
       );
     }
@@ -32,7 +26,7 @@ export async function POST(req: Request) {
 
     try {
       await client.signInUser(apiCredentials, {
-        phoneNumber: async () => pending.phone,
+        phoneNumber: async () => phone,
         phoneCode: async () => code,
         password: password ? async () => password : undefined,
         onError: (err) => { throw err; },
@@ -40,7 +34,7 @@ export async function POST(req: Request) {
 
       const sessionString = client.session.save();
       const me = await client.getMe();
-      const username = me.username || me.firstName || pending.phone;
+      const username = me.username || me.firstName || phone;
 
       const supabase = createServiceClient();
       const { error } = await supabase
@@ -50,14 +44,11 @@ export async function POST(req: Request) {
           telegram_session: sessionString,
           telegram_username: username,
           telegram_mode: "userbot",
-          telegram_phone: pending.phone,
+          telegram_phone: phone,
           updated_at: new Date().toISOString(),
         });
 
       if (error) throw error;
-
-      // Clear pending auth from DB
-      await deletePendingAuth(org.id);
 
       await client.disconnect();
 
@@ -69,15 +60,12 @@ export async function POST(req: Request) {
     } catch (err: any) {
       await client.disconnect();
 
-      // Keep pending auth in DB so user can retry with password
       if (err.message?.includes("SESSION_PASSWORD_NEEDED")) {
         return NextResponse.json(
           { error: "2FA_PASSWORD_REQUIRED", message: "Enter your 2FA password" },
           { status: 400 }
         );
       }
-      // For other errors, clear pending auth
-      await deletePendingAuth(org.id);
       throw err;
     }
   } catch (error: any) {

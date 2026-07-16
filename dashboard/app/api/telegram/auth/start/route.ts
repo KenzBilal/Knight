@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient, apiCredentials, setPendingAuth } from "@/lib/telegram-auth";
+import { createClient, apiCredentials } from "@/lib/telegram-auth";
 import { requireAuthFromToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,17 +21,12 @@ export async function POST(req: Request) {
 
     const sentCode = await client.sendCode(apiCredentials, phone);
 
-    // Save to DB (persists across requests)
-    await setPendingAuth(org.id, {
-      phone,
-      phoneCodeHash: sentCode.phoneCodeHash,
-    });
-
-    // Disconnect client - we'll create a new one in verify
     await client.disconnect();
 
+    // Return phoneCodeHash to client — client stores it and sends it back with the code
     return NextResponse.json({
       ok: true,
+      phoneCodeHash: sentCode.phoneCodeHash,
       message: "SMS code sent to your Telegram",
     });
   } catch (error: any) {
