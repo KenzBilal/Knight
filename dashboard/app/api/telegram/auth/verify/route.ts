@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiCredentials, createClient } from "@/lib/telegram-auth";
+import { getAuthClient, deleteAuthClient } from "@/lib/telegram-auth";
 import { requireAuthFromToken } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase";
 import { Api } from "telegram";
@@ -21,11 +21,17 @@ export async function POST(req: Request) {
       );
     }
 
-    const client = createClient();
-    await client.connect();
+    // Get the SAME client from start step — auth state is tied to it
+    const client = getAuthClient(org.id);
+    if (!client) {
+      return NextResponse.json(
+        { error: "Session expired. Please request a new code." },
+        { status: 400 }
+      );
+    }
 
     try {
-      // Use raw API to avoid signInUser calling sendCode again
+      // Use raw API to sign in with the code
       await client.invoke(
         new Api.auth.SignIn({
           phoneNumber: phone,
@@ -52,7 +58,7 @@ export async function POST(req: Request) {
 
       if (error) throw error;
 
-      await client.disconnect();
+      deleteAuthClient(org.id);
 
       return NextResponse.json({
         ok: true,
@@ -60,71 +66,60 @@ export async function POST(req: Request) {
         message: "Telegram connected successfully",
       });
     } catch (err: any) {
-      await client.disconnect();
-
-      // Handle 2FA — need to use signInPassword instead
+      // Handle 2FA
       if (err.message?.includes("SESSION_PASSWORD_NEEDED") || err.constructor?.name === "SessionPasswordNeededError") {
         if (!password) {
+          // Keep client alive for password retry
           return NextResponse.json(
             { error: "2FA_PASSWORD_REQUIRED", message: "Enter your 2FA password" },
             { status: 400 }
           );
         }
 
-        // Retry with password
-        const client2 = createClient();
-        await client2.connect();
         try {
-          await client2.invoke(
-            new Api.auth.SignIn({
-              phoneNumber: phone,
-              phoneCodeHash: phoneCodeHash,
-              phoneCode: code,
+          await client.invoke(
+            new Api.auth.CheckPassword({
+              password: password,
             })
           );
-        } catch (innerErr: any) {
-          if (innerErr.message?.includes("SESSION_PASSWORD_NEEDED") || innerErr.constructor?.name === "SessionPasswordNeededError") {
-            // Now send the password
-            await client2.invoke(
-              new Api.auth.CheckPassword({
-                password: password,
-              })
-            );
-          } else {
-            throw innerErr;
-          }
-        }
 
-        const sessionString = client2.session.save();
-        const me = await client2.getMe();
-        const username = me.username || me.firstName || phone;
+          const sessionString = client.session.save();
+          const me = await client.getMe();
+          const username = me.username || me.firstName || phone;
 
-        const supabase = createServiceClient();
-        await supabase
-          .from("org_config")
-          .upsert({
-            org_id: org.id,
-            telegram_session: sessionString,
-            telegram_username: username,
-            telegram_mode: "userbot",
-            telegram_phone: phone,
-            updated_at: new Date().toISOString(),
+          const supabase = createServiceClient();
+          await supabase
+            .from("org_config")
+            .upsert({
+              org_id: org.id,
+              telegram_session: sessionString,
+              telegram_username: username,
+              telegram_mode: "userbot",
+              telegram_phone: phone,
+              updated_at: new Date().toISOString(),
+            });
+
+          deleteAuthClient(org.id);
+
+          return NextResponse.json({
+            ok: true,
+            username,
+            message: "Telegram connected successfully",
           });
-
-        await client2.disconnect();
-
-        return NextResponse.json({
-          ok: true,
-          username,
-          message: "Telegram connected successfully",
-        });
+        } catch (pwErr: any) {
+          deleteAuthClient(org.id);
+          throw pwErr;
+        }
       }
 
+      deleteAuthClient(org.id);
       throw err;
     }
   } catch (error: any) {
     const message = error.message?.includes("PHONE_CODE_INVALID")
       ? "Invalid code. Please try again."
+      : error.message?.includes("PHONE_CODE_EXPIRED")
+      ? "Code expired. Please request a new code."
       : error.message || "Failed to verify code";
 
     return NextResponse.json({ error: message }, { status: 500 });

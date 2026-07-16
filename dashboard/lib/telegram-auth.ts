@@ -14,5 +14,26 @@ export function createClient(sessionString?: string) {
   });
 }
 
+// Store connected clients in memory (keyed by orgId)
+// Must use SAME client for sendCode + signIn — Telegram ties auth state to connection
+const authClients = new Map<string, TelegramClient>();
+
+export function setAuthClient(orgId: string, client: TelegramClient) {
+  // Clean up old client if exists
+  const old = authClients.get(orgId);
+  if (old) old.disconnect().catch(() => {});
+  authClients.set(orgId, client);
+}
+
+export function getAuthClient(orgId: string): TelegramClient | undefined {
+  return authClients.get(orgId);
+}
+
+export function deleteAuthClient(orgId: string) {
+  const client = authClients.get(orgId);
+  if (client) client.disconnect().catch(() => {});
+  authClients.delete(orgId);
+}
+
 export const TELEGRAM_API_ID = API_ID;
 export const TELEGRAM_API_HASH = API_HASH;

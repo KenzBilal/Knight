@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient, apiCredentials } from "@/lib/telegram-auth";
+import { createClient, apiCredentials, setAuthClient } from "@/lib/telegram-auth";
 import { requireAuthFromToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -16,14 +16,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Phone number required" }, { status: 400 });
     }
 
+    // Create client and KEEP it connected — must use same client for signIn
     const client = createClient();
     await client.connect();
 
     const sentCode = await client.sendCode(apiCredentials, phone);
 
-    await client.disconnect();
+    // Store client in memory for verify step
+    setAuthClient(org.id, client);
 
-    // Return phoneCodeHash to client — client stores it and sends it back with the code
     return NextResponse.json({
       ok: true,
       phoneCodeHash: sentCode.phoneCodeHash,
