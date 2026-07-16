@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     const supabase = createServiceClient();
     const { data: config } = await supabase
       .from("org_config")
-      .select("telegram_session, telegram_username, company_name")
+      .select("telegram_session, company_name")
       .eq("org_id", org.id)
       .single();
 
@@ -32,22 +32,29 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No Telegram session found" }, { status: 400 });
     }
 
+    // Use the user's session to get their own info
+    const userClient = new TelegramClient(
+      new StringSession(config.telegram_session),
+      API_ID,
+      API_HASH,
+      { connectionRetries: 3 }
+    );
+    await userClient.connect();
+    const me = await userClient.getMe();
+    const username = me.username || me.firstName || "user";
+    const userId = me.id;
+    await userClient.disconnect();
+
     // Connect Knight bot
     const knightBot = new TelegramClient(new StringSession(""), API_ID, API_HASH, {
       connectionRetries: 3,
     });
     await knightBot.start({ botAuthToken: KNIGHT_BOT_TOKEN });
 
-    // Find the user's Telegram chat ID by username
-    const username = config.telegram_username;
-    if (username) {
-      try {
-        const entity = await knightBot.getEntity(username);
-        const chatId = entity.id;
-
-        // Send confirmation message
-        await knightBot.sendMessage(chatId, {
-          message: `✅ **Knight Connected!**
+    // Send confirmation message to user
+    try {
+      await knightBot.sendMessage(userId, {
+        message: `✅ **Knight Connected!**
 
 Your Telegram account is now connected to Knight.
 
@@ -60,12 +67,10 @@ Your Telegram account is now connected to Knight.
 ${config.company_name ? `🏢 **Company:** ${config.company_name}` : ""}
 
 _You can manage everything from your dashboard._`,
-        });
-
-        console.log(`[CONFIRM] Sent confirmation to @${username}`);
-      } catch (err: any) {
-        console.warn(`[CONFIRM] Could not send to @${username}:`, err.message);
-      }
+      });
+      console.log(`[CONFIRM] Sent confirmation to @${username}`);
+    } catch (err: any) {
+      console.warn(`[CONFIRM] Could not send to @${username}:`, err.message);
     }
 
     await knightBot.disconnect();

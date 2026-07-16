@@ -51,8 +51,6 @@ export async function POST(req: Request) {
         .upsert({
           org_id: org.id,
           telegram_session: sessionString,
-          telegram_username: username,
-          telegram_mode: "userbot",
           telegram_phone: phone,
           updated_at: new Date().toISOString(),
         });
@@ -98,8 +96,6 @@ export async function POST(req: Request) {
             .upsert({
               org_id: org.id,
               telegram_session: sessionString,
-              telegram_username: username,
-              telegram_mode: "userbot",
               telegram_phone: phone,
               updated_at: new Date().toISOString(),
             });

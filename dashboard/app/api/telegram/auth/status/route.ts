@@ -14,14 +14,12 @@ export async function GET(req: Request) {
     const supabase = createServiceClient();
     const { data } = await supabase
       .from("org_config")
-      .select("telegram_session, telegram_username, telegram_mode, telegram_phone")
+      .select("telegram_session, telegram_phone")
       .eq("org_id", org.id)
       .single();
 
     return NextResponse.json({
       connected: !!data?.telegram_session,
-      username: data?.telegram_username || null,
-      mode: data?.telegram_mode || null,
       phone: data?.telegram_phone || null,
     });
   } catch (error: any) {

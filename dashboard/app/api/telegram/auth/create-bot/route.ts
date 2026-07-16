@@ -80,7 +80,7 @@ export async function POST(req: Request) {
     const supabase = createServiceClient();
     const { data: config } = await supabase
       .from("org_config")
-      .select("telegram_session, telegram_username, company_name")
+      .select("telegram_session, company_name")
       .eq("org_id", org.id)
       .single();
 
@@ -175,8 +175,8 @@ export async function POST(req: Request) {
 
       // Send confirmation to user
       try {
-        const userEntity = await client.getEntity(config.telegram_username || "me");
-        await client.sendMessage(userEntity.id, {
+        const me = await client.getMe();
+        await client.sendMessage(me.id, {
           message: `🤖 **Bot Created!**
 
 Your Telegram bot has been created automatically:

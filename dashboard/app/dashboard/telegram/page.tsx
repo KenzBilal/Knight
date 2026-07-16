@@ -18,6 +18,7 @@ interface TelegramConfig {
   telegram_phone: string | null;
   telegram_bot_token: string | null;
   telegram_username: string | null;
+  telegram_session: string | null;
 }
 
 export default function TelegramPage() {
@@ -37,7 +38,7 @@ export default function TelegramPage() {
       .catch(() => {});
   }, []);
 
-  const connected = config?.telegram_mode === "userbot" || config?.telegram_mode === "normal";
+  const connected = !!(config?.telegram_session) || config?.telegram_mode === "userbot" || config?.telegram_mode === "normal";
   const mode = config?.telegram_mode;
   const pendingLeads = leads.filter(l => l.status === "NEEDS_APPROVAL" || l.status === "PENDING");
   const approvedLeads = leads.filter(l => l.status === "APPROVED");
@@ -117,7 +118,9 @@ export default function TelegramPage() {
                     {mode === "userbot" ? "Userbot" : "Bot"}
                   </span>
                 </p>
-                <p className="text-xs text-[#525252] mt-0.5" style={{ fontFamily: "var(--font-mono)" }}>@{config?.telegram_username || "unknown"}</p>
+                <p className="text-xs text-[#525252] mt-0.5" style={{ fontFamily: "var(--font-mono)" }}>
+                  {config?.telegram_username ? `@${config.telegram_username}` : config?.telegram_phone || "connected"}
+                </p>
               </div>
             </div>
             <Link
