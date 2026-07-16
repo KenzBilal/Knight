@@ -99,24 +99,44 @@ async function main() {
     // Normal boot — connect all orgs with sessions
     console.log('[USERBOT] Starting per-org userbot manager...');
     
+    const connectedOrgs = new Set();
+
+    // Initial connection
     const orgsWithSessions = await getOrgsWithSessions();
     console.log(`[USERBOT] Found ${orgsWithSessions.length} org(s) with Telegram sessions`);
 
-    if (orgsWithSessions.length === 0) {
-      console.log('[USERBOT] No orgs with Telegram sessions. Waiting for connections...');
-      return;
-    }
-
-    // Connect each org's userbot
     for (const org of orgsWithSessions) {
       try {
         await connectOrgUserbot(org.org_id, org.telegram_session);
+        connectedOrgs.add(org.org_id);
       } catch (err) {
         console.error(`[USERBOT] Failed to connect org ${org.org_id}:`, err.message);
       }
     }
 
-    console.log('[USERBOT] All userbots connected. Listening for messages...');
+    console.log('[USERBOT] Initial connections done. Starting auto-reload...');
+
+    // Auto-reload: check for new orgs every 30 seconds
+    setInterval(async () => {
+      try {
+        const currentOrgs = await getOrgsWithSessions();
+        for (const org of currentOrgs) {
+          if (!connectedOrgs.has(org.org_id)) {
+            console.log(`[USERBOT] New org detected: ${org.org_id}. Connecting...`);
+            try {
+              await connectOrgUserbot(org.org_id, org.telegram_session);
+              connectedOrgs.add(org.org_id);
+              console.log(`[USERBOT] Auto-connected org: ${org.org_id}`);
+            } catch (err) {
+              console.error(`[USERBOT] Failed to auto-connect org ${org.org_id}:`, err.message);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[USERBOT] Auto-reload check failed:', err.message);
+      }
+    }, 30 * 1000); // Check every 30 seconds
+
     return;
   }
 

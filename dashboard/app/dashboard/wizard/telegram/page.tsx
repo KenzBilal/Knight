@@ -65,7 +65,25 @@ export default function TelegramWizardPage() {
         }
         throw new Error(data.error || "Failed to verify");
       }
+
       toast.success("Telegram connected!");
+
+      // Send confirmation message via Knight bot (non-blocking)
+      fetch("/api/telegram/auth/confirm", { method: "POST" }).catch(() => {});
+
+      // Auto-create bot via BotFather (non-blocking, takes time)
+      toast.info("Creating your bot... This may take a moment.");
+      fetch("/api/telegram/auth/create-bot", { method: "POST" })
+        .then(async (r) => {
+          const d = await r.json();
+          if (d.ok) {
+            toast.success(`Bot created! @${d.username}`);
+          } else {
+            toast.error(d.error || "Bot creation failed");
+          }
+        })
+        .catch(() => {});
+
       setCompleted(true);
       setStep(3);
     } catch (err: any) {
