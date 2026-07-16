@@ -85,6 +85,7 @@ export default function TelegramWizardPage() {
       currentStep={step}
       onStepChange={setStep}
       backHref="/dashboard"
+      hideNext={step === 0}
     >
       {step === 0 && (
         <div className="space-y-4">

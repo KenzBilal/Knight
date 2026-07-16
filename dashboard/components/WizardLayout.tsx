@@ -21,6 +21,7 @@ interface WizardLayoutProps {
   onComplete?: () => void;
   completeLabel?: string;
   isSubmitting?: boolean;
+  hideNext?: boolean;
 }
 
 export function WizardLayout({
@@ -35,6 +36,7 @@ export function WizardLayout({
   onComplete,
   completeLabel = "Finish",
   isSubmitting = false,
+  hideNext = false,
 }: WizardLayoutProps) {
   const isFirstStep = currentStep === 0;
   const isLastStep = currentStep === steps.length - 1;
@@ -157,7 +159,7 @@ export function WizardLayout({
                 </>
               )}
             </button>
-          ) : (
+          ) : !hideNext ? (
             <button
               onClick={() => onStepChange(currentStep + 1)}
               className="group relative inline-flex items-center gap-2 rounded-xl bg-white text-[#080808] font-semibold text-[14px] px-7 py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98]"
@@ -167,6 +169,8 @@ export function WizardLayout({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
               </svg>
             </button>
+          ) : (
+            <div />
           )}
         </div>
       </div>
