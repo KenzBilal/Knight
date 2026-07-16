@@ -10,21 +10,30 @@ export function Providers({ children }: { children: React.ReactNode }) {
         position="bottom-right"
         toastOptions={{
           style: {
-            background: "#1a1a1a",
-            border: "1px solid #2a2a2a",
+            background: "rgba(17, 17, 17, 0.95)",
+            border: "1px solid rgba(255, 255, 255, 0.08)",
             color: "#e5e5e5",
-            fontSize: "14px",
+            fontSize: "13px",
+            fontWeight: 500,
+            borderRadius: "12px",
+            padding: "12px 16px",
+            boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05)",
+            backdropFilter: "blur(12px)",
+            letterSpacing: "-0.01em",
           },
           classNames: {
-            success: "!bg-green-500/10 !border-green-500/20 !text-green-400",
-            error: "!bg-red-500/10 !border-red-500/20 !text-red-400",
-            warning: "!bg-yellow-500/10 !border-yellow-500/20 !text-yellow-400",
-            info: "!bg-blue-500/10 !border-blue-500/20 !text-blue-400",
+            success: "!bg-[#4ade80]/8 !border-[#4ade80]/15 !text-[#4ade80]",
+            error: "!bg-[#f87171]/8 !border-[#f87171]/15 !text-[#f87171]",
+            warning: "!bg-[#fbbf24]/8 !border-[#fbbf24]/15 !text-[#fbbf24]",
+            info: "!bg-[#60a5fa]/8 !border-[#60a5fa]/15 !text-[#60a5fa]",
+            actionButton: "!bg-white/10 hover:!bg-white/15 !text-white !border-0 !rounded-lg !px-3 !py-1.5 !text-[12px] !font-semibold !transition-all !duration-150",
+            cancelButton: "!bg-white/5 hover:!bg-white/10 !text-[#a3a3a3] !border-0 !rounded-lg !px-3 !py-1.5 !text-[12px] !font-medium !transition-all !duration-150",
           },
         }}
-        closeButton
         richColors
-        duration={3000}
+        duration={4000}
+        gap={12}
+        visibleToasts={3}
       />
     </>
   );

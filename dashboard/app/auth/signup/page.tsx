@@ -27,7 +27,17 @@ export default function SignupPage() {
       return data;
     });
 
-    toast.promise(promise, { loading: "Creating your account...", success: "Welcome to Knight!", error: err => err.message || "Signup failed" });
+    toast.promise(promise, {
+      loading: "Creating your account...",
+      success: () => "Welcome to Knight!",
+      error: (err) => err.message || "Signup failed",
+      style: {
+        background: "rgba(17, 17, 17, 0.95)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "12px",
+        padding: "12px 16px",
+      },
+    });
     promise.finally(() => setLoading(false));
   }
 
@@ -56,7 +66,7 @@ export default function SignupPage() {
                     value={name}
                     onChange={e => setName(e.target.value)}
                     placeholder="Alex Johnson"
-                    className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] hover:border-[#ccc]"
+                    className="w-full rounded-xl border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-200 ease-out focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.06)] hover:border-[#ccc] hover:shadow-sm"
                   />
                 </div>
 
@@ -70,7 +80,7 @@ export default function SignupPage() {
                     value={email}
                     onChange={e => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] hover:border-[#ccc]"
+                    className="w-full rounded-xl border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-200 ease-out focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.06)] hover:border-[#ccc] hover:shadow-sm"
                   />
                 </div>
 
@@ -85,21 +95,18 @@ export default function SignupPage() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full rounded-lg border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-150 focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.04)] hover:border-[#ccc]"
+                    className="w-full rounded-xl border border-[#e4e4e4] bg-[#fafafa] px-4 py-3.5 text-[15px] text-[#111] placeholder:text-[#bbb] transition-all duration-200 ease-out focus:outline-none focus:border-[#111] focus:bg-white focus:shadow-[0_0_0_3px_rgba(0,0,0,0.06)] hover:border-[#ccc] hover:shadow-sm"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2 rounded-xl bg-[#111] text-white font-semibold py-3 text-[15px] tracking-tight transition-all duration-150 hover:bg-[#222] hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.985] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full mt-2 rounded-xl bg-[#111] text-white font-semibold py-3.5 text-[15px] tracking-tight transition-all duration-200 ease-out hover:bg-[#222] hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.985] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-none"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Creating account…
                     </span>
                   ) : (

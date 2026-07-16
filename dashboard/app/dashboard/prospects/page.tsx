@@ -161,23 +161,63 @@ export default function ProspectsPage() {
       if (!res.ok) throw new Error();
 
       const colLabel = columns.find(c => c.id === newStatus)?.label || newStatus;
-      toast.success(`Moved to ${colLabel}`, {
-        duration: 3000,
-        action: {
-          label: "Undo",
-          onClick: () => {
-            setCompanies(prev);
-            fetch("/api/prospects", {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ companyId: id, status: prev.find(x => x.id === id)?.status || "NEW" }),
-            });
+      const movedCompany = companies.find(x => x.id === id);
+      toast.success(
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-white truncate">
+              <span className="text-[#a3a3a3]">{movedCompany?.name || "Company"}</span>
+              {" → "}
+              <span className="text-[#4ade80]">{colLabel}</span>
+            </p>
+          </div>
+        </div>,
+        {
+          duration: 5000,
+          action: {
+            label: "Undo",
+            onClick: () => {
+              setCompanies(prev);
+              fetch("/api/prospects", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ companyId: id, status: prev.find(x => x.id === id)?.status || "NEW" }),
+              });
+            },
           },
-        },
-      });
+          style: {
+            background: "rgba(17, 17, 17, 0.95)",
+            border: "1px solid rgba(74, 222, 128, 0.15)",
+            borderRadius: "12px",
+            padding: "14px 16px",
+          },
+          classNames: {
+            success: "!bg-[#4ade80]/5 !border-[#4ade80]/15 !text-white",
+          },
+        }
+      );
     } catch {
       setCompanies(prev);
-      toast.error("Move failed — reverted");
+      toast.error(
+        <div className="flex items-center gap-3">
+          <div className="min-w-0">
+            <p className="text-[13px] font-medium text-white">Move failed</p>
+            <p className="text-[11px] text-[#a3a3a3]">Reverted</p>
+          </div>
+        </div>,
+        {
+          duration: 4000,
+          style: {
+            background: "rgba(17, 17, 17, 0.95)",
+            border: "1px solid rgba(248, 113, 113, 0.15)",
+            borderRadius: "12px",
+            padding: "14px 16px",
+          },
+          classNames: {
+            error: "!bg-[#f87171]/5 !border-[#f87171]/15 !text-white",
+          },
+        }
+      );
     }
   }
 
