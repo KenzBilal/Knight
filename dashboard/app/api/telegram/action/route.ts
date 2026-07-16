@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
-    const { id, action } = await req.json();
+    const { leadId, action } = await req.json();
+    const id = leadId;
 
     let newStatus: string;
     if (action === "approve") {

@@ -46,6 +46,7 @@ export async function POST(req: Request) {
         telegram_admin_chat_id: body.telegram_admin_chat_id || null,
         telegram_mode: body.telegram_mode || null,
         telegram_phone: body.telegram_phone || null,
+        telegram_username: body.telegram_username || null,
         updated_at: new Date().toISOString(),
       })
       .select()

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
+import { createServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -12,14 +12,18 @@ export async function GET(req: Request) {
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
-    const { data, error } = await supabase
-      .from("telegram_leads")
-      .select("*")
+    const { data } = await supabase
+      .from("org_config")
+      .select("telegram_session, telegram_username, telegram_mode, telegram_phone")
       .eq("org_id", org.id)
-      .order("created_at", { ascending: false });
+      .single();
 
-    if (error) throw error;
-    return NextResponse.json({ leads: data || [] });
+    return NextResponse.json({
+      connected: !!data?.telegram_session,
+      username: data?.telegram_username || null,
+      mode: data?.telegram_mode || null,
+      phone: data?.telegram_phone || null,
+    });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
