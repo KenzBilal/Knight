@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
-    const { code } = await req.json();
+    const { code, password } = await req.json();
     if (!code) {
       return NextResponse.json({ error: "Verification code required" }, { status: 400 });
     }
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       await client.signInUser(apiCredentials, {
         phoneNumber: phone,
         phoneCode: async () => code,
+        password: password ? async () => password : undefined,
         onError: (err) => { throw err; },
       });
 
@@ -60,13 +61,18 @@ export async function POST(req: Request) {
         message: "Telegram connected successfully",
       });
     } catch (err: any) {
+      // Keep pending auth so user can retry with password
+      if (err.message?.includes("SESSION_PASSWORD_NEEDED")) {
+        return NextResponse.json(
+          { error: "2FA_PASSWORD_REQUIRED", message: "Enter your 2FA password" },
+          { status: 400 }
+        );
+      }
       deletePendingAuth(org.id);
       throw err;
     }
   } catch (error: any) {
-    const message = error.message?.includes("SESSION_PASSWORD_NEEDED")
-      ? "Two-factor authentication enabled. Please disable 2FA on your Telegram account first."
-      : error.message?.includes("PHONE_CODE_INVALID")
+    const message = error.message?.includes("PHONE_CODE_INVALID")
       ? "Invalid code. Please try again."
       : error.message || "Failed to verify code";
 

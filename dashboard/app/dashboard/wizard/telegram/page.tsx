@@ -20,6 +20,8 @@ export default function TelegramWizardPage() {
   const [mode, setMode] = useState<TelegramMode>(null);
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [needsPassword, setNeedsPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [botToken, setBotToken] = useState("");
   const [loading, setLoading] = useState(false);
@@ -52,10 +54,17 @@ export default function TelegramWizardPage() {
       const res = await fetch("/api/telegram/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, password: password || undefined }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to verify");
+      if (!res.ok) {
+        if (data.error === "2FA_PASSWORD_REQUIRED") {
+          setNeedsPassword(true);
+          toast.error("2FA enabled. Enter your password.");
+          return;
+        }
+        throw new Error(data.error || "Failed to verify");
+      }
       toast.success("Telegram connected!");
       setCompleted(true);
       setStep(3);
@@ -418,8 +427,8 @@ export default function TelegramWizardPage() {
 
       {step === 2 && (
         <WizardCard
-          title="Enter Code"
-          description="Check your Telegram for the SMS code"
+          title={needsPassword ? "2FA Password" : "Enter Code"}
+          description={needsPassword ? "Enter your Telegram 2FA password" : "Check your Telegram for the SMS code"}
           icon={
             <svg className="w-5 h-5 text-[#4ade80]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
@@ -427,62 +436,88 @@ export default function TelegramWizardPage() {
           }
         >
           <form onSubmit={handleVerifyCode} className="space-y-5">
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
-              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-3">
-                Instructions
-              </p>
-              <ol className="text-[13px] text-[#525252] space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#4ade80] mt-0.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </span>
-                  <span>Open your Telegram app</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#4ade80] mt-0.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </span>
-                  <span>Find the SMS with your verification code</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#4ade80] mt-0.5">
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
-                  </span>
-                  <span>Enter it below to connect</span>
-                </li>
-              </ol>
-            </div>
-            <div>
-              <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
-                Verification Code
-              </label>
-              <input
-                type="text"
-                required
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                placeholder="12345"
-                className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200 font-mono text-[15px] tracking-[0.3em] text-center"
-                autoFocus
-              />
-            </div>
+            {!needsPassword && (
+              <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
+                <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-3">
+                  Instructions
+                </p>
+                <ol className="text-[13px] text-[#525252] space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#4ade80] mt-0.5">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </span>
+                    <span>Open your Telegram app</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#4ade80] mt-0.5">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </span>
+                    <span>Find the SMS with your verification code</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-[#4ade80] mt-0.5">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </span>
+                    <span>Enter it below to connect</span>
+                  </li>
+                </ol>
+              </div>
+            )}
+            {needsPassword && (
+              <div className="rounded-xl bg-[#fbbf24]/5 border border-[#fbbf24]/10 p-4">
+                <p className="text-[13px] text-[#fbbf24] leading-relaxed">
+                  Your account has 2FA enabled. Enter your Telegram cloud password (not your SMS code).
+                </p>
+              </div>
+            )}
+            {!needsPassword ? (
+              <div>
+                <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
+                  Verification Code
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  placeholder="12345"
+                  className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200 font-mono text-[15px] tracking-[0.3em] text-center"
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
+                  2FA Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Your Telegram password"
+                  className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200"
+                  autoFocus
+                />
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => setStep(1)}
+                onClick={() => { setStep(1); setNeedsPassword(false); setPassword(""); }}
                 className="text-[13px] font-medium text-[#525252] hover:text-white transition-colors px-4 py-2.5"
               >
                 Back
               </button>
               <button
                 type="submit"
-                disabled={!code || loading}
+                disabled={loading || (!code && !needsPassword) || (needsPassword && !password)}
                 className="flex-1 rounded-xl bg-white text-[#080808] font-semibold text-[13px] py-3 transition-all duration-200 hover:shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_8px_32px_rgba(255,255,255,0.1)] active:scale-[0.98] disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:shadow-none flex items-center justify-center gap-2"
               >
                 {loading ? (
