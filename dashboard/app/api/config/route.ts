@@ -14,7 +14,7 @@ export async function GET(req: Request) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
 
@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       ...(data || {}),
       telegram_connected: !!sessionCheck?.telegram_session,
       telegram_mode: sessionCheck?.telegram_session ? "userbot" : null,
+      user_name: user?.name || user?.email?.split("@")[0] || "",
     };
 
     return NextResponse.json(result);

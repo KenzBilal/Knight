@@ -43,6 +43,7 @@ export default function ProfileWizardPage() {
   const [services, setServices] = useState<string[]>([]);
   const [customService, setCustomService] = useState("");
   const [saving, setSaving] = useState(false);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     fetch("/api/config")
@@ -51,6 +52,7 @@ export default function ProfileWizardPage() {
         if (data.company_name) setCompanyName(data.company_name);
         if (data.company_website) setCompanyWebsite(data.company_website);
         if (data.services_offered) setServices(data.services_offered);
+        if (data.user_name) setUserName(data.user_name);
       })
       .catch(() => {});
   }, []);
@@ -289,15 +291,16 @@ export default function ProfileWizardPage() {
               {/* Email body */}
               <div className="p-5 space-y-4 text-[13px] text-[#737373] leading-relaxed">
                 <p>
-                  Hi <span className="text-[#525252] bg-white/[0.04] px-1.5 py-0.5 rounded text-[12px] font-mono">{"{{contact_name}}"}</span>,
+                  Hi <span className="inline-block text-[#a3a3a3] bg-white/[0.06] px-2 py-0.5 rounded-md text-[12px] font-mono border border-white/[0.06]">John</span>,
                 </p>
                 <p>
                   I&apos;m from <strong className="text-white font-semibold">{companyName || "Your Company"}</strong>.
                   {services.length > 0 && (
-                    <> We specialize in{" "}
+                    <>
+                      {" "}We specialize in{" "}
                       {services.slice(0, 3).map((s, i) => (
-                        <span key={s}>
-                          <span className="text-[#a3a3a3] bg-white/[0.04] px-1.5 py-0.5 rounded text-[12px] font-mono">{s}</span>
+                        <span key={s} className="inline-block">
+                          <span className="inline-block text-[#a3a3a3] bg-white/[0.06] px-2 py-0.5 rounded-md text-[12px] font-mono border border-white/[0.06]">{s}</span>
                           {i < Math.min(services.length, 3) - 1 ? ", " : ""}
                         </span>
                       ))}.
@@ -309,7 +312,7 @@ export default function ProfileWizardPage() {
                 </p>
                 <p className="text-[#525252]">
                   Best,<br />
-                  Your Name
+                  {userName || "Your Name"}
                 </p>
               </div>
 
