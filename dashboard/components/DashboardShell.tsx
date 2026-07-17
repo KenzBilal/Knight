@@ -44,7 +44,7 @@ export function DashboardShell({
           />
         )}
 
-        {/* Sidebar — no zoom */}
+        {/* Sidebar */}
         <div className={`
           fixed inset-y-0 left-0 z-50 w-[240px] transform transition-transform duration-200 ease-out
           lg:relative lg:translate-x-0 lg:z-auto
@@ -60,8 +60,8 @@ export function DashboardShell({
           />
         </div>
 
-        {/* Main content — zoomed */}
-        <div className="dashboard-zoom flex-1 flex flex-col h-full min-w-0">
+        {/* Main content */}
+        <div className="flex-1 flex flex-col h-full min-w-0">
           {children}
         </div>
       </div>
