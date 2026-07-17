@@ -47,11 +47,38 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
     let rafId: number;
     let alive = true;
 
+    let offscreenCanvas: HTMLCanvasElement | null = null;
+    let offscreenCtx: CanvasRenderingContext2D | null = null;
+
     function resize() {
       if (!canvas) return;
-      const dpr = window.devicePixelRatio || 1;
+      // Cap DPR to prevent massive Canvas memory allocation on 4k/retina
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       canvas.width = window.innerWidth * dpr;
       canvas.height = window.innerHeight * dpr;
+
+      // Cache the static ghost track so we don't recalculate the full SVG path every frame
+      if (!offscreenCanvas) {
+        offscreenCanvas = document.createElement("canvas");
+        offscreenCtx = offscreenCanvas.getContext("2d", { alpha: true });
+      }
+      offscreenCanvas.width = canvas.width;
+      offscreenCanvas.height = canvas.height;
+
+      if (offscreenCtx) {
+        offscreenCtx.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
+        const scaleX = offscreenCanvas.width / VIEWBOX_W;
+        const scaleY = offscreenCanvas.height / VIEWBOX_H;
+        offscreenCtx.save();
+        offscreenCtx.scale(scaleX, scaleY);
+        offscreenCtx.strokeStyle = "rgba(255,255,255,0.05)";
+        offscreenCtx.lineWidth = 20;
+        offscreenCtx.lineCap = "round";
+        offscreenCtx.lineJoin = "round";
+        offscreenCtx.stroke(path2D);
+        offscreenCtx.restore();
+      }
+
       lastProgress = -1; // force redraw
     }
 
@@ -62,6 +89,11 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
 
       ctx.clearRect(0, 0, W, H);
 
+      // Blit the cached ghost track in 1 GPU instruction
+      if (offscreenCanvas) {
+        ctx.drawImage(offscreenCanvas, 0, 0);
+      }
+
       const drawnLength = totalLength * progress;
       if (drawnLength < 0.5) return;
 
@@ -70,33 +102,28 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
 
       ctx.save();
       ctx.scale(scaleX, scaleY);
-
-      // Pass 1: Ghost track (full length)
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 20;
+      
+      // Global stroke settings
       ctx.lineCap = "round";
       ctx.lineJoin = "round";
-      ctx.setLineDash([]);
-      ctx.shadowColor = "transparent";
-      ctx.shadowBlur = 0;
+      const dashPattern: [number, number] = [drawnLength, totalLength + 10];
+      ctx.setLineDash(dashPattern);
+
+      // ── FAKE GLOW (No shadowBlur math) ──
+      
+      // Pass 1: Wide faint outer glow
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 32;
       ctx.stroke(path2D);
 
-      const dashPattern: [number, number] = [drawnLength, totalLength + 10];
-
-      // Pass 2: Wide soft glow
-      ctx.shadowColor = "rgba(255,255,255,0.55)";
-      ctx.shadowBlur = 28 * scaleX; 
-      ctx.strokeStyle = "rgba(255,255,255,0.12)";
-      ctx.lineWidth = 28;
-      ctx.setLineDash(dashPattern);
+      // Pass 2: Medium semi-transparent inner glow
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 14;
       ctx.stroke(path2D);
 
       // Pass 3: Sharp bright core
-      ctx.shadowColor = "rgba(255,255,255,0.95)";
-      ctx.shadowBlur = 8 * scaleX;
-      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
       ctx.lineWidth = 3;
-      ctx.setLineDash(dashPattern);
       ctx.stroke(path2D);
 
       ctx.restore();
