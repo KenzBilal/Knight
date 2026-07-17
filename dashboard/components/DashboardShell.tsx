@@ -35,7 +35,7 @@ export function DashboardShell({
 
   return (
     <SidebarContext.Provider value={{ toggleSidebar }}>
-      <div className="dashboard-zoom flex h-screen overflow-hidden bg-[#080808]">
+      <div className="flex h-screen overflow-hidden bg-[#080808]">
         {/* Backdrop */}
         {sidebarOpen && (
           <div
@@ -44,7 +44,7 @@ export function DashboardShell({
           />
         )}
 
-        {/* Sidebar */}
+        {/* Sidebar — no zoom */}
         <div className={`
           fixed inset-y-0 left-0 z-50 w-[240px] transform transition-transform duration-200 ease-out
           lg:relative lg:translate-x-0 lg:z-auto
@@ -60,8 +60,8 @@ export function DashboardShell({
           />
         </div>
 
-        {/* Main content */}
-        <div className="flex-1 flex flex-col h-full min-w-0">
+        {/* Main content — zoomed */}
+        <div className="dashboard-zoom flex-1 flex flex-col h-full min-w-0">
           {children}
         </div>
       </div>
