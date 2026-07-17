@@ -425,19 +425,46 @@ async function findYelp(companyName) {
 
 async function handleScrape(job) {
   const orgId = job.org_id;
-  const { auditData, contacts } = await runAudit(job.payload.target);
+  const target = job.payload.target;
+  const CACHE_HOURS = 24;
+
+  // Check cache: skip if same URL audited within 24h
+  const cutoff = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
+  const { data: cached } = await supabase
+    .from('audits')
+    .select('id, total_score, created_at')
+    .eq('org_id', orgId)
+    .gte('created_at', cutoff)
+    .order('created_at', { ascending: false })
+    .limit(1);
+
+  if (cached && cached.length > 0) {
+    const existingCompany = await supabase
+      .from('companies')
+      .select('id, website_url')
+      .eq('org_id', orgId)
+      .eq('website_url', target)
+      .single();
+
+    if (existingCompany.data) {
+      console.log(`[Scrape] ${target} | CACHED: Last audit ${cached[0].created_at} (score: ${cached[0].total_score})`);
+      return { cached: true, auditId: cached[0].id, score: cached[0].total_score };
+    }
+  }
+
+  const { auditData, contacts } = await runAudit(target);
 
   const hasEmail = contacts && contacts.length > 0 && contacts.some(c => c.email);
   const hasPhone = contacts && contacts.length > 0 && contacts.some(c => c.phone);
 
   if (!hasEmail && !hasPhone) {
-    console.log(`[Scrape] ${job.payload.target} | SKIPPED: No contact info`);
+    console.log(`[Scrape] ${target} | SKIPPED: No contact info`);
     return;
   }
 
   // OSINT Enrichment BEFORE AI
-  const clearbit = await getClearbitData(job.payload.target.replace('www.', '').split('.')[0]);
-  const osintName = clearbit?.name || job.payload.target;
+  const clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
+  const osintName = clearbit?.name || target;
   
   const [linkedinLead, crunchbase, glassdoor, yelp] = await Promise.all([
     findLinkedInDecisionMaker(osintName),
@@ -466,12 +493,12 @@ async function handleScrape(job) {
   const aiAnalysis = await analyzeWithCohere(auditData);
   const groqSuggestions = await analyzeWithGroq(auditData);
 
-  const companyName = clearbit?.name || aiAnalysis.companyName || job.payload.target;
+  const companyName = clearbit?.name || aiAnalysis.companyName || target;
 
   const { data: company, error: companyError } = await supabase.from('companies').insert({
     org_id: orgId,
     name: companyName,
-    website_url: job.payload.target,
+    website_url: target,
     industry: aiAnalysis.industry || 'Unknown',
     lead_score: aiAnalysis.leadScore || 50,
     status: 'NEW',
