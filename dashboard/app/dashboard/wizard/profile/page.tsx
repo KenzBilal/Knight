@@ -10,7 +10,6 @@ const STEPS = [
   { id: "company", title: "Company" },
   { id: "services", title: "Services" },
   { id: "preview", title: "Preview" },
-  { id: "done", title: "Done" },
 ];
 
 const SERVICE_SUGGESTIONS = [
@@ -272,41 +271,62 @@ export default function ProfileWizardPage() {
           }
         >
           <div className="space-y-5">
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-6">
-              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-4">
-                Email preview
-              </p>
-              <div className="space-y-3 text-[13px] text-[#525252]">
-                <p>Hi {"{{contact_name}}"},</p>
+            {/* Email card */}
+            <div className="rounded-xl bg-[#111] border border-white/[0.06] overflow-hidden">
+              {/* Email header */}
+              <div className="px-5 py-3.5 border-b border-white/[0.04] flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="text-[#525252]">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[11px] text-[#3a3a3a] font-medium">Sample Outreach Email</p>
+                  <p className="text-[10px] text-[#2a2a2a]">How your prospects will see you</p>
+                </div>
+              </div>
+
+              {/* Email body */}
+              <div className="p-5 space-y-4 text-[13px] text-[#737373] leading-relaxed">
                 <p>
-                  I&apos;m from{" "}
-                  <strong className="text-white">
-                    {companyName || "Your Company"}
-                  </strong>
-                  .
+                  Hi <span className="text-[#525252] bg-white/[0.04] px-1.5 py-0.5 rounded text-[12px] font-mono">{"{{contact_name}}"}</span>,
+                </p>
+                <p>
+                  I&apos;m from <strong className="text-white font-semibold">{companyName || "Your Company"}</strong>.
                   {services.length > 0 && (
-                    <>
-                      {" "}We specialize in{" "}
-                      {services.slice(0, 3).join(", ")}.
+                    <> We specialize in{" "}
+                      {services.slice(0, 3).map((s, i) => (
+                        <span key={s}>
+                          <span className="text-[#a3a3a3] bg-white/[0.04] px-1.5 py-0.5 rounded text-[12px] font-mono">{s}</span>
+                          {i < Math.min(services.length, 3) - 1 ? ", " : ""}
+                        </span>
+                      ))}.
                     </>
                   )}
                 </p>
                 <p>
-                  I noticed your website could use improvements. Would you be
-                  open to a quick chat?
+                  I noticed your website could use improvements. Would you be open to a quick chat?
                 </p>
-                <p>
-                  Best,
-                  <br />
+                <p className="text-[#525252]">
+                  Best,<br />
                   Your Name
                 </p>
-                {companyWebsite && (
-                  <p className="text-[12px] text-[#3a3a3a] mt-2">
-                    {companyWebsite}
-                  </p>
-                )}
               </div>
+
+              {/* Website link */}
+              {companyWebsite && (
+                <div className="px-5 py-3 border-t border-white/[0.04] flex items-center gap-2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="text-[#3a3a3a]">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  <span className="text-[12px] text-[#525252]">{companyWebsite}</span>
+                </div>
+              )}
             </div>
+
+            <p className="text-[11px] text-[#3a3a3a] text-center">
+              This is a preview. Actual emails are personalized per prospect.
+            </p>
           </div>
         </WizardCard>
       )}
