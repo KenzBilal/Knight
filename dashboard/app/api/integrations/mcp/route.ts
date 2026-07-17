@@ -11,7 +11,7 @@ const supabase = createClient(
 export async function GET() {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const { data } = await supabase
@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST() {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const keyValue = `knight_mcp_${crypto.randomBytes(24).toString("hex")}`;
@@ -48,7 +48,7 @@ export async function POST() {
 export async function DELETE(req: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const { searchParams } = new URL(req.url);

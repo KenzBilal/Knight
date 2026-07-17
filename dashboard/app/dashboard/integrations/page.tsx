@@ -70,7 +70,7 @@ export default function IntegrationsPage() {
     }
   }
 
-  async function toggleWebhook(id: string, active: boolean) {
+  async function toggleWebhook(_id: string, _active: boolean) {
     toast.info("Coming soon");
   }
 

@@ -10,7 +10,7 @@ const supabase = createClient(
 export async function GET() {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(req: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const body = await req.json();
@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 export async function DELETE(req: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const org = await getOrg();
+  const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
 
   const { searchParams } = new URL(req.url);
