@@ -350,6 +350,19 @@ async function connectOrgUserbot(orgId, sessionString) {
   await client.connect();
   console.log(`[USERBOT] Connected for org: ${orgId}`);
 
+  // Send /start to Knight bot so it can welcome the user
+  try {
+    const botToken = process.env.KNIGHT_BOT_TOKEN;
+    if (botToken) {
+      const botUsername = botToken.split(':')[0]; // Bot token format: "botId:hash"
+      const botEntity = await client.getEntity('knight_confirmation_bot');
+      await client.sendMessage(botEntity.id, { message: '/start' });
+      console.log(`[USERBOT] Sent /start to Knight bot for org ${orgId}`);
+    }
+  } catch (e) {
+    console.warn(`[USERBOT] Could not send /start to Knight bot: ${e.message}`);
+  }
+
   // Send welcome message if not already sent
   sendWelcomeMessage(orgId, client);
 

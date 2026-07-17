@@ -136,6 +136,7 @@ export default function DashboardPage() {
   const [location, setLocation] = useState("");
   const [discovering, setDiscovering] = useState(false);
   const [discoverError, setDiscoverError] = useState("");
+  const [needsSetup, setNeedsSetup] = useState(true);
 
   const fetchData = useCallback(async (p?: string) => {
     try {
@@ -147,6 +148,13 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => { fetchData(period); }, [period, fetchData]);
+
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((d) => setNeedsSetup(!d.company_name))
+      .catch(() => {});
+  }, []);
 
   async function handleDiscover(e: React.FormEvent) {
     e.preventDefault();
@@ -245,12 +253,12 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-6">
 
           {/* Quick discover form */}
-          <div className="dash-card p-8 flex-1">
+          <div className={`dash-card p-8 flex-1 ${needsSetup ? "opacity-50 pointer-events-none" : ""}`}>
             <h2 className="text-[17px] font-semibold tracking-tight text-white mb-2" style={{ fontFamily: "var(--font-display)" }}>
               Find Leads
             </h2>
             <p className="text-[12px] font-medium text-[#525252] mb-6">
-              Enter a niche and location to start discovery.
+              {needsSetup ? "Complete your company profile to enable discovery." : "Enter a niche and location to start discovery."}
             </p>
             <form onSubmit={handleDiscover} className="space-y-3">
               <input

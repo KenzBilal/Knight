@@ -581,3 +581,10 @@ body {
 [data-sonner-toaster] [data-sonner-toast] [data-button]:hover {
   transform: scale(1.02) !important;
 }
+
+/* ─── Dashboard zoom: 120% on non-mobile ──────────────────────────────────── */
+@media (min-width: 768px) {
+  html {
+    zoom: 1.2;
+  }
+}

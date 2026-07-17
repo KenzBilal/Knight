@@ -17,24 +17,11 @@ function generateUsernames(companyName: string): string[] {
   const variations = [
     `${base}bot`,
     `${base}_bot`,
-    `${base}botai`,
-    `${base}_bot_ai`,
-    `${base}agency_bot`,
-    `${base}agent_bot`,
-    `${base}sales_bot`,
-    `${base}pro_bot`,
-    `${base}official_bot`,
-    `${base}helper_bot`,
-    `${base}service_bot`,
-    `${base}ai_bot`,
-    `${base}assistant_bot`,
-    `${base}team_bot`,
-    `${base}hq_bot`,
   ];
 
   for (let i = 1; i <= 5; i++) {
+    variations.push(`${base}${i}bot`);
     variations.push(`${base}${i}_bot`);
-    variations.push(`${base}_bot${i}`);
   }
 
   return [...new Set(variations)].slice(0, MAX_USERNAME_ATTEMPTS);
