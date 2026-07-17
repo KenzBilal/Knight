@@ -48,10 +48,16 @@ services:
 
   # ─── Tor Proxy (IP Rotation) ───────────────────────────────────────────────
   torproxy:
-    image: dperson/torproxy
+    image: kleen/tor
     restart: unless-stopped
     ports:
       - "9050:9050"
+    healthcheck:
+      test: ["CMD", "curl", "-s", "--socks5", "127.0.0.1:9050", "https://check.torproject.org/api/ip"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   # ─── SearxNG (OSINT Search) ────────────────────────────────────────────────
   searxng:

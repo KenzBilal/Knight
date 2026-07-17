@@ -2,12 +2,47 @@ import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import { Readability } from '@mozilla/readability';
 import { JSDOM } from 'jsdom';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import https from 'https';
 
 puppeteer.use(StealthPlugin());
 import { complete } from './ai_hub.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
+
+const TOR_PROXY = process.env.TOR_PROXY || 'socks5://torproxy:9050';
+let torAgent = null;
+try {
+  torAgent = new SocksProxyAgent(TOR_PROXY);
+} catch (e) {
+  console.log('[Tor] Failed to init proxy agent:', e.message);
+}
+
+function fetchViaAgent(url, agent) {
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { agent }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => resolve({ status: res.statusCode, json: () => JSON.parse(data), ok: res.statusCode >= 200 && res.statusCode < 300 }));
+    });
+    req.on('error', reject);
+    req.setTimeout(30000, () => { req.destroy(); reject(new Error('timeout')); });
+  });
+}
+
+async function fetchWithProxy(url) {
+  if (torAgent) {
+    try {
+      const res = await fetchViaAgent(url, torAgent);
+      if (res.ok) return res;
+      console.log(`[Tor] Got status ${res.status}, trying direct...`);
+    } catch (e) {
+      console.log('[Tor] Proxy fetch failed, trying direct:', e.message);
+    }
+  }
+  return fetchViaAgent(url, https.globalAgent);
+}
 
 /**
  * Strip markdown code fences from AI output before JSON.parse.
@@ -20,10 +55,12 @@ function stripJsonFences(text) {
 export async function fetchLighthouseData(url, attempt = 1) {
   const MAX_RETRIES = 3;
   const BACKOFF_MS = [5000, 15000, 45000];
+  const apiKey = process.env.PAGESPEED_API_KEY;
   try {
     const encoded = encodeURIComponent(url);
-    const api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encoded}&strategy=mobile`;
-    const res = await fetch(api);
+    let api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encoded}&strategy=mobile`;
+    if (apiKey) api += `&key=${apiKey}`;
+    const res = await fetchWithProxy(api);
     if ((res.status === 429 || res.status === 503) && attempt <= MAX_RETRIES) {
       const wait = BACKOFF_MS[attempt - 1] || BACKOFF_MS[BACKOFF_MS.length - 1];
       console.log(`[Lighthouse] Rate limited. Waiting ${wait / 1000}s before retry ${attempt}/${MAX_RETRIES}...`);
@@ -105,7 +142,7 @@ export async function runAudit(url) {
       r.isShopify = !!window.Shopify || !!document.querySelector('script[src*="cdn.shopify.com"]');
       r.isWebflow = !!document.querySelector('html[data-wf-site]');
       r.isReact = !!document.querySelector('[data-reactroot]') || !!window.__REACT_DEVTOOLS_GLOBAL_HOOK__ || html.includes('react-dom');
-      r.isNextJs = !!document.querySelector('#__next') || !!window.__NEXT_DATA__;
+      r.isNextJs = !!document.querySelector('#__next') || !!window.__NEXT_DATA__ || html.includes('_next/static') || html.includes('turbopack') || html.includes('next/dist');
       r.isJQuery = !!window.jQuery || html.includes('jquery.min.js');
 
       r.headings = Array.from(document.querySelectorAll('h2')).map(h => h.innerText.trim()).filter(t => t.length > 5).slice(0, 5);
@@ -298,7 +335,11 @@ export async function extractContacts(page) {
         !clean.includes('sentry') && !clean.includes('schema') &&
         !clean.includes('@2x') && !clean.includes('noreply') &&
         !clean.includes('no-reply') && !clean.includes('donotreply') &&
-        !clean.includes('wordpress') && !clean.includes('woocommerce')
+        !clean.includes('wordpress') && !clean.includes('woocommerce') &&
+        !clean.includes('name@company') && !clean.includes('email@') &&
+        !clean.includes('your@') && !clean.includes('user@') &&
+        !clean.includes('admin@localhost') && !clean.includes('info@example') &&
+        clean !== 'name@company.com' && !clean.endsWith('@company.com')
       ) emails.add(clean);
     });
 

@@ -5,7 +5,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function geminiChat(messages, opts = {}, apiKey) {
   const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: opts.model || 'gemini-2.5-flash' });
+  const model = genAI.getGenerativeModel({ model: opts.model || 'gemini-2.0-flash' });
 
   const contents = messages
     .filter(m => m.role !== 'system')
