@@ -66,10 +66,10 @@ const DEFAULTS: Record<string, unknown> = {
         "When a prospect responds, Knight reads the intent, drafts the perfect reply, and presents it to you for one-click send. Never miss a hot lead again.",
     },
     {
-      icon: "📈",
-      title: "Pipeline You Can See and Trust",
+      icon: "⚡",
+      title: "Omni-Channel Prospecting",
       description:
-        "Every prospect tracked from discovery to closed deal. A clean CRM dashboard gives you complete visibility without the complexity of bloated CRMs.",
+        "Don't just rely on email. Knight's Telegram sniper extracts leads from localized groups and engages them instantly. Reach your prospects where they actually hang out.",
     },
     {
       icon: "🔒",
