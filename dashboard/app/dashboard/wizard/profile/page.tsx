@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { WizardLayout, WizardCard, WizardComplete } from "@/components/WizardLayout";
+import { WizardLayout, WizardCard } from "@/components/WizardLayout";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -44,7 +44,6 @@ export default function ProfileWizardPage() {
   const [services, setServices] = useState<string[]>([]);
   const [customService, setCustomService] = useState("");
   const [saving, setSaving] = useState(false);
-  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     fetch("/api/config")
@@ -74,47 +73,23 @@ export default function ProfileWizardPage() {
 
   async function handleComplete() {
     setSaving(true);
-    const promise = fetch("/api/config", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        company_name: companyName,
-        company_website: companyWebsite,
-        services_offered: services,
-      }),
-    }).then(async (res) => {
+    try {
+      const res = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_name: companyName,
+          company_website: companyWebsite,
+          services_offered: services,
+        }),
+      });
       if (!res.ok) throw new Error("Failed");
-      return res.json();
-    });
-
-    toast.promise(promise, {
-      loading: "Saving...",
-      success: "Saved!",
-      error: "Failed",
-    });
-    await promise;
-    setSaving(false);
-    setCompleted(true);
-    setStep(4);
-  }
-
-  if (completed) {
-    return (
-      <WizardLayout
-        title="Company Profile"
-        steps={STEPS}
-        currentStep={step}
-        onStepChange={setStep}
-        backHref="/dashboard"
-      >
-        <WizardComplete
-          title="Profile Complete!"
-          description="Knight now knows about your business."
-          onContinue={() => router.push("/dashboard")}
-          onSetupMore={() => router.push("/dashboard/wizard/calendly")}
-        />
-      </WizardLayout>
-    );
+      toast.success("Profile saved!");
+      router.replace("/dashboard");
+    } catch {
+      toast.error("Failed to save");
+      setSaving(false);
+    }
   }
 
   return (

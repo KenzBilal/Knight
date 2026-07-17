@@ -29,7 +29,7 @@ export function DashboardContent({
   const [unseenCount, setUnseenCount] = useState(0);
   const [showPopup, setShowPopup] = useState(false);
   const [checkedUnseen, setCheckedUnseen] = useState(false);
-  const [needsSetup, setNeedsSetup] = useState(false);
+  const [needsSetup, setNeedsSetup] = useState(true);
 
   const title =
     pageTitles[pathname] ||
@@ -58,7 +58,7 @@ export function DashboardContent({
     fetch("/api/config")
       .then((r) => r.json())
       .then((d) => {
-        if (!d.company_name) setNeedsSetup(true);
+        setNeedsSetup(!d.company_name);
       })
       .catch(() => {});
   }, [pathname]);
