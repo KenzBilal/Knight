@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { KnightLogo } from "@/components/KnightLogo";
+import { SetupRequiredModal } from "@/components/SetupRequiredModal";
 
 
 // ─── Inline SVG Icons ────────────────────────────────────────────────────────
@@ -85,15 +86,18 @@ interface SidebarProps {
   userEmail?: string;
   userName?: string;
   userRole?: "owner" | "admin" | "member";
+  onboardingIncomplete?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "member", onClose }: SidebarProps) {
+export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "member", onboardingIncomplete, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isFree = orgPlan === "free";
   const isOwner = userRole === "owner";
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showSetupModal, setShowSetupModal] = useState(false);
+  const locked = !!onboardingIncomplete;
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -125,19 +129,34 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         {mainLinks.map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact);
+          const isLocked = locked && href !== "/dashboard";
           return (
             <Link
               key={href}
-              href={href}
-              onClick={onClose}
+              href={isLocked ? "#" : href}
+              onClick={(e) => {
+                if (isLocked) {
+                  e.preventDefault();
+                  setShowSetupModal(true);
+                  return;
+                }
+                onClose?.();
+              }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
-                active
-                  ? "bg-white/[0.08] text-white"
-                  : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
+                isLocked
+                  ? "text-[#333] cursor-not-allowed opacity-50"
+                  : active
+                    ? "bg-white/[0.08] text-white"
+                    : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
               }`}
             >
-              <Icon className={active ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
+              <Icon className={active && !isLocked ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
               {label}
+              {isLocked && (
+                <svg className="ml-auto w-3 h-3 text-[#333]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              )}
             </Link>
           );
         })}
@@ -183,18 +202,36 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
               <div className="p-1.5">
                 {profileLinks.map(({ href, label, Icon }) => {
                   const active = isActive(href);
+                  const isLocked = locked && href !== "/dashboard";
                   return (
                     <Link
                       key={href}
-                      href={href}
+                      href={isLocked ? "#" : href}
+                      onClick={(e) => {
+                        if (isLocked) {
+                          e.preventDefault();
+                          setShowSetupModal(true);
+                          setMenuOpen(false);
+                          return;
+                        }
+                        setMenuOpen(false);
+                        onClose?.();
+                      }}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                        active
-                          ? "bg-white/[0.08] text-white"
-                          : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
+                        isLocked
+                          ? "text-[#333] cursor-not-allowed opacity-50"
+                          : active
+                            ? "bg-white/[0.08] text-white"
+                            : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
                       }`}
                     >
-                      <Icon className={active ? "text-white" : "text-[#525252]"} />
+                      <Icon className={active && !isLocked ? "text-white" : "text-[#525252]"} />
                       {label}
+                      {isLocked && (
+                        <svg className="ml-auto w-3 h-3 text-[#333]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                      )}
                     </Link>
                   );
                 })}
@@ -226,6 +263,12 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
           </div>
         </div>
       </div>
+
+      {/* Setup required modal */}
+      <SetupRequiredModal
+        open={showSetupModal}
+        onClose={() => setShowSetupModal(false)}
+      />
     </aside>
   );
 }

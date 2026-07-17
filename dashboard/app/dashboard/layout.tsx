@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/DashboardShell";
 import { DashboardContent } from "@/components/DashboardContent";
-import { getUser, getOrg, getUserRole } from "@/lib/auth";
+import { getUser, getOrg, getUserRole, getOrgConfig } from "@/lib/auth";
 
 export default async function DashboardLayout({
   children,
@@ -21,12 +21,21 @@ export default async function DashboardLayout({
     // default to member if role query fails
   }
 
+  let onboardingIncomplete = true;
+  try {
+    const config = await getOrgConfig(org.id);
+    if (config?.company_name) onboardingIncomplete = false;
+  } catch {
+    // assume incomplete if we can't check
+  }
+
   return (
     <DashboardShell
       orgPlan={org.plan}
       userEmail={user.email}
       userName={user.name}
       userRole={role}
+      onboardingIncomplete={onboardingIncomplete}
     >
       <DashboardContent>
         {children}

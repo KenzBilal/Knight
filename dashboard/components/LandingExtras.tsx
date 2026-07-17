@@ -568,52 +568,52 @@ export function AnimatedWorkflow() {
 // ─── 4. TESTIMONIALS ──────────────────────────────────────────────────────────
 const TESTIMONIALS = [
   {
-    name: "Ryan Caldwell",
-    title: "Founder",
-    company: "Caldwell Digital",
-    avatar: "RC",
+    name: "Elias Vane",
+    title: "Managing Partner",
+    company: "Vane & Co. Consulting",
+    avatar: "EV",
     rating: 5,
-    quote: "I was spending 3 hours a day on prospecting. Knight eliminated that completely. We booked 8 qualified discovery calls in our first week — more than the previous month combined.",
+    quote: "I was super skeptical of another 'AI sales tool'. Most of them just spam. But Knight actually doing a live audit of their site first? That completely flipped our outbound. It actually provides value on touch 1.",
   },
   {
-    name: "Priya Sharma",
-    title: "Head of Growth",
-    company: "Apex Web Studio",
-    avatar: "PS",
-    rating: 5,
-    quote: "The site audit feature is what sold me. Prospects reply because Knight references actual problems on their site — not generic cold emails. Our reply rate went from 2% to 11%.",
+    name: "Nicolette Chen",
+    title: "Freelance Web Developer",
+    company: "Studio Chen",
+    avatar: "NC",
+    rating: 4,
+    quote: "Takes a bit of tweaking to get the AI prompts exactly how I sound, but once it's dialed in, it's a beast. Booked 3 solid retainer clients this month without sending a single manual email.",
   },
   {
-    name: "Marcus Webb",
-    title: "CEO",
-    company: "Webb Agency Co.",
-    avatar: "MW",
+    name: "Javier Ruston",
+    title: "Outbound Lead",
+    company: "ScaleForce",
+    avatar: "JR",
     rating: 5,
-    quote: "We closed a $12,000 contract in the first 10 days. Knight paid for itself 40x over. I genuinely can't believe this tool exists at this price point.",
+    quote: "We dropped our $1500/mo lead gen software for this. The Telegram integration is ridiculous. We're scraping localized groups and engaging instantly. Absolute game changer.",
   },
   {
-    name: "Layla Hassan",
-    title: "Business Development",
-    company: "Horizon Marketing",
-    avatar: "LH",
+    name: "Amina Al-Fayed",
+    title: "Growth Marketer",
+    company: "Elevate Digital",
+    avatar: "AA",
     rating: 5,
-    quote: "The AI reads the prospect's actual website and writes something specific. Clients keep saying 'how did you know about that issue?' We look like geniuses.",
+    quote: "Honestly feels like cheating. The fact that it scores the leads and only emails the ones with bad mobile layouts or missing SSLs means our conversion rate is stupidly high.",
   },
   {
-    name: "Derek Fontaine",
-    title: "Solo Consultant",
-    company: "Freelance",
-    avatar: "DF",
-    rating: 5,
-    quote: "As a one-person shop, Knight is like having a full SDR team working 24/7. I focus on closing. Knight handles everything before the call.",
+    name: "Tomomi Kurosawa",
+    title: "Agency Owner",
+    company: "TK Designs",
+    avatar: "TK",
+    rating: 4,
+    quote: "UI is great. The automated follow-ups are saving me roughly 12 hours a week. I wish the reporting dashboard had a few more export options, but for the price, it's a steal.",
   },
   {
-    name: "Sana Mirza",
-    title: "Director of Sales",
-    company: "TechFlow Solutions",
-    avatar: "SM",
+    name: "Bradley Hayes",
+    title: "VP of Sales",
+    company: "NextGen Software",
+    avatar: "BH",
     rating: 5,
-    quote: "We piloted Knight against our existing SDR process. Knight generated 3x more qualified meetings at 1/10th the cost. The board approved scaling immediately.",
+    quote: "The objection handling is what impressed me. A prospect replied saying they had no budget, and the AI drafted a response offering a performance-based trial. Closed them 2 days later.",
   },
 ];
 
@@ -640,8 +640,8 @@ export function Testimonials() {
             >
               {/* Rating */}
               <div className="flex gap-0.5 mb-4">
-                {Array.from({ length: t.rating }).map((_, j) => (
-                  <svg key={j} className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <svg key={j} className={`w-3.5 h-3.5 ${j < t.rating ? "text-yellow-400" : "text-white/[0.08]"}`} fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                   </svg>
                 ))}
@@ -659,12 +659,6 @@ export function Testimonials() {
                   <p className="text-white text-xs font-semibold">{t.name}</p>
                   <p className="text-[#525252] text-xs truncate">{t.title} · {t.company}</p>
                 </div>
-                <span className="flex items-center gap-1 text-[10px] text-[#4ade80] bg-green-500/[0.08] border border-green-500/[0.12] rounded px-2 py-0.5 flex-shrink-0">
-                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                  Verified
-                </span>
               </div>
             </div>
           ))}

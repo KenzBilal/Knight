@@ -17,12 +17,14 @@ export function DashboardShell({
   userEmail,
   userName,
   userRole,
+  onboardingIncomplete,
 }: {
   children: React.ReactNode;
   orgPlan?: string;
   userEmail?: string;
   userName?: string;
   userRole?: UserRole;
+  onboardingIncomplete?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
@@ -53,6 +55,7 @@ export function DashboardShell({
             userEmail={userEmail}
             userName={userName}
             userRole={userRole}
+            onboardingIncomplete={onboardingIncomplete}
             onClose={() => setSidebarOpen(false)}
           />
         </div>

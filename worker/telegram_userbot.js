@@ -42,6 +42,49 @@ if (!process.env.TELEGRAM_API_ID || !process.env.TELEGRAM_API_HASH) {
 const API_ID = parseInt(process.env.TELEGRAM_API_ID);
 const API_HASH = process.env.TELEGRAM_API_HASH;
 
+// ─── Send Welcome Message via Knight Bot ─────────────────────────────────────
+async function sendWelcomeMessage(orgId, userClient) {
+  const botToken = process.env.KNIGHT_BOT_TOKEN;
+  if (!botToken) return;
+
+  try {
+    // Check if welcome already sent
+    const { data: config } = await supabase
+      .from('org_config')
+      .select('telegram_welcome_sent')
+      .eq('org_id', orgId)
+      .single();
+
+    if (config?.telegram_welcome_sent) return;
+
+    // Send via user's own account to their Saved Messages
+    const me = await userClient.getMe();
+    await userClient.sendMessage('me', {
+      message: `Hey! Welcome to Knight 🚀
+
+Your Telegram is now connected. Here's what I'll do for you:
+
+• Find leads in Telegram groups automatically
+• Respond to DMs with AI-powered conversations
+• Send you approval requests when a lead is ready
+
+You're all set — I'm already working.`,
+    });
+
+    // Mark as sent (ignore if column doesn't exist yet)
+    try {
+      await supabase.from('org_config').update({
+        telegram_welcome_sent: true,
+        updated_at: new Date().toISOString(),
+      }).eq('org_id', orgId);
+    } catch {}
+
+    console.log(`[WELCOME] Sent welcome message for org ${orgId}`);
+  } catch (e) {
+    console.error(`[WELCOME] Failed to send welcome message for org ${orgId}:`, e.message);
+  }
+}
+
 // ─── Load Session from DB ─────────────────────────────────────────────────────
 async function loadSession(orgId) {
   const { data } = await supabase
@@ -306,6 +349,9 @@ async function connectOrgUserbot(orgId, sessionString) {
 
   await client.connect();
   console.log(`[USERBOT] Connected for org: ${orgId}`);
+
+  // Send welcome message if not already sent
+  sendWelcomeMessage(orgId, client);
 
   const sendFn = (chatId, msg) => sendMessage(client, chatId, msg);
 

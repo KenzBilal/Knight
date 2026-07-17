@@ -40,6 +40,21 @@ export async function POST(req: Request) {
   try {
     const { org } = await requireTelegramAuth(req);
 
+    // Gate: must have company details before connecting Telegram
+    const supabase = createServiceClient();
+    const { data: config } = await supabase
+      .from("org_config")
+      .select("company_name")
+      .eq("org_id", org.id)
+      .single();
+
+    if (!config?.company_name) {
+      return NextResponse.json(
+        { error: "COMPLETE_PROFILE_FIRST", message: "Complete your company profile before connecting Telegram" },
+        { status: 400 }
+      );
+    }
+
     const { code, password } = await req.json();
     if (!code) {
       return NextResponse.json({ error: "Code required" }, { status: 400 });

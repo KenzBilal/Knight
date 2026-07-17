@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardComplete } from "@/components/WizardLayout";
 import { toast } from "sonner";
@@ -26,6 +26,19 @@ export default function TelegramWizardPage() {
   const [botToken, setBotToken] = useState("");
   const [loading, setLoading] = useState(false);
   const [completed, setCompleted] = useState(false);
+
+  // Gate: must have company details before connecting Telegram
+  useEffect(() => {
+    fetch("/api/config")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.company_name) {
+          toast.error("Complete your company profile first");
+          router.push("/dashboard/wizard/profile");
+        }
+      })
+      .catch(() => {});
+  }, [router]);
 
   async function handleSendCode(e: React.FormEvent) {
     e.preventDefault();

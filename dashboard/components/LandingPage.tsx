@@ -109,10 +109,10 @@ const DEFAULT_FEATURES: FeatureItem[] = [
       "When a prospect responds, Knight reads the intent, drafts the perfect reply, and presents it to you for one-click send. Never miss a hot lead again.",
   },
   {
-    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
-    title: "Pipeline You Can See and Trust",
+    icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>,
+    title: "Omni-Channel Prospecting",
     description:
-      "Every prospect tracked from discovery to closed deal. A clean CRM dashboard gives you complete visibility without the complexity of bloated CRMs.",
+      "Don't just rely on email. Knight's Telegram sniper extracts leads from localized groups and engages them instantly. Reach your prospects where they actually hang out.",
   },
   {
     icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,

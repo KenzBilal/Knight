@@ -12,29 +12,29 @@ function generateUsernames(companyName: string): string[] {
   const base = companyName
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "")
-    .slice(0, 20);
+    .slice(0, 16);
 
   const variations = [
-    base,
     `${base}bot`,
-    `${base}Bot`,
     `${base}_bot`,
-    `${base}Agency`,
-    `${base}agent`,
-    `${base}ai`,
-    `${base}Assistant`,
-    `${base}sales`,
-    `${base}pro`,
-    `${base}official`,
-    `${base}_ai`,
-    `${base}_agent`,
-    `${base}helper`,
-    `${base}service`,
+    `${base}botai`,
+    `${base}_bot_ai`,
+    `${base}agency_bot`,
+    `${base}agent_bot`,
+    `${base}sales_bot`,
+    `${base}pro_bot`,
+    `${base}official_bot`,
+    `${base}helper_bot`,
+    `${base}service_bot`,
+    `${base}ai_bot`,
+    `${base}assistant_bot`,
+    `${base}team_bot`,
+    `${base}hq_bot`,
   ];
 
   for (let i = 1; i <= 5; i++) {
-    variations.push(`${base}${i}`);
-    variations.push(`${base}bot${i}`);
+    variations.push(`${base}${i}_bot`);
+    variations.push(`${base}_bot${i}`);
   }
 
   return [...new Set(variations)].slice(0, MAX_USERNAME_ATTEMPTS);
@@ -75,6 +75,14 @@ export async function POST(req: Request) {
       .select("telegram_session, company_name")
       .eq("org_id", org.id)
       .single();
+
+    // Gate: must have company details before creating bot
+    if (!config?.company_name) {
+      return NextResponse.json(
+        { error: "COMPLETE_PROFILE_FIRST", message: "Complete your company profile before creating a bot" },
+        { status: 400 }
+      );
+    }
 
     if (!config?.telegram_session) {
       return NextResponse.json({ error: "No Telegram session found" }, { status: 400 });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient, apiCredentials, setAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
+import { createServiceClient } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -7,6 +8,21 @@ export async function POST(req: Request) {
   let client: ReturnType<typeof createClient> | null = null;
   try {
     const { org } = await requireTelegramAuth(req);
+
+    // Gate: must have company details before connecting Telegram
+    const supabase = createServiceClient();
+    const { data: config } = await supabase
+      .from("org_config")
+      .select("company_name")
+      .eq("org_id", org.id)
+      .single();
+
+    if (!config?.company_name) {
+      return NextResponse.json(
+        { error: "COMPLETE_PROFILE_FIRST", message: "Complete your company profile before connecting Telegram" },
+        { status: 400 }
+      );
+    }
 
     const { phone } = await req.json();
     if (!phone) {
