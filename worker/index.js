@@ -580,6 +580,52 @@ async function handleScrape(job) {
 
   console.log(`[Scrape] ${company.name} | Score: ${auditData.score} | Contacts: ${contacts.length}`);
 
+  // Trigger outbound webhooks
+  try {
+    const { data: webhooks } = await supabase
+      .from('webhooks')
+      .select('*')
+      .eq('org_id', orgId)
+      .eq('is_active', true)
+      .contains('events', ['audit.completed']);
+
+    if (webhooks && webhooks.length > 0) {
+      const payload = JSON.stringify({
+        event: 'audit.completed',
+        data: {
+          company: company.name,
+          website: target,
+          score: auditData.score,
+          techStack: auditData.techStack,
+          issues: auditData.issues,
+          contacts: contacts.map(c => ({ email: c.email, phone: c.phone, name: c.firstName ? `${c.firstName} ${c.lastName || ''}`.trim() : null })),
+          pitch: aiAnalysis.pitch,
+          suggestions: groqSuggestions,
+        },
+      });
+
+      for (const wh of webhooks) {
+        fetch(wh.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Webhook-Signature': wh.secret || '',
+            'X-Knight-Event': 'audit.completed',
+          },
+          body: payload,
+        }).then(async res => {
+          await supabase.from('webhooks').update({ last_triggered_at: new Date().toISOString(), last_status: res.status }).eq('id', wh.id);
+          console.log(`[Webhook] ${wh.label} → ${res.status}`);
+        }).catch(async err => {
+          await supabase.from('webhooks').update({ last_triggered_at: new Date().toISOString(), last_status: 0 }).eq('id', wh.id);
+          console.log(`[Webhook] ${wh.label} → FAILED: ${err.message}`);
+        });
+      }
+    }
+  } catch (e) {
+    console.error(`[Webhook] Error:`, e.message);
+  }
+
   // Auto-send if score is low enough
   if (auditData.score <= 60 && contacts.length > 0 && contacts[0].email) {
     const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
