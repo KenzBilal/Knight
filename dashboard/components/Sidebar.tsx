@@ -59,11 +59,6 @@ const Icons = {
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
     </svg>
   ),
-  Lightning: (p: React.SVGProps<SVGSVGElement>) => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}>
-      <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>
-    </svg>
-  ),
 };
 
 const mainLinks = [
@@ -74,9 +69,8 @@ const mainLinks = [
   { href: "/dashboard/telegram",  label: "Telegram",   Icon: Icons.Telegram },
 ];
 
-const profileMenuLinks = [
+const secondaryLinks = [
   { href: "/dashboard/pitches",   label: "Pitches",    Icon: Icons.Pitches },
-  { href: "/dashboard/team",      label: "Team",       Icon: Icons.Team },
   { href: "/dashboard/settings",  label: "Settings",   Icon: Icons.Settings },
   { href: "/dashboard/billing",   label: "Billing",    Icon: Icons.Billing },
 ];
@@ -95,7 +89,6 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const router = useRouter();
   const isFree = orgPlan === "free";
   const isOwner = userRole === "owner";
-  const [menuOpen, setMenuOpen] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const locked = !!onboardingIncomplete;
 
@@ -104,7 +97,6 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   }
 
   async function handleLogout() {
-    setMenuOpen(false);
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/auth/login");
   }
@@ -113,21 +105,24 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
     ? userName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
     : userEmail ? userEmail[0].toUpperCase() : "K";
 
-  const profileLinks = profileMenuLinks.filter(({ href }) => {
-    if (href === "/dashboard/team" && !isOwner) return false;
-    return true;
-  });
+  const allLinks = [
+    ...mainLinks,
+    ...secondaryLinks.filter(({ href }) => {
+      if (href === "/dashboard/team" && !isOwner) return false;
+      return true;
+    }),
+  ] as Array<{ href: string; label: string; Icon: (p: React.SVGProps<SVGSVGElement>) => React.JSX.Element; exact?: boolean }>;
 
   return (
     <aside className="w-[240px] h-full bg-[#080808] flex flex-col shrink-0 border-r border-white/[0.06]">
       {/* Logo */}
-      <div className="px-6 h-[80px] flex items-center border-b border-white/[0.06]">
+      <div className="px-6 h-[72px] flex items-center border-b border-white/[0.06]">
         <KnightLogo href="/dashboard" variant="dark" size={28} />
       </div>
 
-      {/* Main nav */}
-      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {mainLinks.map(({ href, label, Icon, exact }) => {
+      {/* All nav links — no scroll needed */}
+      <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5">
+        {allLinks.map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact);
           const isLocked = locked && href !== "/dashboard";
           return (
@@ -142,7 +137,7 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
                 }
                 onClose?.();
               }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
+              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
                 isLocked
                   ? "text-[#333] cursor-not-allowed opacity-50"
                   : active
@@ -164,23 +159,21 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
 
       {/* Upgrade to Pro card — only for free plan */}
       {isFree && (
-        <div className="mx-3 mb-3">
+        <div className="mx-3 mb-2">
           <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-[1px]">
-            <div className="rounded-[11px] bg-[#0c0c0c] p-4">
-              <div className="mb-2.5">
-                <p className="text-[13px] font-semibold text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>
-                  Upgrade to Pro
-                </p>
-              </div>
-              <p className="text-[11px] text-[#525252] mb-3.5 leading-relaxed">
+            <div className="rounded-[11px] bg-[#0c0c0c] p-3.5">
+              <p className="text-[12px] font-semibold text-white leading-tight mb-1" style={{ fontFamily: "var(--font-display)" }}>
+                Upgrade to Pro
+              </p>
+              <p className="text-[10px] text-[#525252] mb-2.5 leading-relaxed">
                 Telegram agent, unlimited leads & drip sequences.
               </p>
               <Link
                 href="/dashboard/billing"
-                className="flex items-center justify-center gap-1.5 w-full bg-white text-[#080808] rounded-lg py-2 text-[12px] font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
+                className="flex items-center justify-center gap-1.5 w-full bg-white text-[#080808] rounded-lg py-1.5 text-[11px] font-semibold hover:bg-white/90 active:scale-[0.98] transition-all"
               >
                 Upgrade
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>
                 </svg>
               </Link>
@@ -189,77 +182,24 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
         </div>
       )}
 
-      {/* User profile — fixed at bottom, menu expands above */}
-      <div
-        className="relative px-4 pb-4 pt-2 mt-auto"
-        onMouseEnter={() => setMenuOpen(true)}
-        onMouseLeave={() => setMenuOpen(false)}
-      >
-        {/* Menu — absolutely positioned above the profile */}
-        {menuOpen && (
-          <div className="absolute bottom-full left-0 right-0 px-4 pb-2">
-            <div className="bg-[#111] border border-white/[0.09] rounded-xl overflow-hidden shadow-2xl shadow-black/60">
-              <div className="p-1.5">
-                {profileLinks.map(({ href, label, Icon }) => {
-                  const active = isActive(href);
-                  const isLocked = locked && href !== "/dashboard";
-                  return (
-                    <Link
-                      key={href}
-                      href={isLocked ? "#" : href}
-                      onClick={(e) => {
-                        if (isLocked) {
-                          e.preventDefault();
-                          setShowSetupModal(true);
-                          setMenuOpen(false);
-                          return;
-                        }
-                        setMenuOpen(false);
-                        onClose?.();
-                      }}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${
-                        isLocked
-                          ? "text-[#333] cursor-not-allowed opacity-50"
-                          : active
-                            ? "bg-white/[0.08] text-white"
-                            : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
-                      }`}
-                    >
-                      <Icon className={active && !isLocked ? "text-white" : "text-[#525252]"} />
-                      {label}
-                      {isLocked && (
-                        <svg className="ml-auto w-3 h-3 text-[#333]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                        </svg>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="border-t border-white/[0.06] p-1.5">
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-[#737373] hover:text-[#f87171] hover:bg-white/[0.04] transition-colors w-full"
-                >
-                  <Icons.Logout className="text-[#525252]" />
-                  Log out
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Profile row — always in the same spot */}
-        <div className="bg-[#111] border border-white/[0.09] rounded-xl px-3 py-3">
+      {/* User profile + logout — fixed at bottom */}
+      <div className="px-3 pb-3 pt-1 mt-auto">
+        <div className="bg-[#111] border border-white/[0.09] rounded-xl px-3 py-2.5">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
-              <span className="text-[11px] font-bold text-white">{initials}</span>
+            <div className="w-8 h-8 rounded-full bg-white/[0.08] flex items-center justify-center flex-shrink-0">
+              <span className="text-[10px] font-bold text-white">{initials}</span>
             </div>
             <div className="min-w-0 flex-1 text-left">
-              <p className="text-[12px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
-              <p className="text-[10px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
+              <p className="text-[11px] font-medium text-white truncate">{userName || userEmail || "Account"}</p>
+              <p className="text-[9px] font-medium text-[#525252] capitalize">{orgPlan} plan</p>
             </div>
-            <svg className={`w-3.5 h-3.5 text-[#3a3a3a] transition-transform ${menuOpen ? "rotate-180" : ""}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            <button
+              onClick={handleLogout}
+              className="w-7 h-7 rounded-md flex items-center justify-center text-[#525252] hover:text-[#f87171] hover:bg-white/[0.04] transition-colors flex-shrink-0"
+              title="Log out"
+            >
+              <Icons.Logout className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
       </div>
