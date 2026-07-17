@@ -71,8 +71,8 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
         const scaleY = offscreenCanvas.height / VIEWBOX_H;
         offscreenCtx.save();
         offscreenCtx.scale(scaleX, scaleY);
-        offscreenCtx.strokeStyle = "rgba(255,255,255,0.05)";
-        offscreenCtx.lineWidth = 20;
+        offscreenCtx.strokeStyle = "rgba(255,255,255,0.02)";
+        offscreenCtx.lineWidth = 10;
         offscreenCtx.lineCap = "round";
         offscreenCtx.lineJoin = "round";
         offscreenCtx.stroke(path2D);
@@ -112,17 +112,17 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       // ── FAKE GLOW (No shadowBlur math) ──
       
       // Pass 1: Wide faint outer glow
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
-      ctx.lineWidth = 32;
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 40;
       ctx.stroke(path2D);
 
       // Pass 2: Medium semi-transparent inner glow
-      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
       ctx.lineWidth = 14;
       ctx.stroke(path2D);
 
       // Pass 3: Sharp bright core
-      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      ctx.strokeStyle = "rgba(255,255,255,1)";
       ctx.lineWidth = 3;
       ctx.stroke(path2D);
 
