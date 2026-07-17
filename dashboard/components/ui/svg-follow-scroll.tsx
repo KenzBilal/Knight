@@ -109,21 +109,14 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       const dashPattern: [number, number] = [drawnLength, totalLength + 10];
       ctx.setLineDash(dashPattern);
 
-      // ── FAKE GLOW (No shadowBlur math) ──
+      // ── REAL GLOW (Optimized) ──
+      // Instead of stacked hard lines, we use one single shadowBlur pass.
+      // Since DPR is capped and ghost track is cached, this won't lag.
       
-      // Pass 1: Wide faint outer glow
-      ctx.strokeStyle = "rgba(255,255,255,0.08)";
-      ctx.lineWidth = 40;
-      ctx.stroke(path2D);
-
-      // Pass 2: Medium semi-transparent inner glow
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.lineWidth = 14;
-      ctx.stroke(path2D);
-
-      // Pass 3: Sharp bright core
-      ctx.strokeStyle = "rgba(255,255,255,1)";
-      ctx.lineWidth = 3;
+      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.shadowBlur = 24; 
+      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.lineWidth = 4;
       ctx.stroke(path2D);
 
       ctx.restore();
