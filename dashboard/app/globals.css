@@ -584,7 +584,7 @@ body {
 
 /* ─── Dashboard zoom: 120% on non-mobile ──────────────────────────────────── */
 @media (min-width: 768px) {
-  html {
+  .dashboard-zoom {
     zoom: 1.2;
   }
 }

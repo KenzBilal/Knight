@@ -35,7 +35,7 @@ export function DashboardShell({
 
   return (
     <SidebarContext.Provider value={{ toggleSidebar }}>
-      <div className="flex h-screen overflow-hidden bg-[#080808]">
+      <div className="dashboard-zoom flex h-screen overflow-hidden bg-[#080808]">
         {/* Backdrop */}
         {sidebarOpen && (
           <div
