@@ -20,14 +20,8 @@ const pageTitles: Record<string, string> = {
 
 export function DashboardContent({
   children,
-  userEmail,
-  userName,
-  userRole,
 }: {
   children: React.ReactNode;
-  userEmail?: string;
-  userName?: string;
-  userRole?: "owner" | "admin" | "member";
 }) {
   const pathname = usePathname();
   const { toggleSidebar } = useSidebar();

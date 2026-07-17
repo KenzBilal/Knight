@@ -19,7 +19,6 @@ export default function TelegramWizardPage() {
   const [step, setStep] = useState(0);
   const [mode, setMode] = useState<TelegramMode>(null);
   const [phone, setPhone] = useState("");
-  const [phoneCodeHash, setPhoneCodeHash] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [needsPassword, setNeedsPassword] = useState(false);
@@ -124,7 +123,6 @@ export default function TelegramWizardPage() {
     setCode("");
     setPassword("");
     setNeedsPassword(false);
-    setPhoneCodeHash("");
     setStep(1);
   }
 
@@ -143,11 +141,6 @@ export default function TelegramWizardPage() {
             mode === "userbot"
               ? "Your account is connected. Knight will find leads automatically."
               : "Your bot is connected and ready to receive messages."
-          }
-          icon={
-            <svg className="w-8 h-8 text-[#4ade80]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
           }
           onContinue={() => router.push("/dashboard/telegram")}
           onSetupMore={() => router.push("/dashboard")}

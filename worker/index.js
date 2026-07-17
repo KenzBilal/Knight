@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+puppeteer.use(StealthPlugin());
 import dotenv from 'dotenv';
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
@@ -23,7 +25,7 @@ const jobQueue = [];
 const MAX_QUEUE_SIZE = 100;
 const MAX_ATTEMPTS = 3;
 const JOB_TIMEOUT_MS = 120_000;
-const RAM_LIMIT_MB = 1500;
+const RAM_LIMIT_MB = 2000;
 const runningJobs = new Set();
 
 // Retry delays: 1 min, 5 min, 15 min
@@ -42,6 +44,7 @@ supabase
   .channel('jobs-channel')
   .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'jobs' }, (payload) => {
     if (payload.new.status === 'PENDING') {
+      if (payload.new.execute_after && new Date(payload.new.execute_after) > new Date()) return;
       if (jobQueue.length >= MAX_QUEUE_SIZE) {
         console.warn(`[Worker] Queue full (${MAX_QUEUE_SIZE}). Dropping job ${payload.new.id}.`);
       } else {
@@ -54,6 +57,7 @@ supabase
   .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'jobs' }, (payload) => {
     // Pick up manually-retried jobs (admin sets status back to PENDING)
     if (payload.new.status === 'PENDING' && payload.old.status !== 'PENDING') {
+      if (payload.new.execute_after && new Date(payload.new.execute_after) > new Date()) return;
       if (jobQueue.find(j => j.id === payload.new.id)) return; // already queued
       if (jobQueue.length >= MAX_QUEUE_SIZE) {
         console.warn(`[Worker] Queue full. Dropping retried job ${payload.new.id}.`);
@@ -67,6 +71,7 @@ supabase
   .subscribe(async () => {
     console.log('[Knight Worker] Connected to Supabase realtime');
     await fetchPendingJobs();
+    setInterval(fetchPendingJobs, 60_000);
   });
 
 // Run cleanup once daily at midnight, not on boot
@@ -128,7 +133,8 @@ async function fetchPendingJobs() {
     .from('jobs')
     .select('*')
     .eq('status', 'PENDING')
-    .order('created_at', { ascending: true });
+    .lte('execute_after', new Date().toISOString())
+    .order('execute_after', { ascending: true });
 
   if (data && data.length > 0) {
     console.log(`[Worker] Found ${data.length} pending jobs`);
@@ -210,6 +216,8 @@ async function handleJob(job) {
         await handleDiscover(job);
       } else if (job.type === 'PROCESS_REPLY') {
         await handleProcessReply(job);
+      } else if (job.type === 'SEND_FOLLOWUP') {
+        await handleFollowup(job);
       } else {
         await handleScrape(job);
       }
@@ -295,7 +303,15 @@ async function handleDiscover(job) {
   const query = `${keyword} ${location || ''}`.trim();
   console.log(`[Discover] Searching: "${query}"`);
 
-  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  let browser;
+  try {
+    const wsUrl = process.env.BROWSER_WS_ENDPOINT || 'ws://browserless:3000';
+    console.log(`[Discover] Connecting to Browserless at ${wsUrl}`);
+    browser = await puppeteer.connect({ browserWSEndpoint: wsUrl });
+  } catch (err) {
+    console.log(`[Discover] Browserless failed, falling back to local launch:`, err.message);
+    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  }
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36');
 
@@ -360,6 +376,51 @@ async function handleDiscover(job) {
   }
 }
 
+async function getClearbitData(companyName) {
+  try {
+    const res = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(companyName)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.length > 0) return data[0];
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function fetchSearxNG(query) {
+  try {
+    const q = encodeURIComponent(query);
+    const searxngUrl = process.env.SEARXNG_URL || 'http://searxng:8080';
+    const res = await fetch(`${searxngUrl}/search?q=${q}&format=json`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const best = data.results[0];
+        return { url: best.url, title: best.title, content: best.content };
+      }
+    }
+  } catch (e) {
+    console.log(`[OSINT] SearxNG skipping: ${e.message}`);
+  }
+  return null;
+}
+
+async function findLinkedInDecisionMaker(companyName) {
+  return fetchSearxNG(`site:linkedin.com/in/ "CEO" OR "Founder" "${companyName}"`);
+}
+
+async function findCrunchbase(companyName) {
+  return fetchSearxNG(`site:crunchbase.com/organization/ "${companyName}"`);
+}
+
+async function findGlassdoor(companyName) {
+  return fetchSearxNG(`site:glassdoor.com/Overview/ "${companyName}"`);
+}
+
+async function findYelp(companyName) {
+  return fetchSearxNG(`site:yelp.com/biz/ "${companyName}"`);
+}
+
 // ─── SCRAPE ───────────────────────────────────────────────────────────────────
 
 async function handleScrape(job) {
@@ -374,16 +435,47 @@ async function handleScrape(job) {
     return;
   }
 
+  // OSINT Enrichment BEFORE AI
+  const clearbit = await getClearbitData(job.payload.target.replace('www.', '').split('.')[0]);
+  const osintName = clearbit?.name || job.payload.target;
+  
+  const [linkedinLead, crunchbase, glassdoor, yelp] = await Promise.all([
+    findLinkedInDecisionMaker(osintName),
+    findCrunchbase(osintName),
+    findGlassdoor(osintName),
+    findYelp(osintName)
+  ]);
+
+  if (linkedinLead && contacts.length > 0) {
+    const parts = linkedinLead.title.split('-');
+    const fullName = parts[0].trim().split(' ');
+    contacts[0].firstName = fullName[0];
+    contacts[0].lastName = fullName.slice(1).join(' ');
+    contacts[0].linkedin = linkedinLead.url;
+    contacts[0].bio = linkedinLead.content;
+    console.log(`[OSINT] Found LinkedIn Lead: ${contacts[0].firstName} ${contacts[0].lastName}`);
+  }
+
+  // Inject OSINT into auditData for AI
+  if (linkedinLead) auditData.osint_linkedin = linkedinLead;
+  if (clearbit) auditData.osint_clearbit = clearbit;
+  if (crunchbase) auditData.osint_crunchbase = crunchbase;
+  if (glassdoor) auditData.osint_glassdoor = glassdoor;
+  if (yelp) auditData.osint_yelp = yelp;
+
   const aiAnalysis = await analyzeWithCohere(auditData);
   const groqSuggestions = await analyzeWithGroq(auditData);
 
+  const companyName = clearbit?.name || aiAnalysis.companyName || job.payload.target;
+
   const { data: company, error: companyError } = await supabase.from('companies').insert({
     org_id: orgId,
-    name: aiAnalysis.companyName || job.payload.target,
+    name: companyName,
     website_url: job.payload.target,
     industry: aiAnalysis.industry || 'Unknown',
     lead_score: aiAnalysis.leadScore || 50,
     status: 'NEW',
+    logo_url: clearbit?.logo || null
   }).select().single();
 
   if (companyError) {
@@ -401,6 +493,7 @@ async function handleScrape(job) {
         linkedin_url: c.linkedin || null,
         instagram_url: c.instagram || null,
         phone: c.phone || null,
+        bio: c.bio || null,
         is_primary: i === 0,
       }))
     );
@@ -507,12 +600,22 @@ async function handleScrape(job) {
           console.error('[Scrape] Failed to insert email record:', emailInsertError.message);
         }
 
-        const { error: companyUpdateError } = await supabase.from('companies').update({ status: 'PITCHED' }).eq('id', company.id);
         if (companyUpdateError) {
           console.error('[Scrape] Failed to update company status:', companyUpdateError.message);
         }
 
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
+
+        const { data: org } = await supabase.from('orgs').select('plan').eq('id', orgId).single();
+        if (org?.plan === 'pro') {
+          const day3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
+          const day7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+          await supabase.from('jobs').insert([
+            { org_id: orgId, type: 'SEND_FOLLOWUP', status: 'PENDING', execute_after: day3, payload: { targetEmail, company_id: company.id, step: 2 } },
+            { org_id: orgId, type: 'SEND_FOLLOWUP', status: 'PENDING', execute_after: day7, payload: { targetEmail, company_id: company.id, step: 3 } }
+          ]);
+          console.log(`[Scrape] Queued followups for ${targetEmail}`);
+        }
       } catch (err) {
         console.error('[Scrape] Auto-send failed:', err.message);
       }
@@ -613,5 +716,55 @@ Respond with only the exact text of the email draft. No markdown, no preambles.`
     console.log(`[ProcessReply] Draft generated for email ${email_id}`);
   } catch (err) {
     console.error('[ProcessReply] Draft save failed:', err.message);
+  }
+}
+
+// ─── SEND_FOLLOWUP ─────────────────────────────────────────────────────────────
+
+async function handleFollowup(job) {
+  const { targetEmail, company_id, step } = job.payload;
+  const orgId = job.org_id;
+
+  const { data: company } = await supabase.from('companies').select('name, status').eq('id', company_id).single();
+  if (!company || company.status !== 'PITCHED') {
+    console.log(`[Followup] Skipped ${targetEmail}: status is ${company?.status}`);
+    return;
+  }
+
+  const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
+  const senderName = orgConfig?.company_name || 'Knight';
+  const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || 'hello@knight.ai';
+
+  const { data: contacts } = await supabase.from('contacts').select('first_name').eq('company_id', company_id).limit(1);
+  const contactName = (contacts && contacts[0]?.first_name) ? contacts[0].first_name : 'there';
+
+  let subject = step === 2 ? 'Following up' : 'Last check-in';
+  let body = step === 2 
+    ? `Hi ${contactName},\n\nJust floating this to the top of your inbox. Let me know if you have any questions.\n\nBest,\n${senderName}`
+    : `Hi ${contactName},\n\nI won't follow up again, but please reach out if anything changes.\n\nThanks,\n${senderName}`;
+
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const { error } = await resend.emails.send({
+      from: `${senderName} <${senderEmail}>`,
+      to: targetEmail,
+      subject,
+      html: `<div style="font-family: 'Inter', sans-serif; max-width: 600px; line-height: 1.6; color: #111;">
+        <p>${body.replace(/\n/g, '<br>')}</p>
+      </div>`
+    });
+    if (error) throw error;
+
+    await supabase.from('emails').insert({
+      org_id: orgId,
+      company_id: company_id,
+      direction: 'outbound',
+      subject,
+      body_text: body
+    });
+
+    console.log(`[Followup] Sent step ${step} to ${targetEmail}`);
+  } catch (err) {
+    console.error('[Followup] Send failed:', err.message);
   }
 }

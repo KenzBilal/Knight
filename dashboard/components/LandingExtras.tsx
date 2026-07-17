@@ -896,7 +896,7 @@ const COMPARISON_ROWS = [
   { label: "Follow-ups", knight: "Automated 3-touch", manual: "Often forgotten", sdr: "Inconsistent" },
   { label: "Reply handling", knight: "AI-classified + drafted", manual: "Manual every time", sdr: "Manual every time" },
   { label: "Scalability", knight: "Instant, no hiring", manual: "Doesn't scale", sdr: "Months to hire & train" },
-  { label: "Pipeline visibility", knight: "Full Kanban CRM", manual: "Spreadsheets", sdr: "Depends on tooling" },
+  { label: "Pipeline visibility", knight: "Clean CRM Dashboard", manual: "Spreadsheets", sdr: "Depends on tooling" },
 ];
 
 export function ComparisonTable() {

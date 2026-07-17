@@ -6,6 +6,7 @@ interface Company {
   id: string;
   name: string;
   website_url: string;
+  logo_url?: string;
   industry: string;
   lead_score: number;
   status: string;
@@ -124,10 +125,15 @@ export default function PitchesPage() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-colors overflow-hidden ${
                       isActive ? "bg-white/[0.1]" : "bg-white/[0.06]"
                     }`}>
-                      <span className="text-xs font-semibold text-[#a3a3a3]">{c.name?.[0]}</span>
+                      {c.logo_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={c.logo_url} alt={c.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xs font-semibold text-[#a3a3a3]">{c.name?.[0]}</span>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <span className={`text-[13px] font-medium truncate block ${isActive ? "text-white" : "text-[#a3a3a3]"}`}>

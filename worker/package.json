@@ -9,11 +9,15 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
+    "@mozilla/readability": "^0.6.0",
     "@supabase/supabase-js": "^2.42.0",
     "cohere-ai": "^8.0.0",
     "dotenv": "^16.6.1",
+    "jsdom": "^29.1.1",
     "openai": "^6.45.0",
     "puppeteer": "^22.6.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
     "resend": "^6.16.0",
     "telegram": "^2.26.22",
     "ws": "^8.21.0"

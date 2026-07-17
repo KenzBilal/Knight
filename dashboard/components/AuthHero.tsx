@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 
 // ─── 3D Sphere Renderer ────────────────────────────────────────────────────
 // Fibonacci sphere distribution rendered on Canvas with real 3D projection

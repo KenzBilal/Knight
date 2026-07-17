@@ -25,6 +25,7 @@ export async function GET(req: Request) {
         id,
         name,
         website_url,
+        logo_url,
         industry,
         lead_score,
         status,
@@ -34,7 +35,8 @@ export async function GET(req: Request) {
           id,
           email,
           full_name,
-          role
+          role,
+          bio
         )
       `, { count: 'exact' })
       .eq("org_id", org.id)

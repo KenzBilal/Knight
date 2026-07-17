@@ -132,9 +132,9 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    // If no custom templates, return defaults
+    // If no custom templates, return defaults but allow creation
     if (!templates || templates.length === 0) {
-      return NextResponse.json({ templates: DEFAULT_TEMPLATES, defaults: true });
+      return NextResponse.json({ templates: DEFAULT_TEMPLATES, defaults: false });
     }
 
     return NextResponse.json({ templates, defaults: false });

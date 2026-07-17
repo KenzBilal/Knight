@@ -29,7 +29,7 @@ Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 ┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
 │   Dashboard      │     │   Worker         │     │   Desktop App    │
 │   (Next.js 15)   │────▶│   (Node.js)      │     │   (Electron)     │
-│   Vercel         │     │   PM2 / Docker   │     │   Admin panel    │
+│   Vercel         │     │   Docker         │     │   Admin panel    │
 └────────┬────────┘     └────────┬─────────┘     └────────┬─────────┘
          │                       │                         │
          └───────────────────────┼─────────────────────────┘
@@ -42,7 +42,7 @@ Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 ```
 
 - **Dashboard** — Next.js 15 App Router on Vercel with Supabase Auth, cookie-based sessions, team management, billing, support tickets, landing page CMS
-- **Worker** — Independent Node.js process (PM2/Docker) polling `jobs` table, concurrent batch processing (max 2 jobs), priority queues, rate limiting, RAM monitoring
+- **Worker** — Independent Node.js process (Docker) polling `jobs` table, concurrent batch processing (max 2 jobs), priority queues, rate limiting, RAM monitoring
 - **Desktop App** — Electron 41 + Vite 6 + React 19 admin panel for managing users, plans, AI providers, website content, support tickets, environment config, worker control
 - **Supabase** — PostgreSQL database with 17+ migrations, RLS policies, Edge Functions for Telegram, real-time subscriptions, file storage
 
@@ -61,7 +61,7 @@ Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 | Email | Resend API |
 | Payments | LemonSqueezy (subscriptions + usage-based) |
 | AI | OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, Cerebras |
-| Deploy | Vercel (dashboard), PM2/Docker (worker), GitHub Releases (desktop) |
+| Deploy | Vercel (dashboard), Docker (worker), GitHub Releases (desktop) |
 
 ---
 
@@ -117,7 +117,7 @@ npm run setup
 
 ```bash
 npm run dev          # Dashboard on localhost:3000
-npm run worker       # Worker via PM2
+docker compose up -d worker # Worker via Docker
 ```
 
 ---
@@ -150,8 +150,7 @@ Knight/
 │   ├── jobs/                   # Job type handlers
 │   └── utils/                  # Queue, plans, DB helpers
 ├── docker-compose.yml          # Dashboard + Worker services
-├── Dockerfile                  # Multi-stage Next.js build
-└── ecosystem.config.cjs        # PM2 config for worker
+└── Dockerfile                  # Multi-stage Next.js build
 ```
 
 ---
@@ -171,7 +170,7 @@ Contextual pitches built from audit findings. Each pitch references specific iss
 Automated email sequences via Resend. Custom tracking domains, reply detection, bounce handling, rate limiting.
 
 ### Telegram Integration
-AI-powered Telegram conversations for real-time lead qualification. Runs as an Edge Function on Supabase with user-level configuration.
+AI-powered Telegram conversations for real-time lead qualification. Runs as part of the Node.js worker with user-level configuration.
 
 ### AI Provider Hub
 Admin-managed AI providers with multiple API keys per provider, automatic rotation, cooldown on failures, usage tracking. Supports OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, and Cerebras.
@@ -253,14 +252,6 @@ The worker processes jobs concurrently with:
 ### Running
 
 ```bash
-pm2 start ecosystem.config.cjs    # Start via PM2
-pm2 status                        # Check status
-pm2 logs knight-worker            # View logs
-```
-
-Or via Docker:
-
-```bash
 docker compose up -d worker
 ```
 
@@ -301,9 +292,6 @@ vercel --prod
 ### Worker
 
 ```bash
-# PM2
-pm2 start ecosystem.config.cjs
-
 # Docker
 docker compose up -d worker
 ```

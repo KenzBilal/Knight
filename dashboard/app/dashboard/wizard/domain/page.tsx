@@ -95,7 +95,6 @@ export default function DomainWizardPage() {
         <WizardComplete
           title="Domain Verified!"
           description="Your emails will be sent from your verified domain."
-          icon="✉️"
           onContinue={() => router.push("/dashboard")}
           onSetupMore={() => router.push("/dashboard/wizard/keys")}
         />

@@ -1,4 +1,9 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-extra';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { Readability } from '@mozilla/readability';
+import { JSDOM } from 'jsdom';
+
+puppeteer.use(StealthPlugin());
 import { complete } from './ai_hub.js';
 import dotenv from 'dotenv';
 
@@ -44,7 +49,15 @@ export async function runAudit(url) {
 
   const lighthousePromise = fetchLighthouseData(url);
 
-  const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  let browser;
+  try {
+    const wsUrl = process.env.BROWSER_WS_ENDPOINT || 'ws://browserless:3000';
+    console.log(`[Audit] Connecting to Browserless at ${wsUrl}`);
+    browser = await puppeteer.connect({ browserWSEndpoint: wsUrl });
+  } catch (err) {
+    console.log(`[Audit] Browserless failed, falling back to local launch:`, err.message);
+    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+  }
   const issues = [];
   let contacts = [];
   let title = '';
@@ -172,7 +185,18 @@ export async function runAudit(url) {
         .slice(0, 2).map(a => a.href)
     );
 
-    const rawText = await page.evaluate(() => document.body?.innerText || '').catch(() => '');
+    // Use Mozilla Readability for pure semantic extraction
+    const rawHtml = await page.content();
+    let readableText = '';
+    try {
+      const doc = new JSDOM(rawHtml, { url }).window.document;
+      const reader = new Readability(doc);
+      const article = reader.parse();
+      readableText = article ? article.textContent : (await page.evaluate(() => document.body?.innerText || ''));
+    } catch (e) {
+      readableText = await page.evaluate(() => document.body?.innerText || '');
+    }
+    const rawText = readableText;
 
     await page.close();
 
@@ -184,7 +208,15 @@ export async function runAudit(url) {
         await cp.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36');
         await cp.goto(cu, { waitUntil: 'networkidle2', timeout: 15000 });
         const extractedContacts = await extractContacts(cp);
-        const extraText = await cp.evaluate(() => (document.body?.innerText || '').substring(0, 1500));
+        const extraHtml = await cp.content();
+        let extraText = '';
+        try {
+          const doc = new JSDOM(extraHtml, { url: cu }).window.document;
+          extraText = new Readability(doc).parse()?.textContent || '';
+        } catch {
+          extraText = await cp.evaluate(() => document.body?.innerText || '');
+        }
+        extraText = extraText.substring(0, 1500);
         return { contacts: extractedContacts, text: extraText };
       } catch {
         return null;
@@ -354,7 +386,7 @@ export async function analyzeWithCohere(auditData) {
   Website: ${auditData.url}
   Title: "${auditData.title}"
   Tech Stack: ${auditData.techStack}
-  Company Name: ${auditData.businessContext.semantic?.companyName || 'Unknown'}
+  Company Name: ${auditData.osint_clearbit?.name || auditData.businessContext.semantic?.companyName || 'Unknown'}
   Industry: ${auditData.businessContext.semantic?.industry || 'Unknown'}
   Primary Service: ${auditData.businessContext.semantic?.primaryService || 'Unknown'}
   Target Audience: ${auditData.businessContext.semantic?.targetAudience || 'Unknown'}
@@ -364,14 +396,28 @@ export async function analyzeWithCohere(auditData) {
   Load Time: ${(auditData.loadTimeMs / 1000).toFixed(1)}s
   SSL: ${auditData.ssl ? 'Yes' : 'NO'}
   
+  OSINT DATA (USE THIS TO PERSONALIZE!):
+  Decision Maker Name: ${auditData.osint_linkedin?.title?.split('-')[0] || 'Unknown'}
+  Decision Maker Bio: ${auditData.osint_linkedin?.content || 'Unknown'}
+  Funding/Company Status: ${auditData.osint_crunchbase?.content || 'Unknown'}
+  Glassdoor/Culture/Reviews: ${auditData.osint_glassdoor?.content || 'Unknown'}
+  Yelp/Customer Reviews: ${auditData.osint_yelp?.content || 'Unknown'}
+  
   Issues (${auditData.issues?.length || 0}):
   ${issuesSummary}
+  
+  AGENCY CONFIG:
+  Services Offered: ${auditData.services_offered?.join(', ') || 'Websites, automations'}
+  Tone: ${auditData.tone || 'casual'}
+  Booking Link: ${auditData.calendly_link || 'Not provided'}
+  
+  If a Booking Link is provided above, casually drop it at the end of the email (e.g. "If this sounds useful, grab a time here: [LINK]"). If "Not provided", just ask "Let me know what day works best for a quick chat."
   
   Return a JSON object with:
   1. "companyName": name from URL/title
   2. "industry": specific industry (e.g. "Plumbing Services" not "Services")
   3. "leadScore": 1-100, lower = worse site = hotter lead
-  4. "pitch": cold email max 180 words. You represent Knight, an AI sales agent platform. Reference their specific industry/niche and 1-2 specific technical issues. Sign off as "The Knight Team". Sound professional, direct, and confident. IMPORTANT: Do not use exact metrics or robotic numbers. Use natural human language like "your site is noticeably slow" or "we noticed your images aren't optimized".`,
+  4. "pitch": cold email max 180 words. You represent Knight, an AI sales agent platform. Reference their specific industry/niche and 1-2 specific technical issues. If you have the Decision Maker's Name/Bio from OSINT, mention it casually to show you did your research. Sign off as "The Knight Team". Sound professional, direct, and confident. IMPORTANT: Do not use exact metrics or robotic numbers. Use natural human language like "your site is noticeably slow" or "we noticed your images aren't optimized".`,
   }];
 
   try {

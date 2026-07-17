@@ -67,7 +67,7 @@ const DEFAULTS: Record<string, unknown> = {
       icon: "📊",
       title: "CRM Pipeline",
       description:
-        "Kanban board from discovery to closed. Drag cards between stages. Every deal tracked in one place.",
+        "Every prospect tracked from discovery to closed deal. A clean CRM dashboard gives you complete visibility without the complexity of bloated CRMs.",
     },
     {
       icon: "🔒",

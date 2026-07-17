@@ -110,7 +110,6 @@ export default function ProfileWizardPage() {
         <WizardComplete
           title="Profile Complete!"
           description="Knight now knows about your business."
-          icon="🏢"
           onContinue={() => router.push("/dashboard")}
           onSetupMore={() => router.push("/dashboard/wizard/calendly")}
         />

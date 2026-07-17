@@ -1,11 +1,13 @@
 "use client";
 
 import { Toaster } from "sonner";
+import { UpdateChecker } from "./UpdateChecker";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
+      <UpdateChecker />
       <Toaster
         position="bottom-right"
         toastOptions={{

@@ -69,7 +69,7 @@ const DEFAULTS: Record<string, unknown> = {
       icon: "📈",
       title: "Pipeline You Can See and Trust",
       description:
-        "Every prospect tracked from discovery to closed deal. A clean Kanban board gives you complete visibility without the complexity of bloated CRMs.",
+        "Every prospect tracked from discovery to closed deal. A clean CRM dashboard gives you complete visibility without the complexity of bloated CRMs.",
     },
     {
       icon: "🔒",

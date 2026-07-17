@@ -223,14 +223,12 @@ export function WizardCard({
 export function WizardComplete({
   title,
   description,
-  icon,
   onContinue,
   continueLabel = "Go to Dashboard",
   onSetupMore,
 }: {
   title: string;
   description: string;
-  icon?: React.ReactNode;
   onContinue: () => void;
   continueLabel?: string;
   onSetupMore?: () => void;

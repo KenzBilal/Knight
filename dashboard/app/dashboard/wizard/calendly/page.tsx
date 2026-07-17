@@ -62,7 +62,6 @@ export default function CalendlyWizardPage() {
         <WizardComplete
           title="Calendly Connected!"
           description="Your scheduling link will be included in outreach emails."
-          icon="📅"
           onContinue={() => router.push("/dashboard")}
           onSetupMore={() => router.push("/dashboard/wizard/domain")}
         />

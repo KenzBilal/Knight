@@ -1,22 +1,4 @@
-version: '3.8'
-
 services:
-  # ─── Dashboard (Next.js) ───────────────────────────────────────────────────
-  dashboard:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    env_file:
-      - dashboard/.env.local
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 10s
 
   # ─── Worker (Node.js) ──────────────────────────────────────────────────────
   worker:
@@ -26,14 +8,44 @@ services:
     env_file:
       - worker/.env
     restart: unless-stopped
-    depends_on:
-      dashboard:
-        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 2G
     healthcheck:
       test: ["CMD", "node", "-e", "process.exit(0)"]
       interval: 60s
       timeout: 5s
       retries: 3
+
+  # ─── Browserless (Persistent Browser Pool) ─────────────────────────────────
+  browserless:
+    image: browserless/chrome:latest
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      - MAX_CONCURRENT_SESSIONS=5
+      - MAX_QUEUE_LENGTH=10
+      - CONNECTION_TIMEOUT=120000
+
+  # ─── Tor Proxy (IP Rotation) ───────────────────────────────────────────────
+  torproxy:
+    image: dperson/torproxy
+    restart: unless-stopped
+    ports:
+      - "9050:9050"
+
+  # ─── SearxNG (OSINT Search) ────────────────────────────────────────────────
+  searxng:
+    image: searxng/searxng
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./searxng:/etc/searxng
+    environment:
+      - BASE_URL=http://localhost:8080/
 
 volumes:
   node_modules:

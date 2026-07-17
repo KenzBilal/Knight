@@ -139,7 +139,7 @@ export async function POST(req: Request) {
           }
 
           console.log(`[CREATE-BOT] Username @${username} taken, trying next...`);
-        } catch (err) {
+        } catch {
           console.log(`[CREATE-BOT] Failed for @${username}, trying next...`);
         }
       }

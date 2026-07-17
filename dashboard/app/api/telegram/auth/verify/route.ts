@@ -2,9 +2,39 @@ import { NextResponse } from "next/server";
 import { getAuthEntry, deleteAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
 import { Api } from "telegram";
+import { TelegramClient } from "telegram";
+import { StringSession } from "telegram/sessions/index.js";
 import { computeCheck } from "telegram/Password.js";
 
 export const dynamic = "force-dynamic";
+
+async function sendWelcomeMessage(telegramUserId: any) {
+  const botToken = process.env.KNIGHT_BOT_TOKEN;
+  if (!botToken) return;
+
+  try {
+    const API_ID = parseInt(process.env.TELEGRAM_API_ID!);
+    const API_HASH = process.env.TELEGRAM_API_HASH!;
+    const bot = new TelegramClient(new StringSession(""), API_ID, API_HASH, { connectionRetries: 2 });
+    await bot.start({ botAuthToken: botToken });
+
+    await bot.sendMessage(Number(telegramUserId), {
+      message: `Hey! Welcome to Knight 🚀
+
+Your Telegram is now connected. Here's what I'll do for you:
+
+• Find leads in Telegram groups automatically
+• Respond to DMs with AI-powered conversations
+• Send you approval requests when a lead is ready
+
+You're all set — I'm already working.`,
+    });
+
+    await bot.disconnect();
+  } catch (e) {
+    console.error("[WELCOME] Failed to send welcome message:", e);
+  }
+}
 
 export async function POST(req: Request) {
   try {
@@ -54,6 +84,9 @@ export async function POST(req: Request) {
 
       deleteAuthClient(org.id);
 
+      // Send welcome message from Knight bot
+      sendWelcomeMessage(me.id);
+
       return NextResponse.json({
         ok: true,
         username,
@@ -97,6 +130,9 @@ export async function POST(req: Request) {
           if (error) throw error;
 
           deleteAuthClient(org.id);
+
+          // Send welcome message from Knight bot
+          sendWelcomeMessage(me.id);
 
           return NextResponse.json({
             ok: true,

@@ -62,7 +62,6 @@ export default function KeysWizardPage() {
         <WizardComplete
           title="Keys Saved!"
           description="Knight will use your personal API keys."
-          icon="🔑"
           onContinue={() => router.push("/dashboard")}
           onSetupMore={() => router.push("/dashboard/wizard/telegram")}
         />

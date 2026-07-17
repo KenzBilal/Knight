@@ -14,7 +14,7 @@ export default function AuthLayout({
   const isLogin = pathname === "/auth/login";
 
   const formW = 480;
-  const slide = [0.32, 0.72, 0, 1];
+  const slide: [number, number, number, number] = [0.32, 0.72, 0, 1];
   const SLIDE_MS = 550;
 
   // Delay content swap so text doesn't change before white panel hides

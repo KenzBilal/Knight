@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 
-interface Contact { id: string; email: string; full_name: string; role: string; }
+interface Contact { id: string; email: string; full_name: string; role: string; bio?: string; }
 interface Company {
-  id: string; name: string; website_url: string;
+  id: string; name: string; website_url: string; logo_url?: string;
   industry: string; lead_score: number; status: string;
   created_at: string; contacts: Contact[];
 }
@@ -118,9 +118,6 @@ export default function ProspectsPage() {
     if (dragOver !== colId) setDragOver(colId);
 
     // Determine drop position (top or bottom half of hovered card)
-    const target = e.currentTarget as HTMLElement;
-    const rect = target.getBoundingClientRect();
-    const midY = rect.top + rect.height / 2;
     const hoveredCard = (e.target as HTMLElement).closest("[data-card-id]");
     if (hoveredCard) {
       const cardRect = hoveredCard.getBoundingClientRect();
@@ -323,10 +320,15 @@ export default function ProspectsPage() {
                           {/* Company name + age */}
                           <div className="flex items-center justify-between gap-2 mb-1">
                             <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-7 h-7 rounded bg-white/[0.06] flex items-center justify-center flex-shrink-0">
-                                <span className="text-xs font-semibold text-[#a3a3a3]">
-                                  {company.name?.[0]?.toUpperCase() || "?"}
-                                </span>
+                              <div className="w-7 h-7 rounded bg-white/[0.06] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                                {company.logo_url ? (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img src={company.logo_url} alt={company.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <span className="text-xs font-semibold text-[#a3a3a3]">
+                                    {company.name?.[0]?.toUpperCase() || "?"}
+                                  </span>
+                                )}
                               </div>
                               <span className="text-sm font-medium text-white truncate">
                                 {company.name || "Unknown"}
@@ -340,7 +342,7 @@ export default function ProspectsPage() {
                           {/* Contact name */}
                           {contact?.full_name && (
                             <p className="text-[11px] text-[#525252] truncate ml-9 mb-0.5">
-                              {contact.full_name}
+                              {contact.full_name} {contact.bio && <span className="text-[#3a3a3a]">· {contact.bio}</span>}
                             </p>
                           )}
 
