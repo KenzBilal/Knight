@@ -430,25 +430,50 @@ async function handleScrape(job) {
 
   // Check cache: skip if same URL audited within 24h
   const cutoff = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
-  const { data: cached } = await supabase
+  const { data: cachedAudits } = await supabase
     .from('audits')
-    .select('id, total_score, created_at')
+    .select('id, total_score, created_at, company_id')
     .eq('org_id', orgId)
     .gte('created_at', cutoff)
     .order('created_at', { ascending: false })
     .limit(1);
 
-  if (cached && cached.length > 0) {
+  if (cachedAudits && cachedAudits.length > 0) {
+    const cached = cachedAudits[0];
     const existingCompany = await supabase
       .from('companies')
-      .select('id, website_url')
+      .select('*')
       .eq('org_id', orgId)
       .eq('website_url', target)
       .single();
 
     if (existingCompany.data) {
-      console.log(`[Scrape] ${target} | CACHED: Last audit ${cached[0].created_at} (score: ${cached[0].total_score})`);
-      return { cached: true, auditId: cached[0].id, score: cached[0].total_score };
+      // Fetch full audit data from audit_results
+      const { data: auditResult } = await supabase
+        .from('audit_results')
+        .select('*')
+        .eq('audit_id', cached.id)
+        .single();
+
+      // Fetch contacts
+      const { data: contacts } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('company_id', existingCompany.data.id);
+
+      console.log(`[Scrape] ${target} | CACHED: Last audit ${cached.created_at} (score: ${cached.total_score})`);
+
+      return {
+        cached: true,
+        auditId: cached.id,
+        score: cached.total_score,
+        company: existingCompany.data,
+        auditData: auditResult?.raw_data || null,
+        pitch: auditResult?.issues_found?.pitch || null,
+        suggestions: auditResult?.issues_found?.suggestions || null,
+        issues: auditResult?.issues_found?.issues || [],
+        contacts: contacts || []
+      };
     }
   }
 
