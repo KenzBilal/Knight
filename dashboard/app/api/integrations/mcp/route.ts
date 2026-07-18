@@ -23,11 +23,17 @@ export async function GET() {
   return NextResponse.json({ keys: data || [] });
 }
 
-export async function POST() {
+export async function POST(req: Request) {
   const user = await getUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  let label = "Default";
+  try {
+    const body = await req.json();
+    if (body.label) label = body.label;
+  } catch {}
 
   const keyValue = `knight_mcp_${crypto.randomBytes(24).toString("hex")}`;
 
@@ -36,13 +42,13 @@ export async function POST() {
     .insert({
       org_id: org.id,
       key_value: keyValue,
-      label: "Default",
+      label,
     })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ key: data });
+  return NextResponse.json({ key: { ...data, key_value: keyValue } });
 }
 
 export async function DELETE(req: Request) {
