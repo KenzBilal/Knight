@@ -162,31 +162,47 @@ export default function AuditsPage() {
 
                 {isExpanded && (audit.results || []).length > 0 && (
                   <div className="border-t border-white/[0.06] px-5 py-4 space-y-3">
-                    {(audit.results || []).map((result) => (
-                      <div key={result.id} className="bg-[#0a0a0a] rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-semibold text-white">{result.category}</span>
-                          <span className="text-[10px] text-[#3a3a3a]" style={{ fontFamily: "var(--font-mono)" }}>
-                            Score: {String(result.raw_data?.score ?? "—")}
-                          </span>
-                        </div>
-                        {result.issues_found && result.issues_found.length > 0 ? (
-                          <div className="space-y-1.5">
-                            {result.issues_found.map((issue, idx) => (
-                              <div key={idx} className="flex items-start gap-2">
-                                <SeverityBadge severity={issue.severity} />
-                                <div>
-                                  <p className="text-xs text-[#a3a3a3]">{issue.issue}</p>
-                                  <p className="text-[10px] text-[#525252]">{issue.detail}</p>
-                                </div>
-                              </div>
-                            ))}
+                    {(audit.results || []).map((result) => {
+                      const pitch = (result.raw_data as any)?.pitch;
+                      const suggestions = (result.raw_data as any)?.suggestions;
+                      return (
+                        <div key={result.id} className="bg-[#0a0a0a] rounded-lg p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-semibold text-white">{result.category}</span>
+                            <span className="text-[10px] text-[#3a3a3a]" style={{ fontFamily: "var(--font-mono)" }}>
+                              Score: {String(result.raw_data?.score ?? "—")}
+                            </span>
                           </div>
-                        ) : (
-                          <p className="text-[11px] text-[#3a3a3a]">No issues found</p>
-                        )}
-                      </div>
-                    ))}
+                          {pitch && (
+                            <div className="mb-3">
+                              <p className="text-[10px] text-[#525252] font-medium uppercase tracking-wider mb-1">Pitch</p>
+                              <p className="text-[12px] text-[#a3a3a3] leading-relaxed whitespace-pre-wrap">{pitch}</p>
+                            </div>
+                          )}
+                          {suggestions && (
+                            <div className="mb-3">
+                              <p className="text-[10px] text-[#525252] font-medium uppercase tracking-wider mb-1">Suggestions</p>
+                              <p className="text-[12px] text-[#a3a3a3] leading-relaxed whitespace-pre-wrap">{suggestions}</p>
+                            </div>
+                          )}
+                          {result.issues_found && result.issues_found.length > 0 ? (
+                            <div className="space-y-1.5">
+                              {result.issues_found.map((issue, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <SeverityBadge severity={issue.severity} />
+                                  <div>
+                                    <p className="text-xs text-[#a3a3a3]">{issue.issue}</p>
+                                    <p className="text-[10px] text-[#525252]">{issue.detail}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            !pitch && !suggestions && <p className="text-[11px] text-[#3a3a3a]">No issues found</p>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>

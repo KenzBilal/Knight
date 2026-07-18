@@ -117,7 +117,7 @@ async function runDailyCleanup() {
           org_id: company.org_id,
           category: 'REJECTED',
           raw_data: {},
-          issues_found: { rejection_reason: 'No reply after 30 days' }
+          issues_found: [{ issue: 'No reply after 30 days', severity: 'low', detail: 'No response received' }]
         });
         if (insertError) {
           console.error(`[Cleanup] Failed to insert audit result for company ${company.id}:`, insertError.message);
@@ -570,8 +570,8 @@ async function handleScrape(job) {
     org_id: orgId,
     audit_id: audit.id,
     category: 'AI_PITCH',
-    raw_data: auditData,
-    issues_found: { pitch: aiAnalysis.pitch, suggestions: groqSuggestions, issues: auditData.issues }
+    raw_data: { ...auditData, pitch: aiAnalysis.pitch, suggestions: groqSuggestions },
+    issues_found: auditData.issues || []
   });
 
   if (auditResultError) {
@@ -754,7 +754,7 @@ async function handleProcessReply(job) {
         org_id: orgId,
         category: 'REJECTED',
         raw_data: {},
-        issues_found: { rejection_reason: 'Rejected by client' }
+        issues_found: [{ issue: 'Rejected by client', severity: 'low', detail: 'Client declined the pitch' }]
       });
 
       if (auditResultError) {

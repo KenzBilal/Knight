@@ -55,11 +55,17 @@ export async function GET(req: Request) {
     const auditsWithResults = (audits || []).map((audit) => {
       const rawCompanies = (audit as any).companies;
       const company = Array.isArray(rawCompanies) ? rawCompanies[0] ?? null : rawCompanies ?? null;
-      const auditResults = (results || []).filter((r) => r.audit_id === audit.id).map((r) => ({
-        ...r,
-        issues_found: Array.isArray(r.issues_found) ? r.issues_found : [],
-        raw_data: r.raw_data && typeof r.raw_data === "object" ? r.raw_data : {},
-      }));
+      const auditResults = (results || []).filter((r) => r.audit_id === audit.id).map((r) => {
+        let issues = Array.isArray(r.issues_found) ? r.issues_found : [];
+        if (!issues.length && Array.isArray((r.issues_found as any)?.issues)) {
+          issues = (r.issues_found as any).issues;
+        }
+        const raw = r.raw_data && typeof r.raw_data === "object" ? r.raw_data : {};
+        if (!issues.length && Array.isArray((raw as any)?.issues)) {
+          issues = (raw as any).issues;
+        }
+        return { ...r, issues_found: issues, raw_data: raw };
+      });
       return {
         id: audit.id,
         company_id: audit.company_id,
