@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import Link from "next/link";
 
 interface Template {
   id: string;

@@ -5,13 +5,18 @@ Sentry.init({
 
   integrations: [
     Sentry.browserTracingIntegration(),
-    Sentry.replayIntegration(),
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
   ],
 
   tracesSampleRate: 0.1,
 
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
+
+  tunnel: "/api/sentry-tunnel",
 
   enabled: process.env.NODE_ENV === "production",
 });

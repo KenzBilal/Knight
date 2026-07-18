@@ -101,7 +101,6 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const pathname = usePathname();
   const router = useRouter();
   const isFree = orgPlan === "free";
-  const isStarter = orgPlan === "starter";
   const isOwner = userRole === "owner";
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);

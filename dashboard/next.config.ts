@@ -36,4 +36,7 @@ export default withSentryConfig(nextConfig, {
   silent: true,
   org: "knight-t6",
   project: "knight-dashboard",
+  widenClientFileUpload: true,
+  disableLogger: true,
+  automaticVercelMonitors: true,
 });

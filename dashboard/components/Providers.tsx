@@ -2,10 +2,12 @@
 
 import { Toaster } from "sonner";
 import { UpdateChecker } from "./UpdateChecker";
+import { SentryUserProvider } from "./SentryUserProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
+      <SentryUserProvider />
       {children}
       <UpdateChecker />
       <Toaster
