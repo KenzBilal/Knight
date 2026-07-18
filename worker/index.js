@@ -76,17 +76,18 @@ supabase
     setInterval(fetchPendingJobs, 60_000);
   });
 
-// Run cleanup once daily at midnight, not on boot
+// Run cleanup once daily at midnight
+let lastCleanupDate = '';
 function scheduleMidnightCleanup() {
-  const now = new Date();
-  const midnight = new Date();
-  midnight.setHours(24, 0, 0, 0);
-  const msUntilMidnight = midnight.getTime() - now.getTime();
-  setTimeout(() => {
-    runDailyCleanup();
-    setInterval(runDailyCleanup, 1000 * 60 * 60 * 24);
-  }, msUntilMidnight);
-  console.log(`[Cleanup] Scheduled for ${midnight.toISOString()}`);
+  setInterval(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const hour = new Date().getHours();
+    if (hour === 0 && lastCleanupDate !== today) {
+      lastCleanupDate = today;
+      runDailyCleanup();
+    }
+  }, 60_000); // check every minute
+  console.log('[Cleanup] Scheduled — runs once per day at midnight');
 }
 scheduleMidnightCleanup();
 
@@ -161,15 +162,18 @@ function dedupKey(job) {
   return `${job.type}:${job.payload?.target || job.payload?.company_id || job.id}`;
 }
 
+let ramBackoffMs = 30_000;
 function processQueue() {
   while (activeJobs < MAX_CONCURRENT && jobQueue.length > 0) {
-    // RAM guard
+    // RAM guard with exponential backoff
     const usedMB = getUsedRAM_MB();
     if (usedMB > RAM_LIMIT_MB) {
-      console.warn(`[Worker] RAM limit reached (${usedMB}MB > ${RAM_LIMIT_MB}MB). Pausing queue.`);
-      setTimeout(() => processQueue(), 30_000);
+      console.warn(`[Worker] RAM limit reached (${usedMB}MB > ${RAM_LIMIT_MB}MB). Pausing ${ramBackoffMs / 1000}s.`);
+      setTimeout(() => processQueue(), ramBackoffMs);
+      ramBackoffMs = Math.min(ramBackoffMs * 2, 300_000); // max 5 min
       return;
     }
+    ramBackoffMs = 30_000; // reset on success
 
     sortByPriority(jobQueue);
     const job = jobQueue.shift();
@@ -312,7 +316,10 @@ async function handleDiscover(job) {
     browser = await puppeteer.connect({ browserWSEndpoint: wsUrl });
   } catch (err) {
     console.log(`[Discover] Browserless failed, falling back to local launch:`, err.message);
-    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const isDev = process.env.NODE_ENV !== 'production';
+    browser = await puppeteer.launch({
+      args: isDev ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+    });
   }
   const page = await browser.newPage();
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36');

@@ -64,6 +64,7 @@ export default function IntegrationsPage() {
   const [showWebhookCreate, setShowWebhookCreate] = useState(false);
   const [whUrl, setWhUrl] = useState("");
   const [whLabel, setWhLabel] = useState("");
+  const [whEvents, setWhEvents] = useState<string[]>(["audit.completed"]);
   const [whSaving, setWhSaving] = useState(false);
   const [newWebhook, setNewWebhook] = useState<Webhook | null>(null);
 
@@ -96,12 +97,13 @@ export default function IntegrationsPage() {
 
   async function handleCreateWebhook(e: React.FormEvent) {
     e.preventDefault();
+    if (whEvents.length === 0) { toast.error("Select at least one event"); return; }
     setWhSaving(true);
     try {
       const res = await fetch("/api/integrations/webhooks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: whUrl, label: whLabel || "My Webhook" }),
+        body: JSON.stringify({ url: whUrl, label: whLabel || "My Webhook", events: whEvents }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -110,6 +112,7 @@ export default function IntegrationsPage() {
       setShowWebhookCreate(false);
       setWhUrl("");
       setWhLabel("");
+      setWhEvents(["audit.completed"]);
     } catch (e: any) { toast.error(e.message || "Failed"); }
     setWhSaving(false);
   }
@@ -323,14 +326,30 @@ export default function IntegrationsPage() {
                 </div>
                 <div>
                   <label className="block text-[12px] text-[#737373] mb-1.5 font-medium">Events</label>
-                  <div className="bg-[#080808] border border-[#1a1a1a] rounded-xl p-3">
-                    <label className="flex items-center gap-2.5 cursor-pointer">
-                      <input type="checkbox" checked readOnly className="w-4 h-4 rounded border-[#3a3a3a] bg-[#111111] text-white accent-white" />
-                      <div>
-                        <span className="text-[13px] text-white font-medium">audit.completed</span>
-                        <p className="text-[11px] text-[#525252]">Fired when a website audit finishes</p>
-                      </div>
-                    </label>
+                  <div className="bg-[#080808] border border-[#1a1a1a] rounded-xl p-3 space-y-2">
+                    {[
+                      { value: "audit.completed", label: "audit.completed", desc: "Fired when a website audit finishes" },
+                      { value: "email.sent", label: "email.sent", desc: "Fired when an outreach email is sent" },
+                      { value: "email.replied", label: "email.replied", desc: "Fired when a prospect replies" },
+                      { value: "lead.created", label: "lead.created", desc: "Fired when a new lead is discovered" },
+                    ].map(evt => (
+                      <label key={evt.value} className="flex items-center gap-2.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={whEvents.includes(evt.value)}
+                          onChange={e => {
+                            setWhEvents(prev =>
+                              e.target.checked ? [...prev, evt.value] : prev.filter(x => x !== evt.value)
+                            );
+                          }}
+                          className="w-4 h-4 rounded border-[#3a3a3a] bg-[#111111] text-white accent-white"
+                        />
+                        <div>
+                          <span className="text-[13px] text-white font-medium">{evt.label}</span>
+                          <p className="text-[11px] text-[#525252]">{evt.desc}</p>
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -435,9 +454,9 @@ export default function IntegrationsPage() {
               <div className="bg-[#080808] border border-[#1a1a1a] rounded-xl p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] text-[#525252] font-medium uppercase tracking-wider">Signing Secret</span>
-                  <CopyButton text={detailWebhook.secret} />
                 </div>
-                <code className="text-[13px] text-[#a3a3a3] font-mono break-all leading-relaxed">{detailWebhook.secret}</code>
+                <code className="text-[13px] text-[#a3a3a3] font-mono break-all leading-relaxed">whsec_••••••••••••••••</code>
+                <p className="text-[11px] text-[#3a3a3a] mt-2">Secret is only shown at creation time for security.</p>
               </div>
 
               <div className="bg-[#080808] border border-[#1a1a1a] rounded-xl p-4">

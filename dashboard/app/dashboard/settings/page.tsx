@@ -30,6 +30,8 @@ export default function SettingsPage() {
   const [newDomain, setNewDomain] = useState("");
   const [dnsRecords, setDnsRecords] = useState<any>(null);
   const [domainLoading, setDomainLoading] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
+  const [testSending, setTestSending] = useState(false);
 
   useEffect(() => {
     fetch("/api/config")
@@ -120,6 +122,27 @@ export default function SettingsPage() {
     toast.promise(promise, { loading: "Verifying...", success: "Verified!", error: "Check DNS records" });
   }
 
+  async function handleSendTest() {
+    if (!testEmail) { toast.error("Enter an email address"); return; }
+    setTestSending(true);
+    try {
+      const res = await fetch("/api/send-reply", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          company_id: "test-email-check",
+          text: `Knight email deliverability test\n\nThis is a test email to verify your domain is properly configured.\n\nSent from: Knight Dashboard\nTime: ${new Date().toISOString()}`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send");
+      toast.success("Test email sent! Check your inbox.");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to send test email");
+    }
+    setTestSending(false);
+  }
+
   return (
     <div className="p-6 md:p-8 max-w-2xl">
       <FadeIn>
@@ -181,6 +204,18 @@ export default function SettingsPage() {
                   {domainLoading ? "Adding..." : "Add"}
                 </button>
               </form>
+              {/* Test Email */}
+              {domains.some(d => d.status === "verified") && (
+                <div className="flex gap-2 items-center pt-2 border-t border-white/[0.06]">
+                  <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)}
+                    placeholder="test@yourdomain.com"
+                    className="flex-1 rounded-xl input-base text-sm" />
+                  <button type="button" onClick={handleSendTest} disabled={testSending || !testEmail}
+                    className="rounded-xl bg-white/[0.06] text-white font-medium px-4 py-2.5 text-sm hover:bg-white/[0.1] transition-all disabled:opacity-40 active:scale-[0.98]">
+                    {testSending ? "Sending..." : "Send Test"}
+                  </button>
+                </div>
+              )}
               {dnsRecords && (
                 <div className="rounded-xl bg-[#0f0f0f] dash-card p-4 space-y-3">
                   <p className="text-xs font-medium text-[#a3a3a3]">Add these DNS records:</p>

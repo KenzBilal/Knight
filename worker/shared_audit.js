@@ -94,7 +94,10 @@ export async function runAudit(url) {
     browser = await puppeteer.connect({ browserWSEndpoint: wsUrl });
   } catch (err) {
     console.log(`[Audit] Browserless failed, falling back to local launch:`, err.message);
-    browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
+    const isDev = process.env.NODE_ENV !== 'production';
+    browser = await puppeteer.launch({
+      args: isDev ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
+    });
   }
   const issues = [];
   let contacts = [];
