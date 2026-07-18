@@ -180,6 +180,30 @@ export async function GET(req: Request) {
       .order("created_at", { ascending: false })
       .limit(10);
 
+    // Pipeline health
+    const { count: auditedCount } = companyIds.length > 0
+      ? await supabase
+          .from("audits")
+          .select("*", { count: "exact", head: true })
+          .in("company_id", companyIds)
+      : { count: 0 };
+
+    const { count: pitchedCount } = await supabase
+      .from("companies")
+      .select("*", { count: "exact", head: true })
+      .eq("org_id", org.id)
+      .or("status.eq.PITCHED,ai_pitch.not.is.null");
+
+    const { count: repliedCount } = await supabase
+      .from("companies")
+      .select("*", { count: "exact", head: true })
+      .eq("org_id", org.id)
+      .eq("status", "REPLIED");
+
+    const totalForPipeline = totalProspects || 1;
+    const auditedForPipeline = auditedCount || 0;
+    const pitchedForPipeline = pitchedCount || 0;
+
     // Fetch companies in period for chart
     const { data: companies } = await supabase
       .from("companies")
@@ -196,6 +220,11 @@ export async function GET(req: Request) {
       replies: replies || 0,
       recentJobs: recentJobs || [],
       chartData,
+      pipeline: {
+        prospectsToAudited: Math.round(((auditedForPipeline / totalForPipeline) * 100) || 0),
+        auditedToPitched: Math.round(((pitchedForPipeline / (auditedForPipeline || 1)) * 100) || 0),
+        pitchedToReplied: Math.round(((repliedCount / (pitchedForPipeline || 1)) * 100) || 0),
+      },
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -17,6 +17,11 @@ interface OverviewData {
     created_at: string;
     payload: Record<string, string>;
   }>;
+  pipeline?: {
+    prospectsToAudited: number;
+    auditedToPitched: number;
+    pitchedToReplied: number;
+  };
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -304,9 +309,9 @@ export default function DashboardPage() {
               Pipeline Health
             </h2>
             {[
-              { label: "Prospects → Audited", pct: 72 },
-              { label: "Audited → Pitched", pct: 54 },
-              { label: "Pitched → Replied", pct: 18 },
+              { label: "Prospects → Audited", pct: data?.pipeline?.prospectsToAudited ?? 0 },
+              { label: "Audited → Pitched", pct: data?.pipeline?.auditedToPitched ?? 0 },
+              { label: "Pitched → Replied", pct: data?.pipeline?.pitchedToReplied ?? 0 },
             ].map(({ label, pct }) => (
               <div key={label} className="mb-5 last:mb-0">
                 <div className="flex justify-between text-[11px] font-medium mb-2">
