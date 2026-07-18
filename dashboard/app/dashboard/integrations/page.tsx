@@ -300,7 +300,7 @@ export default function IntegrationsPage() {
 {`{
   "mcpServers": {
     "knight": {
-      "url": "https://dashboard.knight.app/api/mcp",
+      "url": "https://dashboard-ten-lake-62.vercel.app/api/mcp",
       "headers": {
         "Authorization": "Bearer YOUR_API_KEY"
       }
