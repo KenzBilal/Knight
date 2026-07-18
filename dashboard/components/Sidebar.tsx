@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { KnightLogo } from "@/components/KnightLogo";
 import { SetupRequiredModal } from "@/components/SetupRequiredModal";
+import { toast } from "sonner";
 
 
 // ─── Inline SVG Icons ────────────────────────────────────────────────────────
@@ -154,7 +155,10 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
                 }
                 if (isPlanLocked) {
                   e.preventDefault();
-                  router.push("/dashboard/billing");
+                  const feature = label;
+                  toast.error(`${feature} requires a paid plan`, {
+                    action: { label: "View Plans", onClick: () => router.push("/dashboard/billing") },
+                  });
                   return;
                 }
                 onClose?.();
