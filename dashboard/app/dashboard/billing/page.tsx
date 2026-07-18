@@ -35,7 +35,7 @@ function formatPeriod(period: string) {
 }
 
 export default function BillingPage() {
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState<string | false>(false);
   const [currentPlan, setCurrentPlan] = useState("free");
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [plans, setPlans] = useState<PlanData[]>([]);
@@ -68,7 +68,7 @@ export default function BillingPage() {
       const data = await res.json();
       if (data.url) window.location.href = data.url;
     } catch {}
-    setLoading(null);
+    setLoading(false);
   }
 
   async function handleManageSubscription() {
@@ -78,7 +78,7 @@ export default function BillingPage() {
       const data = await res.json();
       if (data.portalUrl) window.location.href = data.portalUrl;
     } catch {}
-    setLoading(null);
+    setLoading(false);
   }
 
   const isFree = currentPlan === "free";
@@ -192,7 +192,7 @@ export default function BillingPage() {
                     : plan.highlighted
                     ? "bg-[#080808] text-white hover:bg-[#161616] active:scale-[0.98]"
                     : "dash-card text-white hover:bg-white/[0.04]"
-                } disabled:opacity-50`}>
+                } ${!plan.lemon_variant_id && !isCurrent ? "opacity-50 cursor-not-allowed" : ""}`}>
                 {isCurrent ? "Current plan" : loading === plan.lemon_variant_id ? "Redirecting..." : plan.lemon_variant_id ? "Upgrade" : "Coming soon"}
               </button>
             </div>
