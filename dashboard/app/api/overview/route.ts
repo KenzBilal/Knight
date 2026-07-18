@@ -223,7 +223,7 @@ export async function GET(req: Request) {
       pipeline: {
         prospectsToAudited: Math.round(((auditedForPipeline / totalForPipeline) * 100) || 0),
         auditedToPitched: Math.round(((pitchedForPipeline / (auditedForPipeline || 1)) * 100) || 0),
-        pitchedToReplied: Math.round(((repliedCount / (pitchedForPipeline || 1)) * 100) || 0),
+        pitchedToReplied: Math.round((((repliedCount || 0) / (pitchedForPipeline || 1)) * 100) || 0),
       },
     });
   } catch (error: any) {
