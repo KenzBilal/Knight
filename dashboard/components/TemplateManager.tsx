@@ -47,10 +47,19 @@ export function TemplateManager() {
   const [previewMode, setPreviewMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [plan, setPlan] = useState<string>("free");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const variables = getAvailableVariables();
 
-  useEffect(() => { fetchTemplates(); }, []);
+  const canEdit = plan === "starter" || plan === "max" || plan === "pro" || plan === "enterprise";
+
+  useEffect(() => {
+    fetch("/api/org")
+      .then(r => r.json())
+      .then(d => { if (d.plan) setPlan(d.plan); })
+      .catch(() => {});
+    fetchTemplates();
+  }, []);
 
   async function fetchTemplates() {
     try {
@@ -60,17 +69,19 @@ export function TemplateManager() {
     } catch { toast.error("Failed to load templates"); } finally { setLoading(false); }
   }
 
-  function handleEdit(template: EmailTemplate) {
-    setEditingTemplate(template);
-    setFormData({ name: template.name, type: template.type, subject: template.subject, body: template.body, is_default: template.is_default });
-    setIsCreating(false);
-    setPreviewMode(false);
-  }
-
   function handleCreate() {
+    if (!canEdit) { toast.error("Upgrade to Starter to create templates", { action: { label: "Upgrade", onClick: () => window.location.href = "/dashboard/billing" } }); return; }
     setEditingTemplate(null);
     setFormData({ name: "", type: "initial", subject: "", body: "", is_default: false });
     setIsCreating(true);
+    setPreviewMode(false);
+  }
+
+  function handleEdit(template: EmailTemplate) {
+    if (!canEdit) { toast.error("Upgrade to Starter to edit templates", { action: { label: "Upgrade", onClick: () => window.location.href = "/dashboard/billing" } }); return; }
+    setEditingTemplate(template);
+    setFormData({ name: template.name, type: template.type, subject: template.subject, body: template.body, is_default: template.is_default });
+    setIsCreating(false);
     setPreviewMode(false);
   }
 
@@ -147,13 +158,19 @@ export function TemplateManager() {
       <div className="dash-card p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>Email Templates</h2>
-          {!usingDefaults && !isCreating && !editingTemplate && (
+          {canEdit && !usingDefaults && !isCreating && !editingTemplate && (
             <button onClick={handleCreate}
               className="rounded-xl bg-white text-[#080808] font-medium px-4 py-2 text-sm hover:bg-white/90 transition-all active:scale-[0.98]">
               New Template
             </button>
           )}
         </div>
+
+        {!canEdit && (
+          <div className="rounded-xl bg-white/[0.04] p-3 text-xs text-[#525252]">
+            View-only. Upgrade to Starter to create and edit templates.
+          </div>
+        )}
 
         {usingDefaults && (
           <div className="rounded-xl bg-white/[0.04] dash-card-glow p-3 text-sm text-[#525252]">
@@ -198,7 +215,7 @@ export function TemplateManager() {
                       </div>
                     ) : (
                       <>
-                        {!template.id.startsWith("default-") && (
+                        {canEdit && !template.id.startsWith("default-") && (
                           <>
                             <button onClick={() => handleEdit(template)} disabled={actingId !== null}
                               className="text-xs text-[#737373] hover:text-white font-medium transition-colors disabled:opacity-50">Edit</button>
