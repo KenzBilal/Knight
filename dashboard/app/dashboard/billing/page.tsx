@@ -82,6 +82,7 @@ export default function BillingPage() {
   }
 
   const isFree = currentPlan === "free";
+  const isUnlimited = usage?.limits.leads === -1 || usage?.limits.emails === -1;
   const leadsUsed = usage?.usage.leads || 0;
   const emailsUsed = usage?.usage.emails || 0;
   const leadsLimit = usage?.limits.leads || 50;
@@ -91,8 +92,28 @@ export default function BillingPage() {
     <div className="p-6 md:p-8 max-w-5xl">
       <h1 className="text-2xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "var(--font-display)" }}>Billing</h1>
 
-      {/* Usage Counter */}
-      {isFree && (
+      {/* Current Plan Card */}
+      <div className="dash-card rounded-2xl p-6 mb-6 flex items-center justify-between">
+        <div>
+          <p className="text-sm text-[#a3a3a3]">
+            Current plan: <span className="text-white font-bold capitalize">{currentPlan}</span>
+          </p>
+          {isUnlimited ? (
+            <p className="text-xs text-[#525252] mt-1">Unlimited leads and emails</p>
+          ) : (
+            <p className="text-xs text-[#525252] mt-1">{leadsLimit} leads · {emailsLimit} emails per month</p>
+          )}
+        </div>
+        {!isFree && (
+          <button onClick={handleManageSubscription} disabled={loading === "portal"}
+            className="text-sm text-[#a3a3a3] hover:text-white transition-colors dash-card rounded-xl px-4 py-2 hover:bg-white/[0.04]">
+            {loading === "portal" ? "Loading..." : "Manage"}
+          </button>
+        )}
+      </div>
+
+      {/* Usage Meter — show for all plans with limits */}
+      {!isUnlimited && (
         <div className="dash-card rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm font-semibold text-white" style={{ fontFamily: "var(--font-display)" }}>This month&apos;s usage</p>
@@ -107,15 +128,10 @@ export default function BillingPage() {
                 </span>
               </div>
               <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min((leadsUsed / leadsLimit) * 100, 100)}%` }}
-                />
+                <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${Math.min((leadsUsed / leadsLimit) * 100, 100)}%` }} />
               </div>
               {leadsUsed >= leadsLimit * 0.8 && (
-                <p className="text-xs text-red-400 mt-2">
-                  {leadsUsed >= leadsLimit ? "Limit reached" : `${leadsLimit - leadsUsed} remaining`}
-                </p>
+                <p className="text-xs text-red-400 mt-2">{leadsUsed >= leadsLimit ? "Limit reached" : `${leadsLimit - leadsUsed} remaining`}</p>
               )}
             </div>
             <div>
@@ -126,33 +142,13 @@ export default function BillingPage() {
                 </span>
               </div>
               <div className="w-full h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min((emailsUsed / emailsLimit) * 100, 100)}%` }}
-                />
+                <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${Math.min((emailsUsed / emailsLimit) * 100, 100)}%` }} />
               </div>
               {emailsUsed >= emailsLimit * 0.8 && (
-                <p className="text-xs text-red-400 mt-2">
-                  {emailsUsed >= emailsLimit ? "Limit reached" : `${emailsLimit - emailsUsed} remaining`}
-                </p>
+                <p className="text-xs text-red-400 mt-2">{emailsUsed >= emailsLimit ? "Limit reached" : `${emailsLimit - emailsUsed} remaining`}</p>
               )}
             </div>
           </div>
-        </div>
-      )}
-
-      {!isFree && usage && (
-        <div className="dash-card rounded-2xl p-6 mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-sm text-[#a3a3a3]">
-              Current plan: <span className="text-white font-bold capitalize">{currentPlan}</span>
-            </p>
-            <p className="text-xs text-[#525252] mt-1">Unlimited leads and emails</p>
-          </div>
-          <button onClick={handleManageSubscription} disabled={loading === "portal"}
-            className="text-sm text-[#a3a3a3] hover:text-white transition-colors dash-card rounded-xl px-4 py-2 hover:bg-white/[0.04]">
-            {loading === "portal" ? "Loading..." : "Manage"}
-          </button>
         </div>
       )}
 

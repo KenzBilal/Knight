@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuthFromToken } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase";
+import { planHasFeature } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,13 @@ export async function POST(req: Request) {
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    if (!planHasFeature(org.plan, "byok")) {
+      return NextResponse.json(
+        { error: "Bring Your Own Keys is only available on the Max plan" },
+        { status: 403 }
+      );
+    }
 
     const { cohere_key, gemini_key, openrouter_key } = await req.json();
 

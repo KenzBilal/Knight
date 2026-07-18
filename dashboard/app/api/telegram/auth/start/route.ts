@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient, apiCredentials, setAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
+import { planHasFeature } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +10,13 @@ export async function POST(req: Request) {
   try {
     const { org } = await requireTelegramAuth(req);
 
-    // Gate: must have company details before connecting Telegram
+    if (!planHasFeature(org.plan, "telegram")) {
+      return NextResponse.json(
+        { error: "PLAN_REQUIRED", message: "Telegram is only available on the Max plan" },
+        { status: 403 }
+      );
+    }
+
     const supabase = createServiceClient();
     const { data: config } = await supabase
       .from("org_config")

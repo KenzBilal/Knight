@@ -515,8 +515,13 @@ async function handleScrape(job) {
   if (glassdoor) auditData.osint_glassdoor = glassdoor;
   if (yelp) auditData.osint_yelp = yelp;
 
-  const aiAnalysis = await analyzeWithCohere(auditData);
-  const groqSuggestions = await analyzeWithGroq(auditData);
+  // Check plan for AI pitch generation (starter+ only)
+  const { data: orgRow } = await supabase.from('orgs').select('plan').eq('id', orgId).single();
+  const orgPlan = orgRow?.plan || 'free';
+  const hasPitch = orgPlan === 'starter' || orgPlan === 'max';
+
+  const aiAnalysis = hasPitch ? await analyzeWithCohere(auditData) : { pitch: '', companyName: target, industry: 'Unknown', leadScore: 50 };
+  const groqSuggestions = hasPitch ? await analyzeWithGroq(auditData) : '';
 
   const companyName = clearbit?.name || aiAnalysis.companyName || target;
 

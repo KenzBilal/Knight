@@ -123,7 +123,15 @@ async function getOrgsWithSessions() {
     .from('org_config')
     .select('org_id, telegram_session')
     .not('telegram_session', 'is', null);
-  return (data || []).filter(r => r.telegram_session);
+  const withSessions = (data || []).filter(r => r.telegram_session);
+
+  // Filter to only max plan orgs
+  const maxOrgs = [];
+  for (const org of withSessions) {
+    const { data: orgRow } = await supabase.from('orgs').select('plan').eq('id', org.org_id).single();
+    if (orgRow?.plan === 'max') maxOrgs.push(org);
+  }
+  return maxOrgs;
 }
 
 // ─── Main Boot ────────────────────────────────────────────────────────────────

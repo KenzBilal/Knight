@@ -16,7 +16,26 @@ const ACTION_TO_USAGE_FIELD: Record<ActionType, string> = {
 // Fallback if plans table is empty
 const FALLBACK_LIMITS: Record<string, { lead_limit: number; email_limit: number }> = {
   free: { lead_limit: 50, email_limit: 50 },
+  starter: { lead_limit: 1000, email_limit: 1000 },
+  max: { lead_limit: -1, email_limit: -1 },
 };
+
+export type PlanFeature = "telegram" | "byok" | "pitch" | "drip" | "webhooks";
+
+const PLAN_FEATURES: Record<string, PlanFeature[]> = {
+  free: [],
+  starter: ["pitch", "webhooks"],
+  max: ["telegram", "byok", "pitch", "drip", "webhooks"],
+};
+
+export function planHasFeature(plan: string, feature: PlanFeature): boolean {
+  return PLAN_FEATURES[plan]?.includes(feature) ?? false;
+}
+
+export function getPlanLimits(plan: string): { leads: number; emails: number } {
+  const limits = FALLBACK_LIMITS[plan] || FALLBACK_LIMITS.free;
+  return { leads: limits.lead_limit, emails: limits.email_limit };
+}
 
 export async function checkLimits(
   orgId: string,
