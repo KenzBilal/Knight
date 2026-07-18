@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { WizardLayout, WizardCard, WizardComplete } from "@/components/WizardLayout";
+import { WizardLayout, WizardCard, WizardComplete, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -11,6 +11,9 @@ const STEPS = [
   { id: "preview", title: "Preview" },
   { id: "done", title: "Done" },
 ];
+
+const inputCls =
+  "w-full rounded-xl bg-[#0a0a0a] border border-white/[0.08] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.22] focus:ring-2 focus:ring-white/[0.04] transition-all duration-200";
 
 export default function CalendlyWizardPage() {
   const router = useRouter();
@@ -61,7 +64,7 @@ export default function CalendlyWizardPage() {
       >
         <WizardComplete
           title="Calendly Connected!"
-          description="Your scheduling link will be included in outreach emails."
+          description="Your scheduling link will now be automatically included in outreach emails so prospects can book instantly."
           onContinue={() => router.push("/dashboard")}
           onSetupMore={() => router.push("/dashboard/wizard/domain")}
         />
@@ -72,7 +75,7 @@ export default function CalendlyWizardPage() {
   return (
     <WizardLayout
       title="Calendly Setup"
-      subtitle="Let prospects book meetings with you"
+      subtitle="Let prospects book meetings with you directly from your outreach emails"
       steps={STEPS}
       currentStep={step}
       onStepChange={setStep}
@@ -81,10 +84,11 @@ export default function CalendlyWizardPage() {
       completeLabel="Save & Finish"
       isSubmitting={saving}
     >
+      {/* ── Step 0: Why ── */}
       {step === 0 && (
         <WizardCard
-          title="Why Calendly?"
-          description="Include your scheduling link in emails"
+          title="Why add Calendly?"
+          description="Frictionless scheduling converts more replies into booked meetings"
           icon={
             <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
@@ -92,26 +96,56 @@ export default function CalendlyWizardPage() {
           }
         >
           <div className="space-y-5">
-            <p className="text-[13px] text-[#525252] leading-relaxed">
-              Knight includes your Calendly link in outreach emails so
-              prospects can book meetings instantly.
-            </p>
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
-              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-2">
-                Example
+            <WizardInfoRow>
+              <p className="text-[13px] text-[#525252] leading-relaxed">
+                Knight automatically appends your Calendly link to every outreach email. Prospects click once to book — no back-and-forth.
+              </p>
+            </WizardInfoRow>
+
+            {/* Email snippet preview */}
+            <div
+              className="rounded-xl p-4"
+              style={{
+                background: "rgba(255,255,255,0.02)",
+                border: "1px solid rgba(255,255,255,0.05)",
+              }}
+            >
+              <p className="text-[10px] text-[#2a2a2a] uppercase tracking-widest font-semibold mb-3">
+                Example snippet
               </p>
               <p className="text-[13px] text-[#525252] italic leading-relaxed">
                 &quot;...Feel free to grab a time:{" "}
-                <span className="text-white not-italic">
+                <span className="text-white not-italic font-medium">
                   calendly.com/yourname
                 </span>
                 &quot;
               </p>
             </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { label: "2× more replies", sub: "on average" },
+                { label: "Zero friction", sub: "no scheduling emails" },
+                { label: "Auto-included", sub: "in every pitch" },
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  className="text-center p-3 rounded-xl"
+                  style={{
+                    background: "rgba(255,255,255,0.02)",
+                    border: "1px solid rgba(255,255,255,0.04)",
+                  }}
+                >
+                  <p className="text-[12px] font-semibold text-white">{stat.label}</p>
+                  <p className="text-[10px] text-[#3a3a3a] mt-0.5">{stat.sub}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </WizardCard>
       )}
 
+      {/* ── Step 1: Enter Link ── */}
       {step === 1 && (
         <WizardCard
           title="Your Calendly Link"
@@ -124,7 +158,7 @@ export default function CalendlyWizardPage() {
         >
           <div className="space-y-5">
             <div>
-              <label className="block text-[12px] font-medium text-[#525252] uppercase tracking-wider mb-2">
+              <label className="block text-[11px] font-semibold text-[#525252] uppercase tracking-widest mb-2.5">
                 Calendly URL
               </label>
               <input
@@ -132,51 +166,49 @@ export default function CalendlyWizardPage() {
                 value={calendlyLink}
                 onChange={(e) => setCalendlyLink(e.target.value)}
                 placeholder="https://calendly.com/yourname"
-                className="w-full rounded-xl bg-[#080808] border border-white/[0.06] px-4 py-3 text-[14px] text-white placeholder:text-[#2a2a2a] focus:outline-none focus:border-white/[0.15] focus:ring-1 focus:ring-white/[0.05] transition-all duration-200"
+                className={inputCls}
+                autoFocus
               />
             </div>
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-4">
-              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-3">
+
+            <WizardInfoRow>
+              <p className="text-[10px] text-[#3a3a3a] uppercase tracking-widest font-semibold mb-3">
                 How to find your link
               </p>
               <ol className="text-[13px] text-[#525252] space-y-2">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3a3a3a] mt-0.5">1.</span>
-                  <span>
+                {[
+                  <>
                     Go to{" "}
-                    <a
-                      href="https://calendly.com"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-white hover:underline"
-                    >
+                    <a href="https://calendly.com" target="_blank" rel="noopener noreferrer" className="text-white hover:underline">
                       calendly.com
-                    </a>
-                  </span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3a3a3a] mt-0.5">2.</span>
-                  <span>Click &quot;Copy link&quot; on your event type</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#3a3a3a] mt-0.5">3.</span>
-                  <span>Paste it above</span>
-                </li>
+                    </a>{" "}
+                    and sign in
+                  </>,
+                  <>Click &quot;Copy link&quot; on your event type</>,
+                  <>Paste it above</>,
+                ].map((s, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-[#2a2a2a] font-mono mt-0.5 flex-shrink-0">{i + 1}.</span>
+                    <span>{s}</span>
+                  </li>
+                ))}
               </ol>
-            </div>
+            </WizardInfoRow>
+
             {!calendlyLink && (
-              <p className="text-[12px] text-[#3a3a3a]">
-                You can skip this and add it later.
+              <p className="text-[12px] text-[#2a2a2a] text-center">
+                You can skip this and add it later in settings.
               </p>
             )}
           </div>
         </WizardCard>
       )}
 
+      {/* ── Step 2: Preview ── */}
       {step === 2 && (
         <WizardCard
-          title="Preview"
-          description="How your link appears in emails"
+          title="Email Preview"
+          description="How your Calendly link appears in outreach emails"
           icon={
             <svg className="w-5 h-5 text-[#a3a3a3]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
@@ -185,18 +217,34 @@ export default function CalendlyWizardPage() {
           }
         >
           <div className="space-y-5">
-            <div className="rounded-xl bg-white/[0.02] border border-white/[0.04] p-6">
-              <p className="text-[11px] text-[#3a3a3a] uppercase tracking-wider font-medium mb-4">
-                Email preview
-              </p>
-              <div className="space-y-3 text-[13px] text-[#525252]">
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{
+                background: "#111",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
+            >
+              {/* Fake window chrome */}
+              <div
+                className="px-5 py-3 flex items-center gap-3 border-b"
+                style={{ borderColor: "rgba(255,255,255,0.05)", background: "#0e0e0e" }}
+              >
+                <div className="flex gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#f87171]/40" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#facc15]/40" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#4ade80]/40" />
+                </div>
+                <span className="text-[11px] text-[#2a2a2a]">Email Preview</span>
+              </div>
+
+              <div className="p-5 sm:p-6 space-y-3 text-[13px] text-[#525252] leading-relaxed">
                 <p>Hi {"{{contact_name}}"},</p>
-                <p>
-                  I noticed your website could benefit from some improvements.
-                </p>
+                <p>I noticed your website could benefit from some improvements.</p>
                 <p>
                   Book a quick call:{" "}
-                  <span className="text-white">
+                  <span
+                    className="text-white underline underline-offset-2 decoration-white/30"
+                  >
                     {calendlyLink || "calendly.com/yourname"}
                   </span>
                 </p>
@@ -207,6 +255,10 @@ export default function CalendlyWizardPage() {
                 </p>
               </div>
             </div>
+
+            <p className="text-[11px] text-[#2a2a2a] text-center">
+              Actual emails are personalized per prospect.
+            </p>
           </div>
         </WizardCard>
       )}
