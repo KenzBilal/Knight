@@ -7,6 +7,7 @@ import https from 'https';
 
 puppeteer.use(StealthPlugin());
 import { complete } from './ai_hub.js';
+import { getGlobalConfig } from './global_config.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -55,7 +56,7 @@ function stripJsonFences(text) {
 export async function fetchLighthouseData(url, attempt = 1) {
   const MAX_RETRIES = 3;
   const BACKOFF_MS = [5000, 15000, 45000];
-  const apiKey = process.env.PAGESPEED_API_KEY;
+  const apiKey = await getGlobalConfig('pagespeed_api_key', process.env.PAGESPEED_API_KEY);
   try {
     const encoded = encodeURIComponent(url);
     let api = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encoded}&strategy=mobile`;

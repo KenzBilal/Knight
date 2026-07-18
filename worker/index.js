@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
 import { complete } from './ai_hub.js';
+import { getGlobalConfig } from './global_config.js';
 
 dotenv.config();
 
@@ -390,7 +391,7 @@ async function getClearbitData(companyName) {
 async function fetchSearxNG(query) {
   try {
     const q = encodeURIComponent(query);
-    const searxngUrl = process.env.SEARXNG_URL || 'http://searxng:8080';
+    const searxngUrl = await getGlobalConfig('searxng_url', process.env.SEARXNG_URL || 'http://searxng:8080');
     const res = await fetch(`${searxngUrl}/search?q=${q}&format=json`);
     if (res.ok) {
       const data = await res.json();
