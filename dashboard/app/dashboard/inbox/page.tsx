@@ -58,6 +58,7 @@ export default function InboxPage() {
   }, []);
 
   async function generateDraft() {
+    if (!requirePlan("use AI drafts")) return;
     if (!selectedThread) return;
     setDrafting(true);
     try {
@@ -84,6 +85,7 @@ export default function InboxPage() {
   }
 
   async function sendReply() {
+    if (!requirePlan("send replies")) return;
     if (!selectedThread || !replyText.trim()) {
       toast.error("Write a reply first");
       return;
@@ -118,23 +120,12 @@ export default function InboxPage() {
 
   const canUse = plan === "max" || plan === "enterprise";
 
-  if (!canUse && !loading) {
-    return (
-      <div className="p-6 md:p-8">
-        <div className="dash-card p-12 text-center">
-          <div className="w-14 h-14 rounded-lg bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" strokeWidth="1.5" strokeLinecap="round">
-              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-            </svg>
-          </div>
-          <p className="text-sm font-medium text-[#a3a3a3] mb-1">Inbox requires Max plan</p>
-          <p className="text-xs text-[#525252] mb-4">Upgrade to Max to manage email threads and reply to prospects</p>
-          <Link href="/dashboard/billing" className="inline-block px-4 py-2 rounded-lg bg-white text-black text-[13px] font-medium hover:bg-white/90 transition-colors">
-            Upgrade to Max
-          </Link>
-        </div>
-      </div>
-    );
+  function requirePlan(action: string) {
+    if (!canUse) {
+      toast.error(`Upgrade to Max to ${action}`, { action: { label: "Upgrade", onClick: () => window.location.href = "/dashboard/billing" } });
+      return false;
+    }
+    return true;
   }
 
   return (

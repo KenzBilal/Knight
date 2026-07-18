@@ -135,38 +135,41 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
 
       {/* Main nav */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {mainLinks
-          .filter(({ href }) => {
-            if (href === "/dashboard/templates" && isFree) return false;
-            if (href === "/dashboard/inbox" && isFree) return false;
-            return true;
-          })
-          .map(({ href, label, Icon, exact }) => {
+        {mainLinks.map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact);
           const isLocked = locked && href !== "/dashboard";
+          const isPlanLocked =
+            (href === "/dashboard/templates" && isFree) ||
+            (href === "/dashboard/inbox" && isFree);
+          const showLock = isLocked || isPlanLocked;
           return (
             <Link
               key={href}
-              href={isLocked ? "#" : href}
+              href={showLock ? "#" : href}
               onClick={(e) => {
                 if (isLocked) {
                   e.preventDefault();
                   setShowSetupModal(true);
                   return;
                 }
+                if (isPlanLocked) {
+                  e.preventDefault();
+                  router.push("/dashboard/billing");
+                  return;
+                }
                 onClose?.();
               }}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg text-[13px] font-medium transition-all duration-200 group ${
-                isLocked
+                showLock
                   ? "text-[#333] cursor-not-allowed opacity-50"
                   : active
                     ? "bg-white/[0.08] text-white"
                     : "text-[#737373] hover:text-[#a3a3a3] hover:bg-white/[0.04]"
               }`}
             >
-              <Icon className={active && !isLocked ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
+              <Icon className={active && !showLock ? "text-white" : "text-[#525252] group-hover:text-[#737373]"} />
               {label}
-              {isLocked && (
+              {showLock && (
                 <svg className="ml-auto w-3 h-3 text-[#333]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
