@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
+import { planHasFeature } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export async function GET(req: Request) {
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    if (!planHasFeature(org.plan, "inbox")) {
+      return NextResponse.json({ threads: [], error: "Inbox is only available on the Max plan" }, { status: 403 });
+    }
 
     const supabase = createServiceClient();
 

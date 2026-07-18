@@ -710,7 +710,7 @@ async function handleScrape(job) {
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
 
         const { data: org } = await supabase.from('orgs').select('plan').eq('id', orgId).single();
-        if (org?.plan === 'pro') {
+        if (org?.plan === 'max') {
           const day3 = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString();
           const day7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
           await supabase.from('jobs').insert([
