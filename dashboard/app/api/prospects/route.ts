@@ -18,7 +18,6 @@ export async function GET(req: Request) {
 
     const supabase = createServiceClient();
 
-    // Get companies with their contacts
     const { data: companies, count } = await supabase
       .from("companies")
       .select(`
@@ -70,6 +69,67 @@ export async function PATCH(req: Request) {
       .eq("org_id", org.id);
 
     if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const cookie = req.headers.get("cookie") || "";
+    const tokenMatch = cookie.match(/knight_token=([^;]+)/);
+    if (!tokenMatch) throw new Error("Unauthorized");
+    const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    const { companyId } = await req.json();
+    if (!companyId) {
+      return NextResponse.json({ error: "Missing companyId" }, { status: 400 });
+    }
+
+    const supabase = createServiceClient();
+
+    // Verify company belongs to this org
+    const { data: company } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("id", companyId)
+      .eq("org_id", org.id)
+      .single();
+
+    if (!company) {
+      return NextResponse.json({ error: "Company not found" }, { status: 404 });
+    }
+
+    // Get all audit IDs for this company
+    const { data: audits } = await supabase
+      .from("audits")
+      .select("id")
+      .eq("company_id", companyId);
+
+    const auditIds = (audits || []).map(a => a.id);
+
+    // Cascade delete in correct order
+    // 1. audit_results (depends on audits)
+    if (auditIds.length > 0) {
+      await supabase.from("audit_results").delete().in("audit_id", auditIds);
+    }
+
+    // 2. audits (depends on companies)
+    await supabase.from("audits").delete().eq("company_id", companyId);
+
+    // 3. contacts (depends on companies)
+    await supabase.from("contacts").delete().eq("company_id", companyId);
+
+    // 4. emails (depends on companies)
+    await supabase.from("emails").delete().eq("company_id", companyId);
+
+    // 5. jobs (company_id is in JSON payload)
+    await supabase.from("jobs").delete().eq("org_id", org.id).contains("payload", { company_id: companyId });
+
+    // 6. companies (the company itself)
+    await supabase.from("companies").delete().eq("id", companyId);
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

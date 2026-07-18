@@ -303,7 +303,24 @@ export default function ProspectsPage() {
                     const age = timeAgo(company.created_at);
                     const dropHere = dropTarget === `${company.id}-top`;
                     const dropBelow = dropTarget === `${company.id}-bottom`;
-                    return (
+  async function handleDelete(companyId: string, companyName: string) {
+    if (!confirm(`Delete ${companyName} and all its data (audits, contacts, emails)?`)) return;
+
+    try {
+      const res = await fetch("/api/prospects", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ companyId }),
+      });
+      if (!res.ok) throw new Error();
+      setCompanies(prev => prev.filter(c => c.id !== companyId));
+      toast.success(`${companyName} deleted`);
+    } catch {
+      toast.error("Failed to delete");
+    }
+  }
+
+  return (
                       <div key={company.id}>
                         {/* Drop indicator line — top */}
                         {dropHere && <div className="h-0.5 bg-[#60a5fa] rounded-full mb-2 mx-2" />}
@@ -358,9 +375,20 @@ export default function ProspectsPage() {
                             <span className="text-[11px] text-[#3a3a3a] truncate">
                               {contact?.email || "No email"}
                             </span>
-                            {company.lead_score > 0 && (
-                              <ScoreBadge score={company.lead_score} />
-                            )}
+                            <div className="flex items-center gap-1.5">
+                              {company.lead_score > 0 && (
+                                <ScoreBadge score={company.lead_score} />
+                              )}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleDelete(company.id, company.name); }}
+                                className="p-1 rounded hover:bg-[#f87171]/10 text-[#3a3a3a] hover:text-[#f87171] transition-colors"
+                                title="Delete"
+                              >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                              </button>
+                            </div>
                           </div>
                         </div>
 
