@@ -537,7 +537,6 @@ async function handleScrape(job) {
   if (contacts.length > 0) {
     const { error: contactsError } = await supabase.from('contacts').insert(
       contacts.map((c, i) => ({
-        org_id: orgId,
         company_id: company.id,
         email: c.email || null,
         first_name: c.firstName || null,
@@ -641,7 +640,8 @@ async function handleScrape(job) {
     if ((count || 0) < dailyLimit) {
       const targetEmail = contacts[0].email;
       const senderName = orgConfig?.company_name || 'Knight';
-      const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || 'hello@knight.ai';
+      const rawSenderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || '';
+      const senderEmail = rawSenderEmail.includes('@') ? rawSenderEmail : 'hello@knight.app';
 
       // Try to use default initial template
       const template = await getDefaultTemplate(orgId, 'initial');
