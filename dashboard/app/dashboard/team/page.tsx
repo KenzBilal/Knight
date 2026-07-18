@@ -117,6 +117,26 @@ export default function TeamPage() {
 
   const currentUserRole = members.find((m) => m.email === currentUserEmail)?.role;
   const isOwner = currentUserRole === "owner";
+  const isPaid = org?.plan === "starter" || org?.plan === "max" || org?.plan === "pro" || org?.plan === "enterprise";
+
+  if (!loading && !isPaid) {
+    return (
+      <div className="p-6 md:p-8 max-w-3xl">
+        <div className="dash-card p-12 text-center">
+          <div className="w-14 h-14 rounded-lg bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" strokeWidth="1.5" strokeLinecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-[#a3a3a3] mb-1">Team management requires a paid plan</p>
+          <p className="text-xs text-[#525252] mb-4">Upgrade to Starter or Max to invite and manage team members</p>
+          <a href="/dashboard/billing" className="inline-block px-4 py-2 rounded-lg bg-white text-black text-[13px] font-medium hover:bg-white/90 transition-colors">
+            Upgrade Plan
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();

@@ -32,8 +32,14 @@ export default function SettingsPage() {
   const [domainLoading, setDomainLoading] = useState(false);
   const [testEmail, setTestEmail] = useState("");
   const [testSending, setTestSending] = useState(false);
+  const [plan, setPlan] = useState<string>("free");
 
   useEffect(() => {
+    fetch("/api/org")
+      .then(r => r.json())
+      .then(d => { if (d.plan) setPlan(d.plan); })
+      .catch(() => {});
+
     fetch("/api/config")
       .then(r => r.json())
       .then(data => {
@@ -234,7 +240,8 @@ export default function SettingsPage() {
             </div>
           </FadeIn>
 
-          {/* API Keys */}
+          {/* API Keys — Max only (BYOK) */}
+          {plan === "max" && (
           <FadeIn delay={300}>
             <div className="dash-card rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
@@ -270,6 +277,7 @@ export default function SettingsPage() {
               {!useCustomKeys && <p className="text-xs text-[#525252]">Using Knight&apos;s built-in keys.</p>}
             </div>
           </FadeIn>
+          )}
 
           <TemplateManager />
 
