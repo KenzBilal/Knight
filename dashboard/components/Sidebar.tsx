@@ -101,6 +101,7 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const pathname = usePathname();
   const router = useRouter();
   const isFree = orgPlan === "free";
+  const isStarter = orgPlan === "starter";
   const isOwner = userRole === "owner";
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
@@ -134,7 +135,13 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
 
       {/* Main nav */}
       <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-        {mainLinks.map(({ href, label, Icon, exact }) => {
+        {mainLinks
+          .filter(({ href }) => {
+            if (href === "/dashboard/templates" && isFree) return false;
+            if (href === "/dashboard/inbox" && isFree) return false;
+            return true;
+          })
+          .map(({ href, label, Icon, exact }) => {
           const active = isActive(href, exact);
           const isLocked = locked && href !== "/dashboard";
           return (

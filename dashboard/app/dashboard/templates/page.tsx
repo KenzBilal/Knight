@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface Template {
   id: string;
@@ -37,13 +38,21 @@ export default function TemplatesPage() {
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: "", type: "initial", subject: "", body: "" });
   const [saving, setSaving] = useState(false);
+  const [plan, setPlan] = useState<string>("free");
 
   useEffect(() => {
+    fetch("/api/org")
+      .then(r => r.json())
+      .then(d => { if (d.plan) setPlan(d.plan); })
+      .catch(() => {});
+
     fetch("/api/templates")
       .then(r => r.json())
       .then(d => { setTemplates(d.templates || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  const canUse = plan === "starter" || plan === "max" || plan === "pro" || plan === "enterprise";
 
   function startCreate() {
     setEditing(null);
@@ -105,6 +114,25 @@ export default function TemplatesPage() {
   }
 
   const isFormOpen = creating || editing !== null;
+
+  if (!canUse) {
+    return (
+      <div className="p-4 sm:p-6 md:p-8 max-w-4xl">
+        <div className="dash-card p-12 text-center">
+          <div className="w-14 h-14 rounded-lg bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3a3a3a" strokeWidth="1.5" strokeLinecap="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <p className="text-sm font-medium text-[#a3a3a3] mb-1">Email Templates require Starter plan</p>
+          <p className="text-xs text-[#525252] mb-4">Upgrade to create and manage custom outreach templates</p>
+          <Link href="/dashboard/billing" className="inline-block px-4 py-2 rounded-lg bg-white text-black text-[13px] font-medium hover:bg-white/90 transition-colors">
+            Upgrade to Starter
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 sm:p-6 md:p-8 max-w-4xl">

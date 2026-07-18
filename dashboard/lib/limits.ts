@@ -20,12 +20,12 @@ const FALLBACK_LIMITS: Record<string, { lead_limit: number; email_limit: number 
   max: { lead_limit: -1, email_limit: -1 },
 };
 
-export type PlanFeature = "telegram" | "byok" | "pitch" | "drip" | "inbox" | "webhooks";
+export type PlanFeature = "telegram" | "byok" | "pitch" | "drip" | "inbox" | "webhooks" | "templates";
 
 const PLAN_FEATURES: Record<string, PlanFeature[]> = {
   free: [],
-  starter: ["pitch", "webhooks"],
-  max: ["telegram", "byok", "pitch", "drip", "inbox", "webhooks"],
+  starter: ["pitch", "webhooks", "templates"],
+  max: ["telegram", "byok", "pitch", "drip", "inbox", "webhooks", "templates"],
 };
 
 export function planHasFeature(plan: string, feature: PlanFeature): boolean {
