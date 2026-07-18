@@ -80,7 +80,7 @@ export default function AuditsPage() {
       .catch((e) => { setError(e.message); setLoading(false); });
   }, []);
 
-  const totalIssues = audits.reduce((sum, a) => sum + a.results.reduce((s, r) => s + (r.issues_found?.length || 0), 0), 0);
+  const totalIssues = audits.reduce((sum, a) => sum + (a.results || []).reduce((s, r) => s + ((r.issues_found || []).length || 0), 0), 0);
   const avgScore = audits.length ? Math.round(audits.reduce((s, a) => s + (a.total_score || 0), 0) / audits.length) : 0;
 
   return (
@@ -130,9 +130,9 @@ export default function AuditsPage() {
           {audits.map((audit) => {
             const company = audit.company;
             const isExpanded = expanded === audit.id;
-            const highIssues = audit.results.reduce((s, r) => s + (r.issues_found?.filter(i => i.severity === "high").length || 0), 0);
-            const medIssues = audit.results.reduce((s, r) => s + (r.issues_found?.filter(i => i.severity === "medium").length || 0), 0);
-            const lowIssues = audit.results.reduce((s, r) => s + (r.issues_found?.filter(i => i.severity === "low").length || 0), 0);
+            const highIssues = (audit.results || []).reduce((s, r) => s + ((r.issues_found || []).filter(i => i.severity === "high").length || 0), 0);
+            const medIssues = (audit.results || []).reduce((s, r) => s + ((r.issues_found || []).filter(i => i.severity === "medium").length || 0), 0);
+            const lowIssues = (audit.results || []).reduce((s, r) => s + ((r.issues_found || []).filter(i => i.severity === "low").length || 0), 0);
 
             return (
               <div key={audit.id} className="dash-card overflow-hidden">
@@ -160,9 +160,9 @@ export default function AuditsPage() {
                   </svg>
                 </button>
 
-                {isExpanded && audit.results.length > 0 && (
+                {isExpanded && (audit.results || []).length > 0 && (
                   <div className="border-t border-white/[0.06] px-5 py-4 space-y-3">
-                    {audit.results.map((result) => (
+                    {(audit.results || []).map((result) => (
                       <div key={result.id} className="bg-[#0a0a0a] rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-semibold text-white">{result.category}</span>
