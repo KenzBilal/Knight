@@ -67,12 +67,12 @@ export default function TelegramWizardPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.error === "SESSION_PASSWORD_NEEDED") {
+        if (data.error === "2FA_PASSWORD_REQUIRED" || data.error === "SESSION_PASSWORD_NEEDED") {
           setNeedsPassword(true);
           setLoading(false);
           return;
         }
-        throw new Error(data.error);
+        throw new Error(data.error || data.message || "Verification failed");
       }
 
       toast.success("Telegram connected!");
