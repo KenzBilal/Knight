@@ -5,15 +5,14 @@ import Link from "next/link";
 import { toast } from "sonner";
 
 export default function TelegramSetupPage() {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0);
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [phoneCodeHash, setPhoneCodeHash] = useState("");
-  const [awaitingPassword, setAwaitingPassword] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
 
   async function handleStart(e: React.FormEvent) {
     e.preventDefault();
@@ -27,8 +26,8 @@ export default function TelegramSetupPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send code");
-      setPhoneCodeHash(data.phoneCodeHash);
-      setStep(2);
+      toast.success("Code sent");
+      setStep(1);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -41,7 +40,7 @@ export default function TelegramSetupPage() {
     setError("");
     setLoading(true);
     try {
-      const body: any = { phone, code, phoneCodeHash };
+      const body: any = { phone, code };
       if (password) body.password = password;
 
       const res = await fetch("/api/telegram/auth/verify", {
@@ -52,8 +51,7 @@ export default function TelegramSetupPage() {
       const data = await res.json();
       if (!res.ok) {
         if (data.error === "SESSION_PASSWORD_NEEDED") {
-          setAwaitingPassword(true);
-          setStep(3);
+          setNeedsPassword(true);
           setLoading(false);
           return;
         }
@@ -80,7 +78,7 @@ export default function TelegramSetupPage() {
 
       <h1 className="text-xl font-semibold text-white mb-2">Connect Telegram</h1>
       <p className="text-sm text-[#525252] mb-8">
-        Knight uses your personal Telegram account to find and message leads.
+        Link your personal Telegram account. Knight acts as you to find and message leads in groups.
       </p>
 
       {error && (
@@ -115,22 +113,25 @@ export default function TelegramSetupPage() {
         <div className="dash-card p-6">
           {/* Step indicators */}
           <div className="flex items-center gap-2 mb-6">
-            {[1, 2, 3].map((s) => (
+            {[0, 1].map((s) => (
               <div key={s} className="flex items-center gap-2">
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
                   step >= s ? "bg-white text-black" : "bg-white/10 text-[#525252]"
                 }`}>
-                  {s}
+                  {s + 1}
                 </div>
-                {s < 3 && <div className={`w-8 h-px ${step > s ? "bg-white" : "bg-white/10"}`} />}
+                {s < 1 && <div className={`w-8 h-px ${step > s ? "bg-white" : "bg-white/10"}`} />}
               </div>
             ))}
           </div>
 
           {/* Step 1: Phone */}
-          {step === 1 && (
+          {step === 0 && (
             <form onSubmit={handleStart}>
-              <h2 className="text-sm font-medium text-white mb-4">Enter your phone number</h2>
+              <h2 className="text-sm font-medium text-white mb-1">Phone number</h2>
+              <p className="text-[11px] text-[#525252] mb-4">
+                Enter the phone number linked to your Telegram account.
+              </p>
               <input
                 type="tel"
                 value={phone}
@@ -138,64 +139,63 @@ export default function TelegramSetupPage() {
                 placeholder="+1 234 567 8900"
                 className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4"
                 required
+                autoFocus
               />
-              <p className="text-[11px] text-[#3a3a3a] mb-4">
-                Telegram will send a verification code to your account.
-              </p>
               <button
                 type="submit"
                 disabled={loading || !phone}
-                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+                className="w-full rounded-xl bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
               >
                 {loading ? "Sending code..." : "Send Code"}
               </button>
             </form>
           )}
 
-          {/* Step 2: Code */}
-          {step === 2 && !awaitingPassword && (
+          {/* Step 2: Code or Password */}
+          {step === 1 && !needsPassword && (
             <form onSubmit={handleVerify}>
-              <h2 className="text-sm font-medium text-white mb-4">Enter verification code</h2>
+              <h2 className="text-sm font-medium text-white mb-1">Verification code</h2>
               <p className="text-[11px] text-[#525252] mb-4">
-                Check your Telegram for the code from Knight.
+                Check Telegram for the code sent by Knight.
               </p>
               <input
                 type="text"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 placeholder="12345"
-                className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4 font-mono"
+                className="w-full input-base rounded-lg px-4 py-3 text-sm font-mono mb-4"
                 required
+                autoFocus
               />
               <button
                 type="submit"
                 disabled={loading || !code}
-                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+                className="w-full rounded-xl bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
               >
                 {loading ? "Verifying..." : "Verify"}
               </button>
             </form>
           )}
 
-          {/* Step 3: 2FA Password */}
-          {awaitingPassword && (
+          {needsPassword && (
             <form onSubmit={handleVerify}>
-              <h2 className="text-sm font-medium text-white mb-4">Enter 2FA password</h2>
+              <h2 className="text-sm font-medium text-white mb-1">Two-factor password</h2>
               <p className="text-[11px] text-[#525252] mb-4">
-                Your account has two-factor authentication enabled.
+                Your account has 2FA enabled.
               </p>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Your 2FA password"
+                placeholder="Your password"
                 className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4"
                 required
+                autoFocus
               />
               <button
                 type="submit"
                 disabled={loading || !password}
-                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+                className="w-full rounded-xl bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
               >
                 {loading ? "Verifying..." : "Verify"}
               </button>
