@@ -135,7 +135,7 @@ ${chatText}`,
 }
 
 // ─── Process Incoming Message ─────────────────────────────────────────────────
-export async function processIncomingMessage(chatId, userMessage, sendMessageFn, orgId) {
+export async function processIncomingMessage(chatId, userMessage, sendMessageFn, orgId, senderUsername = null, senderName = null) {
   console.log(`[AGENT] Incoming DM from ChatID: ${chatId} | Message: "${userMessage}"`);
 
   let { data: lead } = await supabase
@@ -151,7 +151,8 @@ export async function processIncomingMessage(chatId, userMessage, sendMessageFn,
       org_id: orgId,
       chat_id: chatId.toString(),
       status: 'ACTIVE',
-      username: 'InboundLead'
+      username: senderUsername || `user_${chatId}`,
+      full_name: senderName || null,
     }).select().single();
     if (error) {
       console.error('[AGENT] Failed to create inbound lead:', error);

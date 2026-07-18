@@ -247,6 +247,16 @@ async function main() {
     const chatId = msg.chatId?.value || msg.chatId;
     const text = msg.text;
 
+    let senderUsername = null;
+    let senderName = null;
+    try {
+      const entity = await client.getEntity(chatId);
+      senderUsername = entity?.username || null;
+      senderName = [entity?.firstName, entity?.lastName].filter(Boolean).join(' ') || null;
+    } catch (e) {
+      console.warn('[USERBOT] Failed to get sender entity:', e.message);
+    }
+
     const replyFn = async (id, replyText) => {
       const rawChunks = replyText.split(/\|\|\||\n\n/);
       const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
@@ -280,7 +290,7 @@ async function main() {
       }
     };
 
-    await processIncomingMessage(chatId, text, replyFn, orgId);
+    await processIncomingMessage(chatId, text, replyFn, orgId, senderUsername, senderName);
   }, new NewMessage({}));
 
   // ─── Listen to Group Messages (Sniper) ──────────────────────────────────────
@@ -390,6 +400,16 @@ async function connectOrgUserbot(orgId, sessionString) {
     const chatId = msg.chatId?.value || msg.chatId;
     const text = msg.text;
 
+    let senderUsername = null;
+    let senderName = null;
+    try {
+      const entity = await client.getEntity(chatId);
+      senderUsername = entity?.username || null;
+      senderName = [entity?.firstName, entity?.lastName].filter(Boolean).join(' ') || null;
+    } catch (e) {
+      console.warn('[USERBOT] Failed to get sender entity:', e.message);
+    }
+
     const replyFn = async (id, replyText) => {
       const rawChunks = replyText.split(/\|\|\||\n\n/);
       const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
@@ -423,7 +443,7 @@ async function connectOrgUserbot(orgId, sessionString) {
       }
     };
 
-    await processIncomingMessage(chatId, text, replyFn, orgId);
+    await processIncomingMessage(chatId, text, replyFn, orgId, senderUsername, senderName);
   }, new NewMessage({}));
 
   // Listen to group messages
