@@ -61,6 +61,7 @@ export default function TemplatesPage() {
   }
 
   function startEdit(t: Template) {
+    if (!canUse) { toast.error("Upgrade to Starter to edit templates", { action: { label: "Upgrade", onClick: () => window.location.href = "/dashboard/billing" } }); return; }
     setCreating(false);
     setEditing(t);
     setForm({ name: t.name, type: t.type, subject: t.subject, body: t.body });
@@ -120,9 +121,11 @@ export default function TemplatesPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold text-white">Email Templates</h1>
-          <p className="text-sm text-[#525252] mt-1">Customize your outreach emails with variables</p>
+          <p className="text-sm text-[#525252] mt-1">
+            {canUse ? "Customize your outreach emails with variables" : "View your email templates (upgrade to Starter to create)"}
+          </p>
         </div>
-        {!isFormOpen && (
+        {!isFormOpen && canUse && (
           <button
             onClick={startCreate}
             className="px-4 py-2 rounded-lg bg-white text-black text-[13px] font-medium hover:bg-white/90 transition-colors"
@@ -251,7 +254,7 @@ export default function TemplatesPage() {
                   <p className="text-[11px] text-[#3a3a3a] mt-1 line-clamp-2">{t.body}</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  {!t.id.startsWith("default-") && (
+                  {canUse && !t.id.startsWith("default-") && (
                     <>
                       <button
                         onClick={() => startEdit(t)}
@@ -267,13 +270,15 @@ export default function TemplatesPage() {
                       </button>
                     </>
                   )}
-                  <button
-                    onClick={() => startEdit(t)}
-                    className="p-1.5 rounded text-[#525252] hover:text-white hover:bg-white/[0.06] transition-colors"
-                    title="View/Edit"
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </button>
+                  {canUse && (
+                    <button
+                      onClick={() => startEdit(t)}
+                      className="p-1.5 rounded text-[#525252] hover:text-white hover:bg-white/[0.06] transition-colors"
+                      title="View/Edit"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    </button>
+                  )}
                 </div>
               </div>
             );

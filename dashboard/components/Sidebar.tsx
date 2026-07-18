@@ -138,7 +138,6 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
           const active = isActive(href, exact);
           const isLocked = locked && href !== "/dashboard";
           const isPlanLocked =
-            (href === "/dashboard/templates" && isFree) ||
             (href === "/dashboard/inbox" && isFree);
           const showLock = isLocked || isPlanLocked;
           return (
