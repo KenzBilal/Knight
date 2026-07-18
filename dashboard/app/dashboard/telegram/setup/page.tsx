@@ -2,471 +2,206 @@
 
 import { useState } from "react";
 import Link from "next/link";
-
-type TelegramMode = "userbot" | "normal" | null;
+import { toast } from "sonner";
 
 export default function TelegramSetupPage() {
-  const [mode, setMode] = useState<TelegramMode>(null);
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState("");
-  const [username, setUsername] = useState("");
-  const [botToken, setBotToken] = useState("");
+  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [phoneCodeHash, setPhoneCodeHash] = useState("");
+  const [awaitingPassword, setAwaitingPassword] = useState(false);
 
-  async function handleConnect(e: React.FormEvent) {
+  async function handleStart(e: React.FormEvent) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      const payload: any = {
-        telegram_mode: mode,
-        telegram_username: username,
-      };
-
-      if (mode === "userbot") {
-        payload.telegram_phone = phone;
-      } else {
-        payload.telegram_bot_token = botToken;
-      }
-
-      const res = await fetch("/api/config", {
+      const res = await fetch("/api/telegram/auth/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ phone }),
       });
-
-      if (!res.ok) throw new Error("Failed to save Telegram config");
-
-      setSuccess(true);
-      setStep(mode === "userbot" ? 4 : 3);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to send code");
+      setPhoneCodeHash(data.phoneCodeHash);
+      setStep(2);
     } catch (err: any) {
-      setError(err.message || "Failed to connect Telegram");
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const body: any = { phone, code, phoneCodeHash };
+      if (password) body.password = password;
+
+      const res = await fetch("/api/telegram/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (data.error === "SESSION_PASSWORD_NEEDED") {
+          setAwaitingPassword(true);
+          setStep(3);
+          setLoading(false);
+          return;
+        }
+        throw new Error(data.error || "Failed to verify");
+      }
+
+      toast.success("Telegram connected!");
+      fetch("/api/telegram/auth/confirm", { method: "POST" }).catch(() => {});
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-3xl">
+    <div className="p-4 sm:p-6 md:p-8 max-w-2xl">
       <div className="mb-6">
-        <Link href="/dashboard/telegram" className="text-sm text-paper-400 hover:text-paper-200 transition-colors">
+        <Link href="/dashboard/telegram" className="text-sm text-[#525252] hover:text-[#a3a3a3] transition-colors">
           ← Back to Telegram
         </Link>
       </div>
 
-      <h1 className="font-display text-2xl text-paper-100 mb-2">Connect Telegram</h1>
-      <p className="text-sm text-paper-400 mb-8">
-        Choose how Knight connects to Telegram. Each option has different capabilities.
+      <h1 className="text-xl font-semibold text-white mb-2">Connect Telegram</h1>
+      <p className="text-sm text-[#525252] mb-8">
+        Knight uses your personal Telegram account to find and message leads.
       </p>
 
       {error && (
-        <div className="rounded-lg bg-danger-500/10 border border-danger-500/20 px-4 py-3 text-sm text-danger-500 mb-6">
+        <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400 mb-6">
           {error}
         </div>
       )}
 
       {success ? (
-        <div className="rounded-xl border border-line bg-ink-900 p-8 text-center">
+        <div className="dash-card p-8 text-center">
           <div className="text-4xl mb-4">✓</div>
-          <h2 className="font-display text-xl text-paper-100 mb-2">Telegram Connected!</h2>
-          <p className="text-sm text-paper-400 mb-6">
-            {mode === "userbot"
-              ? "Your Telegram account is now connected. Knight will start finding leads in groups automatically."
-              : "Your bot is now connected. Knight can respond to messages and handle conversations."}
+          <h2 className="text-lg font-semibold text-white mb-2">Telegram Connected!</h2>
+          <p className="text-sm text-[#525252] mb-6">
+            Your account is linked. Knight will start finding leads automatically.
           </p>
           <div className="flex gap-3 justify-center">
             <Link
               href="/dashboard/telegram"
-              className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors"
+              className="rounded-lg bg-white text-black font-medium px-5 py-2.5 text-sm hover:bg-white/90 transition-colors"
             >
-              View Telegram Dashboard
+              View Telegram
             </Link>
             <Link
               href="/dashboard"
-              className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
+              className="rounded-lg border border-white/10 text-[#a3a3a3] font-medium px-5 py-2.5 text-sm hover:bg-white/5 transition-colors"
             >
-              Go to Dashboard
+              Dashboard
             </Link>
           </div>
         </div>
-      ) : !mode ? (
-        /* Mode Selection */
-        <div className="space-y-4">
-          <h2 className="font-display text-lg text-paper-100 mb-4">Choose Connection Type</h2>
-
-          {/* Userbot Option */}
-          <button
-            onClick={() => { setMode("userbot"); setStep(1); }}
-            className="w-full text-left rounded-xl border border-line bg-ink-900 p-6 hover:border-flash-500/50 hover:bg-ink-800/50 transition-all"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-flash-500/10 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl">📱</span>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-display text-lg text-paper-100">Userbot (Personal Account)</h3>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-flash-500/10 text-flash-500 font-medium">Recommended</span>
-                </div>
-                <p className="text-sm text-paper-400 mb-3">
-                  Connect your personal Telegram account. Knight acts as you, finding and messaging leads directly.
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Join any Telegram group
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Find leads automatically
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Send DMs as yourself
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Full conversation control
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Higher response rates
-                  </div>
-                  <div className="flex items-center gap-1.5 text-yellow-500">
-                    <span>⚠</span> Requires phone number
-                  </div>
-                </div>
-              </div>
-            </div>
-          </button>
-
-          {/* Normal Bot Option */}
-          <button
-            onClick={() => { setMode("normal"); setStep(1); }}
-            className="w-full text-left rounded-xl border border-line bg-ink-900 p-6 hover:border-line hover:bg-ink-800/50 transition-all"
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-ink-800 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl">🤖</span>
-              </div>
-              <div className="flex-1">
-                <h3 className="font-display text-lg text-paper-100 mb-1">Normal Bot (BotFather)</h3>
-                <p className="text-sm text-paper-400 mb-3">
-                  Create a Telegram bot. Simpler setup but limited to responding to messages.
-                </p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Simple setup
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> No phone required
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Respond to messages
-                  </div>
-                  <div className="flex items-center gap-1.5 text-green-500">
-                    <span>✓</span> Handle conversations
-                  </div>
-                  <div className="flex items-center gap-1.5 text-paper-400">
-                    <span>—</span> Cannot join groups
-                  </div>
-                  <div className="flex items-center gap-1.5 text-paper-400">
-                    <span>—</span> Cannot find leads
-                  </div>
-                </div>
-              </div>
-            </div>
-          </button>
-
-          {/* Comparison Table */}
-          <div className="rounded-xl border border-line bg-ink-900 p-6 mt-6">
-            <h3 className="font-display text-sm text-paper-100 mb-4">Feature Comparison</h3>
-            <table className="w-full text-xs">
-              <thead>
-                <tr className="border-b border-line">
-                  <th className="text-left py-2 text-paper-400 font-medium">Feature</th>
-                  <th className="text-center py-2 text-flash-500 font-medium">Userbot</th>
-                  <th className="text-center py-2 text-paper-400 font-medium">Normal Bot</th>
-                </tr>
-              </thead>
-              <tbody className="text-paper-300">
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Find leads in groups</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                  <td className="text-center py-2 text-paper-400">✗</td>
-                </tr>
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Send first DM</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                  <td className="text-center py-2 text-paper-400">✗</td>
-                </tr>
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Auto-join groups</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                  <td className="text-center py-2 text-paper-400">✗</td>
-                </tr>
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Reply to messages</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                </tr>
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Handle conversations</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                  <td className="text-center py-2 text-green-500">✓</td>
-                </tr>
-                <tr className="border-b border-line/50">
-                  <td className="py-2">Response rate</td>
-                  <td className="text-center py-2 text-green-500">High</td>
-                  <td className="text-center py-2 text-yellow-500">Medium</td>
-                </tr>
-                <tr>
-                  <td className="py-2">Setup difficulty</td>
-                  <td className="text-center py-2 text-yellow-500">Medium</td>
-                  <td className="text-center py-2 text-green-500">Easy</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
       ) : (
-        /* Setup Steps */
-        <form onSubmit={handleConnect} className="space-y-6">
-          {/* Progress Steps */}
-          <div className="flex items-center gap-4 mb-8">
-            {mode === "userbot" ? (
-              <>
-                {[1, 2, 3].map((s) => (
-                  <div key={s} className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      step >= s ? "bg-flash-500 text-ink-950" : "bg-ink-800 text-paper-400"
-                    }`}>
-                      {step > s ? "✓" : s}
-                    </div>
-                    <span className={`text-sm ${step >= s ? "text-paper-200" : "text-paper-400"}`}>
-                      {s === 1 ? "Phone" : s === 2 ? "Username" : "Verify"}
-                    </span>
-                    {s < 3 && <div className="w-8 h-px bg-line" />}
-                  </div>
-                ))}
-              </>
-            ) : (
-              <>
-                {[1, 2].map((s) => (
-                  <div key={s} className="flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                      step >= s ? "bg-flash-500 text-ink-950" : "bg-ink-800 text-paper-400"
-                    }`}>
-                      {step > s ? "✓" : s}
-                    </div>
-                    <span className={`text-sm ${step >= s ? "text-paper-200" : "text-paper-400"}`}>
-                      {s === 1 ? "Bot Token" : "Username"}
-                    </span>
-                    {s < 2 && <div className="w-8 h-px bg-line" />}
-                  </div>
-                ))}
-              </>
-            )}
+        <div className="dash-card p-6">
+          {/* Step indicators */}
+          <div className="flex items-center gap-2 mb-6">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className="flex items-center gap-2">
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium ${
+                  step >= s ? "bg-white text-black" : "bg-white/10 text-[#525252]"
+                }`}>
+                  {s}
+                </div>
+                {s < 3 && <div className={`w-8 h-px ${step > s ? "bg-white" : "bg-white/10"}`} />}
+              </div>
+            ))}
           </div>
 
-          {/* USERBOT STEPS */}
-          {mode === "userbot" && step === 1 && (
-            <div className="rounded-xl border border-line bg-ink-900 p-6">
-              <h2 className="font-display text-lg text-paper-100 mb-4">Step 1: Phone Number</h2>
-              <p className="text-sm text-paper-400 mb-4">
-                Enter the phone number for your Telegram account. Knight will send you a verification code.
+          {/* Step 1: Phone */}
+          {step === 1 && (
+            <form onSubmit={handleStart}>
+              <h2 className="text-sm font-medium text-white mb-4">Enter your phone number</h2>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 234 567 8900"
+                className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4"
+                required
+              />
+              <p className="text-[11px] text-[#3a3a3a] mb-4">
+                Telegram will send a verification code to your account.
               </p>
-              <div>
-                <label className="block text-sm text-paper-300 mb-1.5">Phone Number</label>
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
-                />
-              </div>
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setMode(null)}
-                  className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => phone && setStep(2)}
-                  disabled={!phone}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
+              <button
+                type="submit"
+                disabled={loading || !phone}
+                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+              >
+                {loading ? "Sending code..." : "Send Code"}
+              </button>
+            </form>
           )}
 
-          {mode === "userbot" && step === 2 && (
-            <div className="rounded-xl border border-line bg-ink-900 p-6">
-              <h2 className="font-display text-lg text-paper-100 mb-4">Step 2: Telegram Username</h2>
-              <p className="text-sm text-paper-400 mb-4">
-                Your Telegram username (without @). This is where Knight sends approval requests.
+          {/* Step 2: Code */}
+          {step === 2 && !awaitingPassword && (
+            <form onSubmit={handleVerify}>
+              <h2 className="text-sm font-medium text-white mb-4">Enter verification code</h2>
+              <p className="text-[11px] text-[#525252] mb-4">
+                Check your Telegram for the code from Knight.
               </p>
-              <div>
-                <label className="block text-sm text-paper-300 mb-1.5">Username</label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="your_username"
-                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
-                />
-              </div>
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => username && setStep(3)}
-                  disabled={!username}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="12345"
+                className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4 font-mono"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading || !code}
+                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+              >
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+            </form>
           )}
 
-          {mode === "userbot" && step === 3 && (
-            <div className="rounded-xl border border-line bg-ink-900 p-6">
-              <h2 className="font-display text-lg text-paper-100 mb-4">Step 3: Verify Connection</h2>
-              <p className="text-sm text-paper-400 mb-4">
-                Click connect to send a verification code to your Telegram. Enter the code to complete setup.
+          {/* Step 3: 2FA Password */}
+          {awaitingPassword && (
+            <form onSubmit={handleVerify}>
+              <h2 className="text-sm font-medium text-white mb-4">Enter 2FA password</h2>
+              <p className="text-[11px] text-[#525252] mb-4">
+                Your account has two-factor authentication enabled.
               </p>
-
-              <div className="rounded-lg bg-ink-950 border border-line p-4 mb-4">
-                <p className="text-xs text-paper-400 mb-2">What happens next:</p>
-                <ol className="text-xs text-paper-300 space-y-1 list-decimal list-inside">
-                  <li>Knight sends a verification code to your Telegram</li>
-                  <li>Enter the code when prompted</li>
-                  <li>Your account is securely connected</li>
-                  <li>Knight starts finding leads automatically</li>
-                </ol>
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-                >
-                  {loading ? "Connecting..." : "Connect Telegram"}
-                </button>
-              </div>
-            </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your 2FA password"
+                className="w-full input-base rounded-lg px-4 py-3 text-sm mb-4"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading || !password}
+                className="w-full rounded-lg bg-white text-black font-medium px-4 py-3 text-sm hover:bg-white/90 disabled:opacity-40 transition-colors"
+              >
+                {loading ? "Verifying..." : "Verify"}
+              </button>
+            </form>
           )}
-
-          {/* NORMAL BOT STEPS */}
-          {mode === "normal" && step === 1 && (
-            <div className="rounded-xl border border-line bg-ink-900 p-6">
-              <h2 className="font-display text-lg text-paper-100 mb-4">Step 1: Create Bot</h2>
-              <p className="text-sm text-paper-400 mb-4">
-                Create a Telegram bot via @BotFather and paste the token here.
-              </p>
-
-              <div className="rounded-lg bg-ink-950 border border-line p-4 mb-4">
-                <p className="text-xs text-paper-400 mb-2">How to create a bot:</p>
-                <ol className="text-xs text-paper-300 space-y-1 list-decimal list-inside">
-                  <li>Open Telegram and search for @BotFather</li>
-                  <li>Send /newbot</li>
-                  <li>Enter a name for your bot (e.g., &quot;Knight Sales Bot&quot;)</li>
-                  <li>Enter a username (must end with &quot;bot&quot;)</li>
-                  <li>Copy the API token</li>
-                </ol>
-              </div>
-
-              <div>
-                <label className="block text-sm text-paper-300 mb-1.5">Bot Token</label>
-                <input
-                  type="text"
-                  required
-                  value={botToken}
-                  onChange={(e) => setBotToken(e.target.value)}
-                  placeholder="123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
-                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
-                />
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setMode(null)}
-                  className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => botToken && setStep(2)}
-                  disabled={!botToken}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-                >
-                  Continue
-                </button>
-              </div>
-            </div>
-          )}
-
-          {mode === "normal" && step === 2 && (
-            <div className="rounded-xl border border-line bg-ink-900 p-6">
-              <h2 className="font-display text-lg text-paper-100 mb-4">Step 2: Bot Username</h2>
-              <p className="text-sm text-paper-400 mb-4">
-                Enter your bot&apos;s username (without @) for notifications.
-              </p>
-
-              <div>
-                <label className="block text-sm text-paper-300 mb-1.5">Bot Username</label>
-                <input
-                  type="text"
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="your_bot_username"
-                  className="w-full rounded-lg bg-ink-950 border border-line px-4 py-2.5 text-sm text-paper-100 placeholder:text-paper-400 focus:outline-none focus:border-flash-500"
-                />
-              </div>
-
-              <div className="flex gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="rounded-lg border border-line text-paper-300 font-medium px-5 py-2.5 text-sm hover:bg-ink-800 transition-colors"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="rounded-lg bg-flash-500 text-ink-950 font-medium px-5 py-2.5 text-sm hover:bg-flash-400 transition-colors disabled:opacity-50"
-                >
-                  {loading ? "Connecting..." : "Connect Bot"}
-                </button>
-              </div>
-            </div>
-          )}
-        </form>
+        </div>
       )}
     </div>
   );
