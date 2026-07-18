@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuthFromToken } from "@/lib/auth";
 import { createServiceClient } from "@/lib/supabase";
 import crypto from "crypto";
+import dns from "dns";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,20 @@ function generateDNSRecords(domain: string, verificationToken: string) {
       note: "Domain verification record",
     },
   };
+}
+
+// Verify DNS TXT record exists
+async function verifyDNSRecord(domain: string, recordName: string, expectedValue: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    dns.resolveTxt(`${recordName}.${domain}`, (err, records) => {
+      if (err || !records || records.length === 0) {
+        resolve(false);
+        return;
+      }
+      const found = records.some(r => r.join("").includes(expectedValue));
+      resolve(found);
+    });
+  });
 }
 
 // GET: Fetch domain status
@@ -144,8 +159,20 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Domain not found" }, { status: 404 });
     }
 
-    // TODO: In production, verify DNS records are set correctly
-    // For now, mark as verified
+    // Verify the DNS TXT record
+    const verified = await verifyDNSRecord(
+      domain.domain,
+      "_knight-verification",
+      domain.verification_token
+    );
+
+    if (!verified) {
+      return NextResponse.json(
+        { error: "DNS record not found. Make sure the TXT record is set and wait a few minutes for propagation." },
+        { status: 400 }
+      );
+    }
+
     const { error } = await supabase
       .from("email_domains")
       .update({

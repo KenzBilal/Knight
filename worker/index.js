@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { createHmac } from 'crypto';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 puppeteer.use(StealthPlugin());
@@ -610,11 +611,12 @@ async function handleScrape(job) {
       });
 
       for (const wh of webhooks) {
+        const sig = createHmac('sha256', wh.secret).update(payload).digest('hex');
         fetch(wh.url, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Webhook-Signature': wh.secret || '',
+            'X-Webhook-Signature': `sha256=${sig}`,
             'X-Knight-Event': 'audit.completed',
           },
           body: payload,
@@ -703,6 +705,11 @@ async function handleScrape(job) {
         if (emailInsertError) {
           console.error('[Scrape] Failed to insert email record:', emailInsertError.message);
         }
+
+        const { error: companyUpdateError } = await supabase
+          .from('companies')
+          .update({ status: 'PITCHED', updated_at: new Date().toISOString() })
+          .eq('id', company.id);
 
         if (companyUpdateError) {
           console.error('[Scrape] Failed to update company status:', companyUpdateError.message);

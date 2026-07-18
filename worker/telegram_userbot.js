@@ -28,6 +28,42 @@ import { initAdminRemote } from './telegram_admin.js';
 
 import ws from 'ws';
 
+// ─── Shared Reply Helper ──────────────────────────────────────────────────────
+function createReplyFn(client, event, chatId) {
+  return async (id, replyText) => {
+    const rawChunks = replyText.split(/\|\|\||\n\n/);
+    const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
+
+    await new Promise(r => setTimeout(r, 2000));
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const typeTime = Math.min(Math.max(chunk.length * 60, 2000), 6000);
+
+      try {
+        await client.invoke(new Api.messages.SetTyping({
+          peer: chatId,
+          action: new Api.SendMessageTypingAction()
+        }));
+      } catch (e) {
+        console.warn('[USERBOT] Failed to set typing action:', e.message);
+      }
+
+      await new Promise(r => setTimeout(r, typeTime));
+
+      if (i === 0) {
+        await event.message.reply({ message: chunk });
+      } else {
+        await client.sendMessage(chatId, { message: chunk });
+      }
+
+      if (chunks.length > 1 && i < chunks.length - 1) {
+        await new Promise(r => setTimeout(r, 1500));
+      }
+    }
+  };
+}
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
 });
@@ -257,38 +293,7 @@ async function main() {
       console.warn('[USERBOT] Failed to get sender entity:', e.message);
     }
 
-    const replyFn = async (id, replyText) => {
-      const rawChunks = replyText.split(/\|\|\||\n\n/);
-      const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
-
-      await new Promise(r => setTimeout(r, 2000));
-
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const typeTime = Math.min(Math.max(chunk.length * 60, 2000), 6000);
-
-        try {
-          await client.invoke(new Api.messages.SetTyping({
-            peer: chatId,
-            action: new Api.SendMessageTypingAction()
-          }));
-        } catch (e) {
-          console.warn('[USERBOT] Failed to set typing action:', e.message);
-        }
-
-        await new Promise(r => setTimeout(r, typeTime));
-
-        if (i === 0) {
-          await event.message.reply({ message: chunk });
-        } else {
-          await client.sendMessage(chatId, { message: chunk });
-        }
-
-        if (chunks.length > 1 && i < chunks.length - 1) {
-          await new Promise(r => setTimeout(r, 1500));
-        }
-      }
-    };
+    const replyFn = createReplyFn(client, event, chatId);
 
     await processIncomingMessage(chatId, text, replyFn, orgId, senderUsername, senderName);
   }, new NewMessage({}));
@@ -410,38 +415,7 @@ async function connectOrgUserbot(orgId, sessionString) {
       console.warn('[USERBOT] Failed to get sender entity:', e.message);
     }
 
-    const replyFn = async (id, replyText) => {
-      const rawChunks = replyText.split(/\|\|\||\n\n/);
-      const chunks = rawChunks.map(c => c.trim()).filter(c => c.length > 0);
-
-      await new Promise(r => setTimeout(r, 2000));
-
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        const typeTime = Math.min(Math.max(chunk.length * 60, 2000), 6000);
-
-        try {
-          await client.invoke(new Api.messages.SetTyping({
-            peer: chatId,
-            action: new Api.SendMessageTypingAction()
-          }));
-        } catch (e) {
-          console.warn('[USERBOT] Failed to set typing action:', e.message);
-        }
-
-        await new Promise(r => setTimeout(r, typeTime));
-
-        if (i === 0) {
-          await event.message.reply({ message: chunk });
-        } else {
-          await client.sendMessage(chatId, { message: chunk });
-        }
-
-        if (chunks.length > 1 && i < chunks.length - 1) {
-          await new Promise(r => setTimeout(r, 1500));
-        }
-      }
-    };
+    const replyFn = createReplyFn(client, event, chatId);
 
     await processIncomingMessage(chatId, text, replyFn, orgId, senderUsername, senderName);
   }, new NewMessage({}));

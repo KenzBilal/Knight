@@ -61,6 +61,13 @@ export default function ProspectsPage() {
       .then((r) => r.json())
       .then((d) => { setCompanies(d.companies || []); setLoading(false); })
       .catch(() => setLoading(false));
+
+    return () => {
+      if (dragImageRef.current) {
+        dragImageRef.current.remove();
+        dragImageRef.current = null;
+      }
+    };
   }, []);
 
   const getByStatus = useCallback((status: string) => {
@@ -93,9 +100,12 @@ export default function ProspectsPage() {
     const el = e.currentTarget as HTMLElement;
     dragRef.current = { id, el };
 
-    // Custom drag image
+    // Custom drag image — reuse existing clone if present
+    if (dragImageRef.current) {
+      dragImageRef.current.remove();
+    }
     const clone = el.cloneNode(true) as HTMLDivElement;
-    clone.style.cssText = "width:280px;opacity:0.92;position:absolute;top:-9999px;left:-9999px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);";
+    clone.style.cssText = "width:280px;opacity:0.92;position:absolute;top:-9999px;left:-9999px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);pointer-events:none;";
     document.body.appendChild(clone);
     dragImageRef.current = clone;
     e.dataTransfer.setDragImage(clone, 140, 30);
