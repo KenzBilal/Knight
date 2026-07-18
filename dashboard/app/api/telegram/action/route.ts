@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
+import { planHasFeature } from "@/lib/limits";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export async function POST(req: Request) {
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
     const { org } = await requireAuthFromToken(tokenMatch[1]);
+
+    if (!planHasFeature(org.plan, "telegram")) {
+      return NextResponse.json({ error: "PLAN_REQUIRED", message: "Telegram requires Max plan" }, { status: 403 });
+    }
 
     // Verify origin matches host (CSRF protection)
     const origin = req.headers.get("origin");

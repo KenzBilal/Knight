@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUser, getOrg } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
+import { planHasFeature } from "@/lib/limits";
 import crypto from "crypto";
 
 const supabase = createClient(
@@ -17,6 +18,10 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
+  }
 
   const { data } = await supabase
     .from("mcp_api_keys")
@@ -38,6 +43,10 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
+  }
 
   let label = "Default";
   try {
@@ -68,6 +77,10 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
+  }
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

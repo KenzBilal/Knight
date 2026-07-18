@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getUser, getOrg } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
+import { planHasFeature } from "@/lib/limits";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,10 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "Webhooks require Starter plan" }, { status: 403 });
+  }
 
   const { data, error } = await supabase
     .from("webhooks")
@@ -28,6 +33,10 @@ export async function POST(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "Webhooks require Starter plan" }, { status: 403 });
+  }
 
   const body = await req.json();
   const { url, label, events } = body;
@@ -61,6 +70,10 @@ export async function DELETE(req: Request) {
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const org = await getOrg(user.id);
   if (!org) return NextResponse.json({ error: "No org" }, { status: 400 });
+
+  if (!planHasFeature(org.plan, "webhooks")) {
+    return NextResponse.json({ error: "PLAN_REQUIRED", message: "Webhooks require Starter plan" }, { status: 403 });
+  }
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
