@@ -47,8 +47,10 @@ export async function GET(req: Request) {
     for (const email of emails || []) {
       const companyId = email.company_id;
       if (!threads[companyId]) {
-        threads[companyId] = {
-          company: email.companies,
+        const rawCo = (email as any).companies;
+          const company = Array.isArray(rawCo) ? rawCo[0] ?? null : rawCo ?? null;
+          threads[companyId] = {
+          company,
           emails: [],
           lastActivity: email.created_at,
           hasReply: false,

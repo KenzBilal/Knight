@@ -15,7 +15,7 @@ interface Audit {
   status: string;
   total_score: number;
   created_at: string;
-  companies: { id: string; name: string; website_url: string; industry: string } | null;
+  company: { id: string; name: string; website_url: string; industry: string } | null;
   results: AuditResult[];
 }
 
@@ -63,13 +63,21 @@ function timeAgo(d: string) {
 export default function AuditsPage() {
   const [audits, setAudits] = useState<Audit[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/audits")
-      .then((r) => r.json())
-      .then((d) => { setAudits(d.audits || []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((d) => {
+        if (d.error) throw new Error(d.error);
+        setAudits(d.audits || []);
+        setLoading(false);
+      })
+      .catch((e) => { setError(e.message); setLoading(false); });
   }, []);
 
   const totalIssues = audits.reduce((sum, a) => sum + a.results.reduce((s, r) => s + (r.issues_found?.length || 0), 0), 0);
@@ -77,7 +85,6 @@ export default function AuditsPage() {
 
   return (
     <div className="p-6 md:p-8">
-      {/* Header stats */}
       <div className="flex items-center gap-6 mb-8 flex-wrap">
         <div>
           <h1 className="text-[17px] font-semibold tracking-tight text-white" style={{ fontFamily: "var(--font-display)" }}>
@@ -103,6 +110,11 @@ export default function AuditsPage() {
             </div>
           ))}
         </div>
+      ) : error ? (
+        <div className="dash-card p-12 text-center">
+          <p className="text-sm font-medium text-[#f87171] mb-1">Failed to load audits</p>
+          <p className="text-xs text-[#525252]">{error}</p>
+        </div>
       ) : audits.length === 0 ? (
         <div className="dash-card p-12 text-center">
           <div className="w-14 h-14 rounded-lg bg-white/[0.04] flex items-center justify-center mx-auto mb-4">
@@ -116,7 +128,7 @@ export default function AuditsPage() {
       ) : (
         <div className="space-y-3">
           {audits.map((audit) => {
-            const company = audit.companies;
+            const company = audit.company;
             const isExpanded = expanded === audit.id;
             const highIssues = audit.results.reduce((s, r) => s + (r.issues_found?.filter(i => i.severity === "high").length || 0), 0);
             const medIssues = audit.results.reduce((s, r) => s + (r.issues_found?.filter(i => i.severity === "medium").length || 0), 0);
@@ -148,7 +160,6 @@ export default function AuditsPage() {
                   </svg>
                 </button>
 
-                {/* Expanded results */}
                 {isExpanded && audit.results.length > 0 && (
                   <div className="border-t border-white/[0.06] px-5 py-4 space-y-3">
                     {audit.results.map((result) => (
