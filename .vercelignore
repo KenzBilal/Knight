@@ -1,0 +1,7 @@
+admin-app/
+worker/
+node_modules/
+.git/
+*.deb
+*.rpm
+*.AppImage

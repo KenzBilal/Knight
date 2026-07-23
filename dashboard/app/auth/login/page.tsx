@@ -26,13 +26,10 @@ function LoginForm() {
       if (!res.ok) throw new Error(data.error || "Login failed");
 
       // PostHog: Identify user after login
-      if (data.user && data.org) {
+      if (data.user) {
         posthog.identify(data.user.id, {
           email: data.user.email,
-          org_id: data.org.id,
-          org_plan: data.org.plan,
         });
-        posthog.people.set({ email: data.user.email });
         posthog.capture("user_logged_in", { method: "password" });
       }
 
