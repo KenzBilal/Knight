@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface Email {
   id: string;
@@ -69,6 +70,7 @@ export default function InboxPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to generate draft");
       setReplyText(data.draft || "");
+      track("ai_draft_generated", { company_id: selectedThread.company.id, company_name: selectedThread.company.name });
       toast.success("Draft generated");
     } catch (e: any) {
       toast.error(e.message || "Failed to generate draft");
@@ -102,6 +104,13 @@ export default function InboxPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send");
+      track("inbox_reply_sent", {
+        company_id: selectedThread.company.id,
+        company_name: selectedThread.company.name,
+        reply_length: replyText.length,
+        used_template: !!selectedTemplate,
+        used_ai_draft: replyText.includes(data.draft || "__nomatch__"),
+      });
       toast.success("Reply sent!");
       setReplyText("");
       setSelectedTemplate("");

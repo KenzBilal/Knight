@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface Contact { id: string; email: string; full_name: string; role: string; bio?: string; }
 interface Company {
@@ -169,6 +170,13 @@ export default function ProspectsPage() {
 
       const colLabel = columns.find(c => c.id === newStatus)?.label || newStatus;
       const movedCompany = companies.find(x => x.id === id);
+      track("prospect_status_changed", {
+        company_id: id,
+        company_name: movedCompany?.name,
+        to_status: newStatus,
+        lead_score: movedCompany?.lead_score,
+        industry: movedCompany?.industry,
+      });
       toast.success(
         <div className="flex items-center gap-3">
           <div className="min-w-0">
@@ -324,6 +332,7 @@ export default function ProspectsPage() {
       });
       if (!res.ok) throw new Error();
       setCompanies(prev => prev.filter(c => c.id !== companyId));
+      track("prospect_deleted", { company_id: companyId, company_name: companyName });
       toast.success(`${companyName} deleted`);
     } catch {
       toast.error("Failed to delete");

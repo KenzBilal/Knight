@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { track } from "@/lib/analytics";
 
 interface PlanData {
   id: string;
@@ -66,6 +67,7 @@ export default function BillingPage() {
         body: JSON.stringify({ variant_id: variantId }),
       });
       const data = await res.json();
+      track("checkout_initiated", { variant_id: variantId, current_plan: currentPlan?.plan });
       if (data.url) window.location.href = data.url;
     } catch {}
     setLoading(false);
@@ -73,6 +75,7 @@ export default function BillingPage() {
 
   async function handleManageSubscription() {
     setLoading("portal");
+    track("manage_subscription_clicked", { current_plan: currentPlan?.plan });
     try {
       const res = await fetch("/api/billing/portal", { method: "POST" });
       const data = await res.json();

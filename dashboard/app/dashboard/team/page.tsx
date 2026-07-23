@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
+import { track } from "@/lib/analytics";
 
 interface TeamMember {
   user_id: string;
@@ -155,6 +156,7 @@ export default function TeamPage() {
         ...prev,
       ]);
       setInviteEmail("");
+      track("team_invite_sent", { email: inviteEmail, role: inviteRole });
       toast.success("Invitation sent", { description: `Invite link sent to ${inviteEmail}` });
     } catch (err: any) {
       toast.error(err.message);
@@ -188,6 +190,7 @@ export default function TeamPage() {
       });
       if (!res.ok) throw new Error("Failed to change role");
       setMembers((prev) => prev.map((m) => m.user_id === memberId ? { ...m, role: newRole } : m));
+      track("team_role_changed", { member_id: memberId, new_role: newRole });
       toast.success("Role updated", { description: `Member role changed to ${newRole}` });
     } catch (err: any) {
       toast.error(err.message);
@@ -207,6 +210,7 @@ export default function TeamPage() {
       });
       if (!res.ok) throw new Error("Failed to remove member");
       setMembers((prev) => prev.filter((m) => m.user_id !== memberId));
+      track("team_member_removed", { member_id: memberId, email });
       toast.success("Member removed", { description: `${email} has been removed from the organization` });
     } catch (err: any) {
       toast.error(err.message);

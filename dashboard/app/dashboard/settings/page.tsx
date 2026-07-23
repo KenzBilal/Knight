@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { FadeIn } from "@/components/Animations";
 import { TemplateManager } from "@/components/TemplateManager";
+import { track } from "@/lib/analytics";
 
 interface EmailDomain {
   id: string;
@@ -74,6 +75,12 @@ export default function SettingsPage() {
       }),
     }).then(async res => { if (!res.ok) throw new Error("Failed"); return res.json(); });
 
+    track("company_profile_saved", {
+      has_name: !!companyName,
+      has_website: !!companyWebsite,
+      service_count: services.split(",").map(s => s.trim()).filter(Boolean).length,
+      has_calendly: !!calendlyLink,
+    });
     toast.promise(promise, { loading: "Saving...", success: "Saved!", error: "Failed to save" });
     promise.finally(() => setSaving(false));
   }
