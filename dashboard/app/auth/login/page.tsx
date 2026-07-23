@@ -31,6 +31,7 @@ function LoginForm() {
           email: data.user.email,
         });
         posthog.capture("user_logged_in", { method: "password" });
+        posthog.flush();
       }
 
       const inviteToken = searchParams.get("invite_token");
