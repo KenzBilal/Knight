@@ -32,7 +32,6 @@ export default function SignupPage() {
           name: name,
         });
         posthog.capture("user_signed_up", { method: "password" });
-        posthog.flush();
       }
 
       router.push("/dashboard");
