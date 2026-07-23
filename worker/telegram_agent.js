@@ -7,6 +7,7 @@ import 'dotenv/config';
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
 import { complete } from './ai_hub.js';
+import { isFeatureEnabled } from './posthog.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }
@@ -136,6 +137,13 @@ ${chatText}`,
 
 // ─── Process Incoming Message ─────────────────────────────────────────────────
 export async function processIncomingMessage(chatId, userMessage, sendMessageFn, orgId, senderUsername = null, senderName = null) {
+  // PostHog Kill Switch: Check if Telegram userbot is enabled
+  const telegramEnabled = await isFeatureEnabled('enable-telegram-userbot', orgId);
+  if (!telegramEnabled) {
+    console.log(`[PostHog] Telegram userbot disabled via kill switch for org ${orgId}`);
+    return;
+  }
+
   console.log(`[AGENT] Incoming DM from ChatID: ${chatId} | Message: "${userMessage}"`);
 
   let { data: lead } = await supabase

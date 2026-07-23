@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
+import posthog from "posthog-js";
 
 const inputCls = "w-full rounded-xl input-base";
 
@@ -110,6 +111,7 @@ export default function IntegrationsPage() {
       setWebhooks(prev => [data.webhook, ...prev]);
       setNewWebhook(data.webhook);
       setShowWebhookCreate(false);
+      posthog.capture("webhook_created", { url: whUrl, label: whLabel || "My Webhook", events: whEvents });
       setWhUrl("");
       setWhLabel("");
       setWhEvents(["audit.completed"]);

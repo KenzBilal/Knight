@@ -4,6 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 function LoginForm() {
   const router = useRouter();
@@ -23,6 +24,18 @@ function LoginForm() {
     }).then(async res => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
+
+      // PostHog: Identify user after login
+      if (data.user && data.org) {
+        posthog.identify(data.user.id, {
+          email: data.user.email,
+          org_id: data.org.id,
+          org_plan: data.org.plan,
+        });
+        posthog.people.set({ email: data.user.email });
+        posthog.capture("user_logged_in", { method: "password" });
+      }
+
       const inviteToken = searchParams.get("invite_token");
       if (inviteToken) {
         router.push(`/api/team/accept?token=${inviteToken}`);

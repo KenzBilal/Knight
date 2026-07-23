@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardComplete, WizardBenefitList, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
+import posthog from "posthog-js";
 
 interface EmailDomain {
   id: string;
@@ -55,6 +56,7 @@ export default function DomainWizardPage() {
       setDomains((prev) => [data.domain, ...prev]);
       setDnsRecords(data.dnsRecords);
       setDomain("");
+      posthog.capture("domain_added", { domain: data.domain.domain });
       toast.success("Domain added. Add DNS records to verify.");
       setStep(2);
     } catch (err: any) {

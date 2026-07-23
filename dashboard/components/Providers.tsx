@@ -1,12 +1,27 @@
 "use client";
 
+import posthog from "posthog-js";
+import { PostHogProvider } from "posthog-js/react";
 import { Toaster } from "sonner";
 import { UpdateChecker } from "./UpdateChecker";
 import { SentryUserProvider } from "./SentryUserProvider";
 
+if (typeof window !== "undefined") {
+  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
+    api_host: "https://us.i.posthog.com",
+    person_profiles: "identified_only",
+    capture_pageview: false,
+    capture_pageleave: true,
+    autocapture: true,
+    session_recording: {
+      maskTextSelector: ".ph-no-capture",
+    },
+  });
+}
+
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <PostHogProvider client={posthog}>
       <SentryUserProvider />
       {children}
       <UpdateChecker />
@@ -39,6 +54,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
         gap={12}
         visibleToasts={3}
       />
-    </>
+    </PostHogProvider>
   );
 }

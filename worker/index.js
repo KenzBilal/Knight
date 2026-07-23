@@ -9,6 +9,8 @@ import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
 import { complete } from './ai_hub.js';
 import { getGlobalConfig } from './global_config.js';
+import { generateEmbedding, companyToText, auditToText } from './embeddings.js';
+import { captureEvent, isFeatureEnabled, flush } from './posthog.js';
 
 dotenv.config();
 
@@ -40,6 +42,18 @@ function sortByPriority(queue) {
 }
 
 console.log('[Knight Worker] Starting...');
+
+// Graceful shutdown — flush PostHog events
+process.on('SIGTERM', async () => {
+  console.log('[Worker] SIGTERM received, flushing PostHog...');
+  await flush();
+  process.exit(0);
+});
+process.on('SIGINT', async () => {
+  console.log('[Worker] SIGINT received, flushing PostHog...');
+  await flush();
+  process.exit(0);
+});
 
 // Subscribe to all new jobs across all orgs
 supabase
@@ -307,6 +321,14 @@ async function getDefaultTemplate(orgId, type) {
 async function handleDiscover(job) {
   const { keyword, location } = job.payload;
   const query = `${keyword} ${location || ''}`.trim();
+
+  // PostHog Kill Switch: Check if discovery is enabled
+  const discoveryEnabled = await isFeatureEnabled('enable-discovery', job.org_id);
+  if (!discoveryEnabled) {
+    console.log(`[PostHog] Discovery disabled via kill switch for org ${job.org_id}`);
+    return;
+  }
+
   console.log(`[Discover] Searching: "${query}"`);
 
   let browser;
@@ -497,15 +519,24 @@ async function handleScrape(job) {
   }
 
   // OSINT Enrichment BEFORE AI
-  const clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
-  const osintName = clearbit?.name || target;
-  
-  const [linkedinLead, crunchbase, glassdoor, yelp] = await Promise.all([
-    findLinkedInDecisionMaker(osintName),
-    findCrunchbase(osintName),
-    findGlassdoor(osintName),
-    findYelp(osintName)
-  ]);
+  // PostHog Kill Switch: Check if OSINT is enabled
+  const osintEnabled = await isFeatureEnabled('enable-osint', orgId);
+  let linkedinLead, clearbit, crunchbase, glassdoor, yelp;
+
+  if (osintEnabled) {
+    clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
+    const osintName = clearbit?.name || target;
+    
+    [linkedinLead, crunchbase, glassdoor, yelp] = await Promise.all([
+      findLinkedInDecisionMaker(osintName),
+      findCrunchbase(osintName),
+      findGlassdoor(osintName),
+      findYelp(osintName)
+    ]);
+  } else {
+    console.log(`[PostHog] OSINT disabled via kill switch for org ${orgId}`);
+    clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
+  }
 
   if (linkedinLead && contacts.length > 0) {
     const parts = linkedinLead.title.split('-');
@@ -529,7 +560,19 @@ async function handleScrape(job) {
   const orgPlan = orgRow?.plan || 'free';
   const hasPitch = orgPlan === 'starter' || orgPlan === 'max';
 
-  const aiAnalysis = hasPitch ? await analyzeWithCohere(auditData) : { pitch: '', companyName: target, industry: 'Unknown', leadScore: 50 };
+  // PostHog Kill Switch: Check if AI pitching is enabled for this org
+  const aiPitchingEnabled = await isFeatureEnabled('enable-ai-pitching', orgId);
+
+  let aiAnalysis;
+  if (hasPitch && aiPitchingEnabled) {
+    aiAnalysis = await analyzeWithCohere(auditData);
+  } else {
+    // Kill switch active or plan doesn't include AI — use static template
+    if (!aiPitchingEnabled) {
+      console.log(`[PostHog] AI pitching disabled via kill switch for org ${orgId}`);
+    }
+    aiAnalysis = { pitch: '', companyName: target, industry: 'Unknown', leadScore: 50 };
+  }
   const groqSuggestions = hasPitch ? await analyzeWithGroq(auditData) : '';
 
   const companyName = clearbit?.name || aiAnalysis.companyName || target;
@@ -547,6 +590,16 @@ async function handleScrape(job) {
   if (companyError) {
     throw new Error(`Failed to create company: ${companyError.message}`);
   }
+
+  // Generate company embedding (async, non-blocking)
+  generateEmbedding(companyToText({ ...company, industry: aiAnalysis.industry }), process.env.COHERE_API_KEY)
+    .then(async (embedding) => {
+      if (embedding) {
+        await supabase.from('companies').update({ embedding: JSON.stringify(embedding) }).eq('id', company.id);
+        console.log(`[Embedding] Company ${company.name} embedded`);
+      }
+    })
+    .catch(err => console.error(`[Embedding] Failed for ${company.name}:`, err.message));
 
   if (contacts.length > 0) {
     const { error: contactsError } = await supabase.from('contacts').insert(
@@ -579,6 +632,16 @@ async function handleScrape(job) {
     throw new Error(`Failed to create audit: ${auditError.message}`);
   }
 
+  // Generate audit embedding (async, non-blocking)
+  generateEmbedding(auditToText({ ...audit, company: { name: companyName, industry: aiAnalysis.industry } }, auditData.issues || []), process.env.COHERE_API_KEY)
+    .then(async (embedding) => {
+      if (embedding) {
+        await supabase.from('audits').update({ embedding: JSON.stringify(embedding) }).eq('id', audit.id);
+        console.log(`[Embedding] Audit ${audit.id} embedded`);
+      }
+    })
+    .catch(err => console.error(`[Embedding] Failed for audit ${audit.id}:`, err.message));
+
   const { error: auditResultError } = await supabase.from('audit_results').insert({
     org_id: orgId,
     audit_id: audit.id,
@@ -594,7 +657,12 @@ async function handleScrape(job) {
   console.log(`[Scrape] ${company.name} | Score: ${auditData.score} | Contacts: ${contacts.length}`);
 
   // Trigger outbound webhooks
-  try {
+  // PostHog Kill Switch: Check if webhooks are enabled
+  const webhooksEnabled = await isFeatureEnabled('enable-webhooks', orgId);
+  if (!webhooksEnabled) {
+    console.log(`[PostHog] Webhooks disabled via kill switch for org ${orgId}`);
+  } else {
+    try {
     const { data: webhooks } = await supabase
       .from('webhooks')
       .select('*')
@@ -639,8 +707,16 @@ async function handleScrape(job) {
   } catch (e) {
     console.error(`[Webhook] Error:`, e.message);
   }
+  } // end webhooksEnabled check
 
   // Auto-send if score is low enough
+  // PostHog Kill Switch: Check if auto-email is enabled
+  const autoEmailEnabled = await isFeatureEnabled('enable-auto-email', orgId);
+  if (!autoEmailEnabled) {
+    console.log(`[PostHog] Auto-email disabled via kill switch for org ${orgId}`);
+    return { company, audit, auditData, pitch: aiAnalysis.pitch, contacts };
+  }
+
   if (auditData.score <= 60 && contacts.length > 0 && contacts[0].email) {
     const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
     const dailyLimit = orgConfig?.daily_email_limit || 90;
@@ -723,6 +799,20 @@ async function handleScrape(job) {
         }
 
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
+
+        // PostHog: Audit completed event
+        captureEvent(orgId, 'worker_audit_completed', {
+          company_name: company.name,
+          website: target,
+          score: auditData.score,
+          industry: aiAnalysis.industry,
+          lead_score: aiAnalysis.leadScore,
+          has_pitch: hasPitch,
+          ai_pitching_enabled: aiPitchingEnabled,
+          contacts_found: contacts.length,
+          email_sent: true,
+          org_plan: orgPlan,
+        });
 
         const { data: org } = await supabase.from('orgs').select('plan').eq('id', orgId).single();
         if (org?.plan === 'max') {
@@ -832,6 +922,11 @@ Respond with only the exact text of the email draft. No markdown, no preambles.`
       status: 'pending'
     });
     console.log(`[ProcessReply] Draft generated for email ${email_id}`);
+    captureEvent(orgId, 'worker_reply_processed', {
+      company_id,
+      intent,
+      draft_generated: true,
+    });
   } catch (err) {
     console.error('[ProcessReply] Draft save failed:', err.message);
   }
@@ -882,6 +977,11 @@ async function handleFollowup(job) {
     });
 
     console.log(`[Followup] Sent step ${step} to ${targetEmail}`);
+    captureEvent(orgId, 'worker_followup_sent', {
+      company_id,
+      step,
+      target_email: targetEmail,
+    });
   } catch (err) {
     console.error('[Followup] Send failed:', err.message);
   }
