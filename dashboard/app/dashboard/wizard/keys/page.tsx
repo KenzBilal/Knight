@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardComplete, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 const STEPS = [
   { id: "why", title: "Why" },
@@ -75,6 +76,7 @@ export default function KeysWizardPage() {
       success: "Keys saved!",
       error: "Failed",
     });
+    track("api_keys_saved", { has_cohere: !!cohereKey, has_gemini: !!geminiKey, has_openrouter: !!openrouterKey, source: "wizard" });
     await promise;
     setSaving(false);
     setCompleted(true);

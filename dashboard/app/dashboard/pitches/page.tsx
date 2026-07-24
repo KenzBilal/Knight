@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { track } from "@/lib/analytics";
 
 interface Company {
   id: string;
@@ -57,6 +58,7 @@ export default function PitchesPage() {
   function handleCopy() {
     if (!selected?.ai_pitch) return;
     navigator.clipboard.writeText(selected.ai_pitch);
+    track("pitch_copied", { company_id: selected.id, company_name: selected.name });
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }

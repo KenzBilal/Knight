@@ -96,6 +96,7 @@ export default function SettingsPage() {
       }),
     }).then(async res => { if (!res.ok) throw new Error("Failed"); return res.json(); });
 
+    track("api_keys_saved", { has_cohere: !!cohereKey, has_gemini: !!geminiKey, has_openrouter: !!openrouterKey });
     toast.promise(promise, { loading: "Saving keys...", success: "Keys saved!", error: "Failed" });
   }
 
@@ -111,6 +112,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed");
+      track("email_domain_added", { domain: newDomain });
       setDomains(prev => [data.domain, ...prev]);
       setDnsRecords(data.dnsRecords);
       setNewDomain("");
@@ -149,6 +151,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to send");
+      track("test_email_sent", { email: testEmail });
       toast.success("Test email sent! Check your inbox.");
     } catch (e: any) {
       toast.error(e.message || "Failed to send test email");

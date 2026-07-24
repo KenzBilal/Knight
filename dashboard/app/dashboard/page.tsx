@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { track } from "@/lib/analytics";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface OverviewData {
@@ -176,6 +177,7 @@ export default function DashboardPage() {
         const err = await res.json().catch(() => ({}));
         throw new Error((err as { error?: string }).error || "Discovery failed");
       }
+      track("discovery_started", { keyword: keyword.trim(), location: location.trim() });
       setKeyword("");
       setLocation("");
       await fetchData(period);

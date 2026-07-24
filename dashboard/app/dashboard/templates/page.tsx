@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface Template {
   id: string;
@@ -88,6 +89,7 @@ export default function TemplatesPage() {
       } else {
         setTemplates(prev => [data.template, ...prev]);
       }
+      track("template_saved", { template_id: editing?.id || data.template?.id, type: form.type, is_update: isUpdate });
       setCreating(false);
       setEditing(null);
       toast.success(isUpdate ? "Template updated" : "Template created");
@@ -103,6 +105,7 @@ export default function TemplatesPage() {
     try {
       const res = await fetch(`/api/templates?id=${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed");
+      track("template_deleted", { template_id: id });
       setTemplates(prev => prev.filter(t => t.id !== id));
       toast.success("Deleted");
     } catch {

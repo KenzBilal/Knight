@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardBenefitList, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 const STEPS = [
   { id: "welcome", title: "Welcome" },
@@ -86,6 +87,7 @@ export default function ProfileWizardPage() {
         }),
       });
       if (!res.ok) throw new Error("Failed");
+      track("company_profile_saved", { has_name: !!companyName, has_website: !!companyWebsite, service_count: services.length, source: "wizard" });
       toast.success("Profile saved!");
       router.replace("/dashboard");
     } catch {
