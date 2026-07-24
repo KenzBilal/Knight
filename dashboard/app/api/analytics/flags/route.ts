@@ -5,7 +5,7 @@ import { requireAuthFromToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("knight_token")?.value;

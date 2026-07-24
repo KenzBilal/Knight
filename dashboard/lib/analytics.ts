@@ -3,7 +3,7 @@
 
 let _userId: string | null = null;
 let _orgId: string | null = null;
-let _sessionId: string = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+const _sessionId: string = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
 
 /**
  * Identify the current user. Call once after login.
