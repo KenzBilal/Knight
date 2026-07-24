@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import posthog from "posthog-js";
+import { identifyUser, track } from "@/lib/analytics";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -25,13 +25,13 @@ export default function SignupPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Signup failed");
 
-      // PostHog: Identify user after signup
+      // Analytics: Identify user after signup
       if (data.user) {
-        posthog.identify(data.user.id, {
+        identifyUser(data.user.id, {
           email: data.user.email,
           name: name,
         });
-        posthog.capture("user_signed_up", { method: "password" });
+        track("user_signed_up", { method: "password" });
       }
 
       router.push("/dashboard");

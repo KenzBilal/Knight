@@ -10,7 +10,7 @@ import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js'
 import { complete } from './ai_hub.js';
 import { getGlobalConfig } from './global_config.js';
 import { generateEmbedding, companyToText, auditToText } from './embeddings.js';
-import { captureEvent, isFeatureEnabled, flush } from './posthog.js';
+import { captureEvent, isFeatureEnabled, flush } from './analytics.js';
 
 dotenv.config();
 

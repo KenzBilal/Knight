@@ -7,7 +7,7 @@ import 'dotenv/config';
 import ws from 'ws';
 import { runAudit, analyzeWithCohere, analyzeWithGroq } from './shared_audit.js';
 import { complete } from './ai_hub.js';
-import { isFeatureEnabled } from './posthog.js';
+import { isFeatureEnabled } from './analytics.js';
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
   realtime: { transport: ws }

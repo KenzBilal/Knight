@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
-import posthog from "posthog-js";
+import { identifyUser, track } from "@/lib/analytics";
 
 function LoginForm() {
   const router = useRouter();
@@ -25,12 +25,13 @@ function LoginForm() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Login failed");
 
-      // PostHog: Identify user after login
+      // Analytics: Identify user after login
       if (data.user) {
-        posthog.identify(data.user.id, {
+        identifyUser(data.user.id, {
           email: data.user.email,
+          name: data.user.name,
         });
-        posthog.capture("user_logged_in", { method: "password" });
+        track("user_logged_in", { method: "password" });
       }
 
       const inviteToken = searchParams.get("invite_token");
