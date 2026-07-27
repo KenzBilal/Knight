@@ -1,0 +1,27 @@
+name: Deploy to Server
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: false
+        default: 'master'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /home/kenz/Projects/Knight
+            git fetch origin ${{ inputs.branch || 'master' }}
+            git reset --hard origin/${{ inputs.branch || 'master' }}
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
+            echo "Deploy complete: $(git rev-parse --short HEAD)"
