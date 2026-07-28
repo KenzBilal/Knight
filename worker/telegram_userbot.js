@@ -383,10 +383,12 @@ async function connectOrgUserbot(orgId, sessionString) {
   try {
     const botToken = process.env.KNIGHT_BOT_TOKEN;
     if (botToken) {
-      const botId = botToken.split(':')[0]; // Bot token format: "botId:hash"
-      const botEntity = await client.getEntity(botId);
-      await client.sendMessage(botEntity.id, { message: '/start' });
-      console.log(`[USERBOT] Sent /start to Knight bot for org ${orgId}`);
+      const botId = parseInt(botToken.split(':')[0]);
+      const [botEntity] = await client.invoke(new Api.users.GetUsers({ id: [botId] }));
+      if (botEntity) {
+        await client.sendMessage(botEntity.id, { message: '/start' });
+        console.log(`[USERBOT] Sent /start to Knight bot for org ${orgId}`);
+      }
     }
   } catch (e) {
     console.warn(`[USERBOT] Could not send /start to Knight bot: ${e.message}`);
