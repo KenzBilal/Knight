@@ -379,21 +379,6 @@ async function connectOrgUserbot(orgId, sessionString) {
   await client.connect();
   console.log(`[USERBOT] Connected for org: ${orgId}`);
 
-  // Send /start to Knight bot so it can welcome the user
-  try {
-    const botToken = process.env.KNIGHT_BOT_TOKEN;
-    if (botToken) {
-      const botId = parseInt(botToken.split(':')[0]);
-      const [botEntity] = await client.invoke(new Api.users.GetUsers({ id: [botId] }));
-      if (botEntity) {
-        await client.sendMessage(botEntity.id, { message: '/start' });
-        console.log(`[USERBOT] Sent /start to Knight bot for org ${orgId}`);
-      }
-    }
-  } catch (e) {
-    console.warn(`[USERBOT] Could not send /start to Knight bot: ${e.message}`);
-  }
-
   // Send welcome message if not already sent
   sendWelcomeMessage(orgId, client);
 
@@ -455,22 +440,19 @@ async function connectOrgUserbot(orgId, sessionString) {
     const keywords = await generateSearchKeywords();
     console.log('[HUNTER] Keywords:', keywords);
 
-    // Ensure client is fully connected before invoking MTProto calls
-    try {
-      await client.getMe();
-    } catch (e) {
-      console.warn(`[HUNTER] Client not ready, skipping hunt: ${e.message}`);
-      return;
-    }
-
     for (const keyword of keywords) {
       try {
-        const results = await client.invoke({
-          _: 'messages.searchGlobal',
-          q: keyword,
-          filter: { _: 'inputMessagesFilterEmpty' },
-          minDate: 0, maxDate: 0, offsetRate: 0, offsetId: 0, limit: 5,
-        });
+        const results = await client.invoke(
+          new Api.messages.SearchGlobal({
+            q: keyword,
+            filter: new Api.InputMessagesFilterEmpty(),
+            minDate: 0,
+            maxDate: 0,
+            offsetRate: 0,
+            offsetId: 0,
+            limit: 5,
+          })
+        );
 
         for (const chat of (results?.chats || [])) {
           try {
