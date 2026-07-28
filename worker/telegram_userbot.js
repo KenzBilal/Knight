@@ -305,7 +305,13 @@ async function main() {
     if (msg.date < botStartTime) return;
 
     const chatId = msg.senderId?.value || msg.senderId;
-    const username = (await client.getEntity(chatId))?.username;
+    let username = null;
+    try {
+      const entity = await client.getEntity(chatId);
+      username = entity?.username || null;
+    } catch (e) {
+      return;
+    }
     const groupName = event.message.chat?.title || 'Unknown Group';
     const text = msg.text;
 
@@ -377,8 +383,8 @@ async function connectOrgUserbot(orgId, sessionString) {
   try {
     const botToken = process.env.KNIGHT_BOT_TOKEN;
     if (botToken) {
-      const botUsername = botToken.split(':')[0]; // Bot token format: "botId:hash"
-      const botEntity = await client.getEntity('knight_confirmation_bot');
+      const botId = botToken.split(':')[0]; // Bot token format: "botId:hash"
+      const botEntity = await client.getEntity(botId);
       await client.sendMessage(botEntity.id, { message: '/start' });
       console.log(`[USERBOT] Sent /start to Knight bot for org ${orgId}`);
     }
@@ -427,7 +433,14 @@ async function connectOrgUserbot(orgId, sessionString) {
     if (msg.date < botStartTime) return;
 
     const chatId = msg.senderId?.value || msg.senderId;
-    const username = (await client.getEntity(chatId))?.username;
+    let username = null;
+    try {
+      const entity = await client.getEntity(chatId);
+      username = entity?.username || null;
+    } catch (e) {
+      // Entity not cached — skip group sniper for this message
+      return;
+    }
     const groupName = event.message.chat?.title || 'Unknown Group';
     const text = msg.text;
 
@@ -439,6 +452,14 @@ async function connectOrgUserbot(orgId, sessionString) {
     console.log(`[HUNTER] Starting daily hunt for org ${orgId}...`);
     const keywords = await generateSearchKeywords();
     console.log('[HUNTER] Keywords:', keywords);
+
+    // Ensure client is fully connected before invoking MTProto calls
+    try {
+      await client.getMe();
+    } catch (e) {
+      console.warn(`[HUNTER] Client not ready, skipping hunt: ${e.message}`);
+      return;
+    }
 
     for (const keyword of keywords) {
       try {
@@ -460,6 +481,8 @@ async function connectOrgUserbot(orgId, sessionString) {
       } catch (err) {
         console.warn(`[HUNTER] Search failed for "${keyword}":`, err.message);
       }
+      // Throttle between searches to avoid flood
+      await new Promise(r => setTimeout(r, 3000));
     }
   };
 
