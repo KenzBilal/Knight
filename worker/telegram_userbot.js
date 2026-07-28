@@ -446,9 +446,10 @@ async function connectOrgUserbot(orgId, sessionString) {
           new Api.messages.SearchGlobal({
             q: keyword,
             filter: new Api.InputMessagesFilterEmpty(),
-            minDate: 0,
-            maxDate: 0,
+            minDate: undefined,
+            maxDate: undefined,
             offsetRate: 0,
+            offsetPeer: new Api.InputPeerEmpty(),
             offsetId: 0,
             limit: 5,
           })
