@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
+import { checkKillSwitch } from "@/lib/kill-switches";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +19,10 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const companyId = url.searchParams.get("companyId");
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "10"), 50);
+
+    // Kill switch check
+    const ksError = await checkKillSwitch("enable-ai-pitching", org.id);
+    if (ksError) return ksError;
 
     if (!companyId) {
       return NextResponse.json({ error: "companyId is required" }, { status: 400 });

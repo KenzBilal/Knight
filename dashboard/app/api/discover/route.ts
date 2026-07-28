@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
 import { checkLimits, incrementUsage } from "@/lib/limits";
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS } from "@/lib/rate-limit";
+import { checkKillSwitch } from "@/lib/kill-switches";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,10 @@ export async function POST(req: Request) {
         { status: 429, headers: getRateLimitHeaders(rateLimit) }
       );
     }
+
+    // Kill switch check
+    const ksError = await checkKillSwitch("enable-discovery", org.id);
+    if (ksError) return ksError;
 
     // Check usage limits
     const limits = await checkLimits(org.id, "lead");

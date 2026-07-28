@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
+import { checkKillSwitch } from "@/lib/kill-switches";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,10 @@ export async function POST(req: Request) {
 
     const supabase = createServiceClient();
     const { url } = await req.json();
+
+    // Kill switch check
+    const ksError = await checkKillSwitch("enable-ai-pitching", org.id);
+    if (ksError) return ksError;
 
     if (!url) {
       return NextResponse.json({ error: "url is required" }, { status: 400 });

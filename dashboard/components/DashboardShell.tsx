@@ -27,10 +27,20 @@ export function DashboardShell({
   onboardingIncomplete?: boolean;
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [killSwitches, setKillSwitches] = useState<Record<string, boolean>>({});
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   useEffect(() => {
     setSidebarOpen(false);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/kill-switches")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.flags) setKillSwitches(data.flags);
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -56,6 +66,7 @@ export function DashboardShell({
             userName={userName}
             userRole={userRole}
             onboardingIncomplete={onboardingIncomplete}
+            killSwitches={killSwitches}
             onClose={() => setSidebarOpen(false)}
           />
         </div>

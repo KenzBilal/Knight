@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthEntry, deleteAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
+import { checkKillSwitch } from "@/lib/kill-switches";
 import { Api } from "telegram";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
@@ -39,6 +40,9 @@ You're all set — I'm already working.`,
 export async function POST(req: Request) {
   try {
     const { org } = await requireTelegramAuth(req);
+
+    const ksError = await checkKillSwitch("enable-telegram-userbot", org.id);
+    if (ksError) return ksError;
 
     // Gate: must have company details before connecting Telegram
     const supabase = createServiceClient();

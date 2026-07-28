@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getUser, getOrg } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { planHasFeature } from "@/lib/limits";
+import { checkKillSwitch } from "@/lib/kill-switches";
 import crypto from "crypto";
 
 const supabase = createClient(
@@ -22,6 +23,9 @@ export async function GET() {
   if (!planHasFeature(org.plan, "webhooks")) {
     return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
   }
+
+  const ksError = await checkKillSwitch("enable-webhooks", org.id);
+  if (ksError) return ksError;
 
   const { data } = await supabase
     .from("mcp_api_keys")
@@ -47,6 +51,9 @@ export async function POST(req: Request) {
   if (!planHasFeature(org.plan, "webhooks")) {
     return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
   }
+
+  const ksError = await checkKillSwitch("enable-webhooks", org.id);
+  if (ksError) return ksError;
 
   let label = "Default";
   try {
@@ -81,6 +88,9 @@ export async function DELETE(req: Request) {
   if (!planHasFeature(org.plan, "webhooks")) {
     return NextResponse.json({ error: "PLAN_REQUIRED", message: "MCP requires Starter plan" }, { status: 403 });
   }
+
+  const ksError = await checkKillSwitch("enable-webhooks", org.id);
+  if (ksError) return ksError;
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");

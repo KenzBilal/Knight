@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { requireAuthFromToken } from "@/lib/auth";
 import { planHasFeature } from "@/lib/limits";
+import { checkKillSwitch } from "@/lib/kill-switches";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,9 @@ export async function GET(req: Request) {
     if (!planHasFeature(org.plan, "telegram")) {
       return NextResponse.json({ error: "PLAN_REQUIRED", message: "Telegram requires Max plan" }, { status: 403 });
     }
+
+    const ksError = await checkKillSwitch("enable-telegram-userbot", org.id);
+    if (ksError) return ksError;
 
     const url = new URL(req.url);
     const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));

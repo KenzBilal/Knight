@@ -95,10 +95,11 @@ interface SidebarProps {
   userName?: string;
   userRole?: "owner" | "admin" | "member";
   onboardingIncomplete?: boolean;
+  killSwitches?: Record<string, boolean>;
   onClose?: () => void;
 }
 
-export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "member", onboardingIncomplete, onClose }: SidebarProps) {
+export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "member", onboardingIncomplete, killSwitches, onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const isFree = orgPlan === "free";
@@ -106,6 +107,21 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
   const [menuOpen, setMenuOpen] = useState(false);
   const [showSetupModal, setShowSetupModal] = useState(false);
   const locked = !!onboardingIncomplete;
+
+  // Kill switch mapping: sidebar label → flag key
+  const killSwitchMap: Record<string, string> = {
+    Prospects: "enable-discovery",
+    Audits: "enable-ai-pitching",
+    Inbox: "enable-auto-email",
+    Telegram: "enable-telegram-userbot",
+    Integrations: "enable-webhooks",
+  };
+
+  function isKillSwitchedOff(label: string): boolean {
+    if (!killSwitches) return false;
+    const flagKey = killSwitchMap[label];
+    return flagKey ? killSwitches[flagKey] === false : false;
+  }
 
   function isActive(href: string, exact?: boolean) {
     return exact ? pathname === href : pathname.startsWith(href);
@@ -142,7 +158,8 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
             (href === "/dashboard/inbox" && isFree) ||
             (href === "/dashboard/telegram" && isFree) ||
             (href === "/dashboard/integrations" && isFree);
-          const showLock = isLocked || isPlanLocked;
+          const isDisabled = isKillSwitchedOff(label);
+          const showLock = isLocked || isPlanLocked || isDisabled;
           return (
             <Link
               key={href}
@@ -151,6 +168,13 @@ export function Sidebar({ orgPlan = "free", userEmail, userName, userRole = "mem
                 if (isLocked) {
                   e.preventDefault();
                   setShowSetupModal(true);
+                  return;
+                }
+                if (isDisabled) {
+                  e.preventDefault();
+                  toast.error(`${label} is currently disabled by your admin.`, {
+                    description: "Contact your organization owner to enable this feature.",
+                  });
                   return;
                 }
                 if (isPlanLocked) {

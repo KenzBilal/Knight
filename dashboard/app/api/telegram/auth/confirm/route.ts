@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireTelegramAuth, TELEGRAM_API_ID, TELEGRAM_API_HASH } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
+import { checkKillSwitch } from "@/lib/kill-switches";
 import { TelegramClient } from "telegram";
 import { StringSession } from "telegram/sessions/index.js";
 
@@ -13,6 +14,9 @@ export async function POST(req: Request) {
   let knightBot: TelegramClient | null = null;
   try {
     const { org } = await requireTelegramAuth(req);
+
+    const ksError = await checkKillSwitch("enable-telegram-userbot", org.id);
+    if (ksError) return ksError;
 
     if (!KNIGHT_BOT_TOKEN) {
       return NextResponse.json({ error: "Knight bot not configured" }, { status: 500 });

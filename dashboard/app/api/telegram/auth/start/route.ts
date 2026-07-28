@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient, apiCredentials, setAuthClient, requireTelegramAuth } from "@/lib/telegram-auth";
 import { createServiceClient } from "@/lib/supabase";
 import { planHasFeature } from "@/lib/limits";
+import { checkKillSwitch } from "@/lib/kill-switches";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,9 @@ export async function POST(req: Request) {
         { status: 403 }
       );
     }
+
+    const ksError = await checkKillSwitch("enable-telegram-userbot", org.id);
+    if (ksError) return ksError;
 
     const supabase = createServiceClient();
     const { data: config } = await supabase
