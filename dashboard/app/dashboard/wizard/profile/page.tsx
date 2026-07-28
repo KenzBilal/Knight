@@ -62,14 +62,17 @@ export default function ProfileWizardPage() {
   }, []);
 
   function toggleService(service: string) {
-    setServices((prev) =>
-      prev.includes(service) ? prev.filter((s) => s !== service) : [...prev, service]
-    );
+    setServices((prev) => {
+      const enabled = !prev.includes(service);
+      track("wizard_service_toggled", { service, enabled });
+      return enabled ? [...prev, service] : prev.filter((s) => s !== service);
+    });
   }
 
   function addCustomService() {
     if (customService && !services.includes(customService)) {
       setServices((prev) => [...prev, customService]);
+      track("wizard_custom_service_added", { service: customService });
       setCustomService("");
     }
   }

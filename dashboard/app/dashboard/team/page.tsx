@@ -174,6 +174,7 @@ export default function TeamPage() {
       });
       if (!res.ok) throw new Error("Failed to cancel invite");
       setInvites((prev) => prev.filter((i) => i.id !== inviteId));
+      track("team_invite_cancelled", { email });
       toast.success("Invite cancelled", { description: `Invitation to ${email} has been revoked` });
     } catch (err: any) {
       toast.error(err.message);
@@ -231,6 +232,7 @@ export default function TeamPage() {
       if (!res.ok) throw new Error("Failed to update organization");
       setOrg((prev) => prev ? { ...prev, name: orgName, slug: orgSlug } : prev);
       setEditingOrg(false);
+      track("organization_saved", { name: orgName, slug: orgSlug });
       toast.success("Organization updated");
     } catch (err: any) {
       toast.error(err.message);

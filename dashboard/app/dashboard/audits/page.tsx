@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface AuditResult {
   id: string;
@@ -178,7 +179,7 @@ export default function AuditsPage() {
                             <div className="mb-3">
                               <div className="flex items-center justify-between mb-1">
                                 <p className="text-[10px] text-[#525252] font-medium uppercase tracking-wider">Pitch</p>
-                                <button onClick={() => { navigator.clipboard.writeText(pitch); toast.success("Pitch copied"); }} className="text-[10px] text-[#3a3a3a] hover:text-white transition-colors">Copy</button>
+                                <button onClick={() => { navigator.clipboard.writeText(pitch); track("audit_pitch_copied"); toast.success("Pitch copied"); }} className="text-[10px] text-[#3a3a3a] hover:text-white transition-colors">Copy</button>
                               </div>
                               <p className="text-[12px] text-[#a3a3a3] leading-relaxed whitespace-pre-wrap">{pitch}</p>
                             </div>

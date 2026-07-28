@@ -83,6 +83,7 @@ export default function InboxPage() {
     if (!t) return;
     setSelectedTemplate(templateId);
     setReplyText(t.body);
+    track("inbox_template_applied", { template_id: templateId, template_name: t.name });
   }
 
   async function sendReply() {
@@ -168,7 +169,7 @@ export default function InboxPage() {
             {threads.map((thread) => (
               <button
                 key={thread.company.id}
-                onClick={() => { setSelectedThread(thread); setReplyText(""); setSelectedTemplate(""); }}
+                onClick={() => { setSelectedThread(thread); track("inbox_thread_selected", { thread_id: thread.company.id, company: thread.company?.name }); setReplyText(""); setSelectedTemplate(""); }}
                 className={`w-full text-left rounded-lg p-4 transition-all duration-150 dash-card ${
                   selectedThread?.company.id === thread.company.id
                     ? "bg-white/[0.06]"

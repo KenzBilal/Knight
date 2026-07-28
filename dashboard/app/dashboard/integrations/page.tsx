@@ -91,6 +91,7 @@ export default function IntegrationsPage() {
       setMcpKeys(prev => [data.key, ...prev]);
       setNewMcpKey({ key_value: data.key.key_value, label: data.key.label });
       setShowMcpCreate(false);
+      track("mcp_key_created", { label: mcpLabel || "Default" });
       setMcpLabel("");
     } catch (e: any) { toast.error(e.message || "Failed"); }
     setMcpSaving(false);
@@ -121,12 +122,12 @@ export default function IntegrationsPage() {
 
   async function deleteWebhook(id: string) {
     const res = await fetch(`/api/integrations/webhooks?id=${id}`, { method: "DELETE" });
-    if (res.ok) { setWebhooks(prev => prev.filter(w => w.id !== id)); toast.success("Deleted"); setDetailWebhook(null); }
+    if (res.ok) { setWebhooks(prev => prev.filter(w => w.id !== id)); track("webhook_deleted", { id }); toast.success("Deleted"); setDetailWebhook(null); }
   }
 
   async function deleteMcpKey(id: string) {
     const res = await fetch(`/api/integrations/mcp?id=${id}`, { method: "DELETE" });
-    if (res.ok) { setMcpKeys(prev => prev.filter(k => k.id !== id)); toast.success("Deleted"); setDetailMcpKey(null); }
+    if (res.ok) { setMcpKeys(prev => prev.filter(k => k.id !== id)); track("mcp_key_deleted", { id }); toast.success("Deleted"); setDetailMcpKey(null); }
   }
 
   const MCP_CONFIG_EXAMPLE = `{

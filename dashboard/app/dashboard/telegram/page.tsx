@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 interface TelegramLead {
   id: string;
@@ -71,6 +72,7 @@ export default function TelegramPage() {
         return;
       }
       toast.success(action === "approve" ? "Lead approved" : "Lead declined");
+      track(action === "approve" ? "telegram_lead_approved" : "telegram_lead_declined", { lead_id: leadId });
       // Refresh leads
       fetchLeads(page);
     } catch {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardComplete, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 const STEPS = [
   { id: "welcome", title: "Welcome" },
@@ -48,6 +49,7 @@ export default function CalendlyWizardPage() {
       error: "Failed",
     });
     await promise;
+    track("calendly_link_saved");
     setSaving(false);
     setCompleted(true);
     setStep(3);

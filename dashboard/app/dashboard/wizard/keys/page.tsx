@@ -163,6 +163,7 @@ export default function KeysWizardPage() {
 
             <button
               onClick={() => {
+                track("wizard_keys_skipped");
                 setCompleted(true);
                 setStep(2);
               }}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WizardLayout, WizardCard, WizardComplete, WizardInfoRow } from "@/components/WizardLayout";
 import { toast } from "sonner";
+import { track } from "@/lib/analytics";
 
 const STEPS = [
   { id: "phone", title: "Phone" },
@@ -45,6 +46,7 @@ export default function TelegramWizardPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       toast.success("Code sent to your Telegram");
+      track("telegram_auth_started");
       setStep(1);
     } catch (err: any) {
       toast.error(err.message || "Failed to send code");
@@ -76,6 +78,7 @@ export default function TelegramWizardPage() {
       }
 
       toast.success("Telegram connected!");
+      track(password ? "telegram_auth_2fa_submitted" : "telegram_auth_code_submitted");
       fetch("/api/telegram/auth/confirm", { method: "POST" }).catch(() => {});
       setCompleted(true);
       setStep(2);

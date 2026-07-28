@@ -3,11 +3,13 @@
 import { Toaster } from "sonner";
 import { UpdateChecker } from "./UpdateChecker";
 import { SentryUserProvider } from "./SentryUserProvider";
+import { PageTracker } from "./PageTracker";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <>
       <SentryUserProvider />
+      <PageTracker />
       {children}
       <UpdateChecker />
       <Toaster

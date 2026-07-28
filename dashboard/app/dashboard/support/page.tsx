@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { track } from "@/lib/analytics";
 
 interface Ticket {
   id: string;
@@ -191,6 +192,7 @@ export default function SupportPage() {
       if (res.ok) {
         const { ticket } = await res.json();
         setTickets((prev) => [ticket, ...prev]);
+        track("support_ticket_created", { subject: newSubject.trim(), category: newCategory });
         setShowNewForm(false);
         setNewSubject("");
         setNewMessage("");
@@ -213,7 +215,7 @@ export default function SupportPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: replyText.trim() }),
       });
-      if (res.ok) setReplyText("");
+      if (res.ok) { setReplyText(""); track("support_reply_sent", { ticket_id: selectedTicket.id }); }
     } catch {}
     setSending(false);
   }

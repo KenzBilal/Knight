@@ -214,7 +214,7 @@ export default function DashboardPage() {
           {PERIODS.map((p) => (
             <button
               key={p}
-              onClick={() => setPeriod(p)}
+              onClick={() => { setPeriod(p); track("dashboard_period_changed", { period: p }); }}
               className={`px-4 py-1.5 rounded-md text-[12px] font-medium transition-all duration-150 ${
                 period === p
                   ? "bg-white text-[#080808]"
@@ -244,7 +244,7 @@ export default function DashboardPage() {
               Leads Discovered
             </h2>
             <button
-              onClick={() => fetchData(period)}
+              onClick={() => { fetchData(period); track("dashboard_chart_refreshed"); }}
               className="w-10 h-10 rounded-lg bg-white/[0.04] flex items-center justify-center text-[#525252] hover:text-white hover:bg-white/[0.08] transition-all dash-card-glow"
               aria-label="Refresh"
             >
@@ -340,7 +340,7 @@ export default function DashboardPage() {
           </h2>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => fetchData(period)}
+              onClick={() => { fetchData(period); track("dashboard_activity_refreshed"); }}
               className="w-10 h-10 rounded-lg dash-card flex items-center justify-center text-[#525252] hover:text-white hover:bg-white/[0.06] transition-all"
               aria-label="Refresh activity"
             >
@@ -350,6 +350,7 @@ export default function DashboardPage() {
             </button>
             <Link
               href="/dashboard/prospects"
+              onClick={() => track("dashboard_view_all_clicked")}
               className="w-10 h-10 rounded-lg bg-white/[0.08] flex items-center justify-center text-white hover:bg-white/[0.12] transition-all dash-card-glow"
               aria-label="View all"
             >

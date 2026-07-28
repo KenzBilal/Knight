@@ -248,7 +248,7 @@ export default function ProspectsPage() {
             type="text"
             placeholder="Search by name, industry, email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => { setSearch(e.target.value); if (e.target.value.length === 3) track("prospect_search_used", { query: e.target.value }); }}
             className="w-full input-base rounded-lg pl-9 pr-4 py-2.5 text-sm"
           />
         </div>
