@@ -3,7 +3,7 @@
 
 export async function openrouterChat(messages, opts = {}, apiKey) {
   const body = {
-    model: opts.model || 'meta-llama/llama-3.1-8b-instruct:free',
+    model: opts.model || 'nvidia/nemotron-3-ultra-550b-a55b:free',
     messages,
     temperature: opts.temperature ?? 0.3,
     max_tokens: opts.maxTokens,

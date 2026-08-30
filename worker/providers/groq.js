@@ -11,7 +11,7 @@ export async function groqChat(messages, opts = {}, apiKey) {
 
   const completion = await client.chat.completions.create({
     messages,
-    model: opts.model || 'llama-3.3-70b-versatile',
+    model: opts.model || 'qwen/qwen3.8-27b',
     temperature: opts.temperature ?? 0.3,
     max_tokens: opts.maxTokens,
     ...(opts.responseFormat === 'json' ? { response_format: { type: 'json_object' } } : {}),

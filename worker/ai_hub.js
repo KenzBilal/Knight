@@ -203,11 +203,14 @@ export async function updateConfig(taskType, provider, model) {
 }
 
 export async function testProvider(provider, apiKey) {
+  await refreshCache();
   const chatFn = PROVIDERS[provider];
   if (!chatFn) throw new Error(`Unknown provider: ${provider}`);
 
+  const config = _configCache.find(c => c.provider === provider);
+  const model = config?.model;
   const testMessages = [{ role: 'user', content: 'Say "ok" in one word.' }];
-  const result = await chatFn(testMessages, { temperature: 0 }, apiKey);
+  const result = await chatFn(testMessages, { temperature: 0, model, maxTokens: 50 }, apiKey);
   return result.content;
 }
 
