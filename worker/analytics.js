@@ -1,4 +1,4 @@
-// worker/analytics.js — replaces posthog.js
+// worker/analytics.js — Supabase-backed analytics + feature flags
 // Custom analytics: Supabase-backed, fail-open, batched events
 
 import { createClient } from '@supabase/supabase-js';

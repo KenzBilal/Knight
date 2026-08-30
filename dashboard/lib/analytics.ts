@@ -1,4 +1,4 @@
-// lib/analytics.ts — custom analytics, replaces posthog-js
+// lib/analytics.ts — custom analytics via /api/analytics/track -> Supabase
 // All events go through /api/analytics/track -> Supabase
 
 let _userId: string | null = null;

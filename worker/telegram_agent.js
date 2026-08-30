@@ -13,6 +13,41 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
   realtime: { transport: ws }
 });
 
+// ─── Bot Detection ────────────────────────────────────────────────────────────
+const BOT_USERNAME_PATTERNS = /bot$/i;
+const BOT_MESSAGE_PATTERNS = [
+  /^\/start/i,
+  /^\/help/i,
+  /^welcome to/i,
+  /^this is an automated/i,
+  /^i am a bot/i,
+  /^i'm a bot/i,
+];
+
+function isLikelyBot(username, messages = []) {
+  if (username && BOT_USERNAME_PATTERNS.test(username)) return true;
+
+  if (messages.length >= 3) {
+    const lastThree = messages.slice(-3);
+    const userMsgs = lastThree.filter(m => m.role === 'user');
+    if (userMsgs.length === 3) {
+      const normalized = userMsgs.map(m => m.content.toLowerCase().trim());
+      if (normalized[0] === normalized[1] && normalized[1] === normalized[2]) return true;
+    }
+  }
+
+  return false;
+}
+
+// ─── Loop Detection ───────────────────────────────────────────────────────────
+function isLooping(messages, threshold = 3) {
+  if (!messages || messages.length < threshold) return false;
+  const recent = messages.slice(-threshold);
+  const userMsgs = recent.filter(m => m.role === 'user');
+  if (userMsgs.length < threshold) return false;
+  return userMsgs.every(m => m.content.toLowerCase().trim() === userMsgs[0].content.toLowerCase().trim());
+}
+
 // ─── Get Org Config ───────────────────────────────────────────────────────────
 async function getOrgConfig(orgId) {
   const { data } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
@@ -137,10 +172,10 @@ ${chatText}`,
 
 // ─── Process Incoming Message ─────────────────────────────────────────────────
 export async function processIncomingMessage(chatId, userMessage, sendMessageFn, orgId, senderUsername = null, senderName = null) {
-  // PostHog Kill Switch: Check if Telegram userbot is enabled
+  // Kill Switch: Check if Telegram userbot is enabled
   const telegramEnabled = await isFeatureEnabled('enable-telegram-userbot', orgId);
   if (!telegramEnabled) {
-    console.log(`[PostHog] Telegram userbot disabled via kill switch for org ${orgId}`);
+    console.log(`[Analytics] Telegram userbot disabled via kill switch for org ${orgId}`);
     return;
   }
 
@@ -170,6 +205,26 @@ export async function processIncomingMessage(chatId, userMessage, sendMessageFn,
   }
 
   if (['APPROVED', 'REJECTED', 'HUMAN_TAKEOVER'].includes(lead.status)) return;
+
+  if (isLikelyBot(senderUsername, lead.chat_history || [])) {
+    console.log(`[AGENT] Bot detected: ${senderUsername} (${chatId}). Rejecting.`);
+    await supabase.from('telegram_leads').update({
+      status: 'REJECTED',
+      ai_summary: 'Auto-rejected: bot account detected',
+      updated_at: new Date().toISOString()
+    }).eq('id', lead.id);
+    return;
+  }
+
+  if (isLooping(lead.chat_history || [])) {
+    console.log(`[AGENT] Loop detected for chat ${chatId}. Stopping replies.`);
+    await supabase.from('telegram_leads').update({
+      status: 'REJECTED',
+      ai_summary: 'Auto-rejected: conversation loop detected (same message repeated 3x)',
+      updated_at: new Date().toISOString()
+    }).eq('id', lead.id);
+    return;
+  }
 
   // Check for website URL in message
   const urlMatch = userMessage.match(/(https?:\/\/[^\s]+|[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
@@ -259,6 +314,15 @@ export function startDripCron(sendMessageFn, orgId) {
 
       for (const lead of leads) {
         if (!lead.updated_at || !lead.chat_history || lead.chat_history.length === 0) continue;
+
+        if (isLikelyBot(lead.username, lead.chat_history)) {
+          await supabase.from('telegram_leads').update({
+            status: 'REJECTED',
+            ai_summary: 'Auto-rejected by drip cron: bot account',
+            updated_at: new Date().toISOString()
+          }).eq('id', lead.id);
+          continue;
+        }
 
         const lastMsg = lead.chat_history[lead.chat_history.length - 1];
         if (lastMsg.role !== 'assistant') continue;

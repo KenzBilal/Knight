@@ -12,6 +12,7 @@ import { getGlobalConfig } from './global_config.js';
 import { generateEmbedding, companyToText, auditToText } from './embeddings.js';
 import { captureEvent, isFeatureEnabled, flush } from './analytics.js';
 
+
 dotenv.config();
 
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -43,14 +44,14 @@ function sortByPriority(queue) {
 
 console.log('[Knight Worker] Starting...');
 
-// Graceful shutdown — flush PostHog events
+// Graceful shutdown — flush analytics events
 process.on('SIGTERM', async () => {
-  console.log('[Worker] SIGTERM received, flushing PostHog...');
+  console.log('[Worker] SIGTERM received, flushing analytics...');
   await flush();
   process.exit(0);
 });
 process.on('SIGINT', async () => {
-  console.log('[Worker] SIGINT received, flushing PostHog...');
+  console.log('[Worker] SIGINT received, flushing analytics...');
   await flush();
   process.exit(0);
 });
@@ -322,10 +323,10 @@ async function handleDiscover(job) {
   const { keyword, location } = job.payload;
   const query = `${keyword} ${location || ''}`.trim();
 
-  // PostHog Kill Switch: Check if discovery is enabled
+  // Kill Switch: Check if discovery is enabled
   const discoveryEnabled = await isFeatureEnabled('enable-discovery', job.org_id);
   if (!discoveryEnabled) {
-    console.log(`[PostHog] Discovery disabled via kill switch for org ${job.org_id}`);
+    console.log(`[Analytics] Discovery disabled via kill switch for org ${job.org_id}`);
     return;
   }
 
@@ -519,7 +520,7 @@ async function handleScrape(job) {
   }
 
   // OSINT Enrichment BEFORE AI
-  // PostHog Kill Switch: Check if OSINT is enabled
+  // Kill Switch: Check if OSINT is enabled
   const osintEnabled = await isFeatureEnabled('enable-osint', orgId);
   let linkedinLead, clearbit, crunchbase, glassdoor, yelp;
 
@@ -534,7 +535,7 @@ async function handleScrape(job) {
       findYelp(osintName)
     ]);
   } else {
-    console.log(`[PostHog] OSINT disabled via kill switch for org ${orgId}`);
+    console.log(`[Analytics] OSINT disabled via kill switch for org ${orgId}`);
     clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
   }
 
@@ -560,7 +561,7 @@ async function handleScrape(job) {
   const orgPlan = orgRow?.plan || 'free';
   const hasPitch = orgPlan === 'starter' || orgPlan === 'max';
 
-  // PostHog Kill Switch: Check if AI pitching is enabled for this org
+  // Kill Switch: Check if AI pitching is enabled for this org
   const aiPitchingEnabled = await isFeatureEnabled('enable-ai-pitching', orgId);
 
   let aiAnalysis;
@@ -569,7 +570,7 @@ async function handleScrape(job) {
   } else {
     // Kill switch active or plan doesn't include AI — use static template
     if (!aiPitchingEnabled) {
-      console.log(`[PostHog] AI pitching disabled via kill switch for org ${orgId}`);
+      console.log(`[Analytics] AI pitching disabled via kill switch for org ${orgId}`);
     }
     aiAnalysis = { pitch: '', companyName: target, industry: 'Unknown', leadScore: 50 };
   }
@@ -657,10 +658,10 @@ async function handleScrape(job) {
   console.log(`[Scrape] ${company.name} | Score: ${auditData.score} | Contacts: ${contacts.length}`);
 
   // Trigger outbound webhooks
-  // PostHog Kill Switch: Check if webhooks are enabled
+  // Kill Switch: Check if webhooks are enabled
   const webhooksEnabled = await isFeatureEnabled('enable-webhooks', orgId);
   if (!webhooksEnabled) {
-    console.log(`[PostHog] Webhooks disabled via kill switch for org ${orgId}`);
+    console.log(`[Analytics] Webhooks disabled via kill switch for org ${orgId}`);
   } else {
     try {
     const { data: webhooks } = await supabase
@@ -710,10 +711,10 @@ async function handleScrape(job) {
   } // end webhooksEnabled check
 
   // Auto-send if score is low enough
-  // PostHog Kill Switch: Check if auto-email is enabled
+  // Kill Switch: Check if auto-email is enabled
   const autoEmailEnabled = await isFeatureEnabled('enable-auto-email', orgId);
   if (!autoEmailEnabled) {
-    console.log(`[PostHog] Auto-email disabled via kill switch for org ${orgId}`);
+    console.log(`[Analytics] Auto-email disabled via kill switch for org ${orgId}`);
     return { company, audit, auditData, pitch: aiAnalysis.pitch, contacts };
   }
 
@@ -800,7 +801,7 @@ async function handleScrape(job) {
 
         console.log(`[Scrape] Pitch sent to ${targetEmail}`);
 
-        // PostHog: Audit completed event
+        // Analytics: Audit completed event
         captureEvent(orgId, 'worker_audit_completed', {
           company_name: company.name,
           website: target,

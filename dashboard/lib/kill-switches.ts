@@ -22,8 +22,8 @@ export async function checkKillSwitch(
       .eq("user_id", userId)
       .single();
 
-    if (userOverride && userOverride[overrideField] !== null) {
-      if (!userOverride[overrideField]) {
+    if (userOverride && (userOverride as Record<string, any>)[overrideField] !== null) {
+      if (!(userOverride as Record<string, any>)[overrideField]) {
         return NextResponse.json(
           {
             error: "FEATURE_DISABLED",
