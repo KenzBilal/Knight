@@ -171,6 +171,8 @@ ${chatText}`,
 }
 
 // ─── Process Incoming Message ─────────────────────────────────────────────────
+const TELEGRAM_SERVICE_IDS = [777000, 136817688, 4290000000];
+
 export async function processIncomingMessage(chatId, userMessage, sendMessageFn, orgId, senderUsername = null, senderName = null) {
   // Kill Switch: Check if Telegram userbot is enabled
   const telegramEnabled = await isFeatureEnabled('enable-telegram-userbot', orgId);
@@ -178,6 +180,9 @@ export async function processIncomingMessage(chatId, userMessage, sendMessageFn,
     console.log(`[Analytics] Telegram userbot disabled via kill switch for org ${orgId}`);
     return;
   }
+
+  // Skip Telegram service accounts (OTP codes, notifications, etc.)
+  if (TELEGRAM_SERVICE_IDS.includes(Number(chatId))) return;
 
   console.log(`[AGENT] Incoming DM from ChatID: ${chatId} | Message: "${userMessage}"`);
 

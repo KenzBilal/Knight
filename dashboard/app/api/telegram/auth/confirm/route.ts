@@ -47,6 +47,12 @@ export async function POST(req: Request) {
     await userClient.disconnect();
     userClient = null;
 
+    // Mark session as valid
+    await supabase
+      .from("org_config")
+      .update({ telegram_session_valid: true, updated_at: new Date().toISOString() })
+      .eq("org_id", org.id);
+
     // Connect Knight bot
     knightBot = new TelegramClient(new StringSession(""), TELEGRAM_API_ID, TELEGRAM_API_HASH, {
       connectionRetries: 3,
