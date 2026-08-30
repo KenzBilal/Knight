@@ -29,6 +29,8 @@ export default function TelegramPage() {
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showDisconnect, setShowDisconnect] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
 
   useEffect(() => {
     fetch("/api/config")
@@ -57,6 +59,27 @@ export default function TelegramPage() {
   const mode = config?.telegram_mode;
   const pendingLeads = leads.filter(l => l.status === "NEEDS_APPROVAL" || l.status === "PENDING");
   const approvedLeads = leads.filter(l => l.status === "APPROVED");
+
+  async function handleDisconnect() {
+    setDisconnecting(true);
+    try {
+      const res = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "disconnect_telegram" }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Disconnect failed");
+      toast.success("Telegram disconnected");
+      track("telegram_disconnected");
+      setConfig(prev => prev ? { ...prev, telegram_connected: false, telegram_mode: null } : null);
+      setShowDisconnect(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to disconnect");
+    } finally {
+      setDisconnecting(false);
+    }
+  }
 
   async function handleAction(leadId: string, action: "approve" | "decline") {
     setActionLoading(leadId);
@@ -134,28 +157,77 @@ export default function TelegramPage() {
 
       {connected && (
         <>
-          <div className="dash-card rounded-2xl p-5 mb-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#4ade80]" />
-              <div>
-                <p className="font-semibold text-white text-sm flex items-center gap-2" style={{ fontFamily: "var(--font-display)" }}>
-                  Connected
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-[#4ade80]/10 text-[#4ade80]">
-                    {mode === "userbot" ? "Userbot" : "Bot"}
-                  </span>
-                </p>
-                <p className="text-xs text-[#525252] mt-0.5">
-                  Telegram active
-                </p>
+          <div className="dash-card rounded-2xl p-5 mb-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#4ade80]" />
+                <div>
+                  <p className="font-semibold text-white text-sm flex items-center gap-2" style={{ fontFamily: "var(--font-display)" }}>
+                    Connected
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[#4ade80]/10 text-[#4ade80]">
+                      {mode === "userbot" ? "Userbot" : "Bot"}
+                    </span>
+                  </p>
+                  <p className="text-xs text-[#525252] mt-0.5">
+                    Telegram active
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/dashboard/wizard/telegram"
+                  className="rounded-xl dash-card-glow text-[#a3a3a3] font-medium px-4 py-2 text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
+                >
+                  Reconnect
+                </Link>
+                <button
+                  onClick={() => setShowDisconnect(true)}
+                  className="rounded-xl bg-[#f87171]/10 text-[#f87171] font-medium px-4 py-2 text-sm hover:bg-[#f87171]/20 transition-colors"
+                >
+                  Disconnect
+                </button>
               </div>
             </div>
-            <Link
-              href="/dashboard/wizard/telegram"
-              className="rounded-xl dash-card-glow text-[#a3a3a3] font-medium px-4 py-2 text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
-            >
-              Reconnect
-            </Link>
           </div>
+
+          {showDisconnect && (
+            <div className="dash-card rounded-2xl p-5 mb-5 border border-[#f87171]/20">
+              <div className="flex items-start gap-3">
+                <svg className="w-5 h-5 text-[#f87171] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-white mb-1">Disconnect Telegram?</p>
+                  <p className="text-xs text-[#525252] mb-3">
+                    This will stop all automated DMs, lead hunting, and conversations. You can reconnect anytime.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDisconnect}
+                      disabled={disconnecting}
+                      className="rounded-lg bg-[#f87171] text-white font-medium px-4 py-2 text-sm hover:bg-[#f87171]/90 transition-colors disabled:opacity-50"
+                    >
+                      {disconnecting ? (
+                        <span className="flex items-center gap-2">
+                          <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          Disconnecting...
+                        </span>
+                      ) : (
+                        "Yes, Disconnect"
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setShowDisconnect(false)}
+                      disabled={disconnecting}
+                      className="rounded-lg dash-card-glow text-[#a3a3a3] font-medium px-4 py-2 text-sm hover:bg-white/[0.04] hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
             {[

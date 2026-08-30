@@ -71,6 +71,14 @@ export async function POST(req: Request) {
     if (body.telegram_admin_chat_id !== undefined) updateFields.telegram_admin_chat_id = body.telegram_admin_chat_id;
     if (body.telegram_phone !== undefined) updateFields.telegram_phone = body.telegram_phone;
 
+    // Handle Telegram disconnect
+    if (body.action === "disconnect_telegram") {
+      updateFields.telegram_session = null;
+      updateFields.telegram_session_valid = false;
+      updateFields.telegram_enabled = false;
+      updateFields.telegram_welcome_sent = false;
+    }
+
     const { data: existing } = await supabase
       .from("org_config")
       .select("id")
