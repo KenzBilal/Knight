@@ -197,6 +197,11 @@ async function main() {
         connectedOrgs.add(org.org_id);
       } catch (err) {
         console.error(`[USERBOT] Failed to connect org ${org.org_id}:`, err.message);
+        // Mark session as invalid
+        await supabase.from('org_config').update({
+          telegram_session_valid: false,
+          updated_at: new Date().toISOString(),
+        }).eq('org_id', org.org_id);
       }
     }
 
@@ -215,6 +220,10 @@ async function main() {
               console.log(`[USERBOT] Auto-connected org: ${org.org_id}`);
             } catch (err) {
               console.error(`[USERBOT] Failed to auto-connect org ${org.org_id}:`, err.message);
+              await supabase.from('org_config').update({
+                telegram_session_valid: false,
+                updated_at: new Date().toISOString(),
+              }).eq('org_id', org.org_id);
             }
           }
         }
@@ -378,6 +387,12 @@ async function connectOrgUserbot(orgId, sessionString) {
 
   await client.connect();
   console.log(`[USERBOT] Connected for org: ${orgId}`);
+
+  // Mark session as valid in DB
+  await supabase.from('org_config').update({
+    telegram_session_valid: true,
+    updated_at: new Date().toISOString(),
+  }).eq('org_id', orgId);
 
   // Send welcome message if not already sent
   sendWelcomeMessage(orgId, client);

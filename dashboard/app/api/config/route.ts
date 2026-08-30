@@ -28,13 +28,13 @@ export async function GET(req: Request) {
     // Check if telegram_session exists (without exposing it)
     const { data: sessionCheck } = await supabase
       .from("org_config")
-      .select("telegram_session")
+      .select("telegram_session, telegram_session_valid")
       .eq("org_id", org.id)
       .single();
 
     const result = {
       ...(data || {}),
-      telegram_connected: !!sessionCheck?.telegram_session,
+      telegram_connected: sessionCheck?.telegram_session_valid === true,
       telegram_mode: sessionCheck?.telegram_session ? "userbot" : null,
       user_name: user?.name || user?.email?.split("@")[0] || "",
     };
