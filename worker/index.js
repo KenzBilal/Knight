@@ -332,6 +332,12 @@ async function handleDiscover(job) {
 
   console.log(`[Discover] Searching: "${query}"`);
 
+  // Directory sites to exclude
+  const DIR_DOMAINS = ['yelp.com', 'yellowpages.com', 'bbb.org', 'justdaddy.com', 'thumbtack.com', 'angi.com', 'angieslist.com', 'homeadvisor.com', 'thumbtack.com', 'foursquare.com', 'tripadvisor.com', 'clutch.co', 'goodfirms.co', 'sortlist.com', 'upcity.com', 'expertise.com', ' bark.com', 'checkatrade.com', 'trustatrader.com', 'ratedpeople.com', 'mybuilder.com', 'houzz.com', 'porch.com', 'nextdoor.com', 'craigslist.org', 'facebook.com', 'linkedin.com', 'instagram.com', 'twitter.com', 'tiktok.com', 'youtube.com', 'wikipedia.org', 'reddit.com', 'quora.com', 'medium.com', 'substack.com'];
+  
+  // Low-quality builder platforms (already optimized sites)
+  const BUILDER_META = ['powered by wix', 'built with squarespace', 'made with weebly', 'created with shopify', 'powered by wordpress.com'];
+
   let browser;
   try {
     const wsUrl = process.env.BROWSER_WS_ENDPOINT || 'ws://browserless:3000';
@@ -348,6 +354,7 @@ async function handleDiscover(job) {
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36');
 
   try {
+    // Use more specific search query for better quality
     const mapsUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
     await page.goto(mapsUrl, { waitUntil: 'networkidle2', timeout: 30000 });
     await page.waitForSelector('[role="feed"]', { timeout: 10000 }).catch(() => {});
@@ -363,7 +370,7 @@ async function handleDiscover(job) {
     });
 
     const businessLinks = await page.$$eval('a[href*="/maps/place/"]', links =>
-      [...new Set(links.map(a => a.href).filter(h => h.includes('/maps/place/')))].slice(0, 25)
+      [...new Set(links.map(a => a.href).filter(h => h.includes('/maps/place/')))].slice(0, 10)
     );
 
     console.log(`[Discover] Found ${businessLinks.length} businesses`);
@@ -371,38 +378,79 @@ async function handleDiscover(job) {
 
     let queued = 0;
     for (const link of businessLinks) {
+      if (queued >= 10) break; // Hard cap at 10 quality leads
+
       try {
         const bizPage = await browser.newPage();
         await bizPage.goto(link, { waitUntil: 'networkidle2', timeout: 20000 });
 
-        const website = await bizPage.evaluate(() => {
+        // Extract website URL + check for low-quality signals
+        const bizData = await bizPage.evaluate(() => {
           const links = [...document.querySelectorAll('a[href]')];
           const websiteLink = links.find(a =>
             a.getAttribute('data-item-id')?.includes('authority') ||
             a.getAttribute('aria-label')?.toLowerCase().includes('website')
           );
-          return websiteLink?.href || null;
+          const website = websiteLink?.href || null;
+
+          // Check for low-quality builder signals in page meta
+          const meta = document.querySelector('meta[name="generator"]')?.content?.toLowerCase() || '';
+          const html = document.documentElement.innerHTML.toLowerCase().slice(0, 5000);
+          const hasBuilderMeta = ['powered by wix', 'built with squarespace', 'made with weebly', 'created with shopify'].some(s => meta.includes(s) || html.includes(s));
+
+          return { website, hasBuilderMeta };
         });
 
-        if (website && !website.includes('google.com') && !website.includes('facebook.com')) {
-          const cleanUrl = new URL(website).hostname.replace('www.', '');
-          const { error: insertError } = await supabase.from('jobs').insert({
-            org_id: job.org_id,
-            type: 'SCRAPE',
-            status: 'PENDING',
-            payload: { target: cleanUrl, source: `discovery:${query}` }
-          });
+        if (!bizData.website) continue;
 
-          if (insertError) {
-            console.error(`[Discover] Failed to insert SCRAPE job for ${cleanUrl}:`, insertError.message);
-          } else {
-            queued++;
+        const hostname = new URL(bizData.website).hostname.replace('www.', '');
+
+        // Skip directory/social sites
+        if (DIR_DOMAINS.some(d => hostname.includes(d))) {
+          console.log(`[Discover] Skipping directory: ${hostname}`);
+          continue;
+        }
+
+        // Skip sites built on simple builders (already optimized, low conversion potential)
+        if (bizData.hasBuilderMeta) {
+          console.log(`[Discover] Skipping builder site: ${hostname}`);
+          continue;
+        }
+
+        // Quick check: is the website live?
+        try {
+          const checkPage = await browser.newPage();
+          await checkPage.goto(`https://${hostname}`, { waitUntil: 'domcontentloaded', timeout: 10000 });
+          const status = await checkPage.evaluate(() => document.title);
+          await checkPage.close();
+
+          if (!status || status.toLowerCase().includes('error') || status.toLowerCase().includes('not found')) {
+            console.log(`[Discover] Skipping dead site: ${hostname}`);
+            continue;
           }
+        } catch {
+          console.log(`[Discover] Skipping unreachable site: ${hostname}`);
+          continue;
+        }
+
+        // Queue for audit
+        const { error: insertError } = await supabase.from('jobs').insert({
+          org_id: job.org_id,
+          type: 'SCRAPE',
+          status: 'PENDING',
+          payload: { target: hostname, source: `discovery:${query}` }
+        });
+
+        if (insertError) {
+          console.error(`[Discover] Failed to insert SCRAPE job for ${hostname}:`, insertError.message);
+        } else {
+          queued++;
+          console.log(`[Discover] Queued (${queued}/10): ${hostname}`);
         }
       } catch { try { await bizPage.close(); } catch {} }
     }
 
-    console.log(`[Discover] Queued ${queued} sites for audit`);
+    console.log(`[Discover] Queued ${queued} quality sites for audit`);
   } finally {
     await browser.close();
   }
