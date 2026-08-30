@@ -173,8 +173,9 @@ function getUsedRAM_MB() {
 }
 
 function dedupKey(job) {
-  if (job.type === 'DISCOVER') return `discover:${job.payload?.keyword}:${job.payload?.location}`;
-  return `${job.type}:${job.payload?.target || job.payload?.company_id || job.id}`;
+  const org = job.org_id;
+  if (job.type === 'DISCOVER') return `${org}:discover:${job.payload?.keyword}:${job.payload?.location}`;
+  return `${org}:${job.type}:${job.payload?.target || job.payload?.company_id || job.id}`;
 }
 
 let ramBackoffMs = 30_000;
