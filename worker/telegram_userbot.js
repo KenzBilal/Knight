@@ -361,6 +361,7 @@ async function main() {
     const old = orgIntervals.get(orgId);
     clearInterval(old.cleanup);
     clearInterval(old.dailyHunt);
+    if (old.healthCheck) clearInterval(old.healthCheck);
   }
 
   const cleanupId = setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
@@ -378,6 +379,18 @@ async function main() {
 
 // ─── Connect Single Org Userbot ──────────────────────────────────────────────
 async function connectOrgUserbot(orgId, sessionString) {
+  // Check if telegram is still enabled before connecting
+  const { data: config } = await supabase
+    .from('org_config')
+    .select('telegram_enabled, telegram_session')
+    .eq('org_id', orgId)
+    .single();
+
+  if (!config?.telegram_enabled || !config?.telegram_session) {
+    console.log(`[USERBOT] Skipping org ${orgId}: telegram disabled or no session`);
+    return;
+  }
+
   const session = new StringSession(sessionString);
   
   const client = new TelegramClient(session, API_ID, API_HASH, {
@@ -491,11 +504,40 @@ async function connectOrgUserbot(orgId, sessionString) {
     const old = orgIntervals.get(orgId);
     clearInterval(old.cleanup);
     clearInterval(old.dailyHunt);
+    if (old.healthCheck) clearInterval(old.healthCheck);
   }
 
   const cleanupId = setInterval(() => runCleanup(orgId), 6 * 60 * 60 * 1000);
   const dailyHuntId = setInterval(runDailyHunt, 24 * 60 * 60 * 1000);
-  orgIntervals.set(orgId, { cleanup: cleanupId, dailyHunt: dailyHuntId });
+
+  // Health check: disconnect if telegram_enabled becomes false
+  const healthCheckId = setInterval(async () => {
+    try {
+      const { data: cfg } = await supabase
+        .from('org_config')
+        .select('telegram_enabled, telegram_session')
+        .eq('org_id', orgId)
+        .single();
+
+      if (!cfg?.telegram_enabled || !cfg?.telegram_session) {
+        console.log(`[USERBOT] Org ${orgId} disabled or session cleared. Disconnecting...`);
+        clearInterval(healthCheckId);
+        clearInterval(cleanupId);
+        clearInterval(dailyHuntId);
+        orgIntervals.delete(orgId);
+        await client.disconnect();
+        await supabase.from('org_config').update({
+          telegram_session_valid: false,
+          updated_at: new Date().toISOString(),
+        }).eq('org_id', orgId);
+        console.log(`[USERBOT] Disconnected org ${orgId}`);
+      }
+    } catch (e) {
+      console.warn(`[USERBOT] Health check error for ${orgId}:`, e.message);
+    }
+  }, 30_000);
+
+  orgIntervals.set(orgId, { cleanup: cleanupId, dailyHunt: dailyHuntId, healthCheck: healthCheckId });
 
   // Run initial hunt
   runDailyHunt().catch(err => console.error(`[HUNTER] Initial hunt failed for org ${orgId}:`, err.message));
