@@ -20,8 +20,11 @@ const PROVIDERS = { cohere: cohereChat, gemini: geminiChat, groq: groqChat, open
 // In-memory cache for config + keys (refreshed every 60s)
 let _configCache = null;
 let _keysCache = null;
+let _orgKeysCache = new Map(); // orgId -> { keys: [], expires: number }
+let _orgConfigCache = new Map(); // orgId -> { config: {}, expires: number }
 let _lastFetch = 0;
 const CACHE_TTL_MS = 60_000;
+const ORG_CACHE_TTL_MS = 30_000;
 
 // ─── Cache Management ────────────────────────────────────────────────────────
 
@@ -37,6 +40,37 @@ async function refreshCache() {
   _configCache = configRes.data || [];
   _keysCache = keysRes.data || [];
   _lastFetch = now;
+}
+
+async function getOrgConfig(orgId) {
+  if (!orgId) return {};
+  const cached = _orgConfigCache.get(orgId);
+  if (cached && Date.now() < cached.expires) return cached.config;
+
+  const { data } = await supabase
+    .from('org_config')
+    .select('use_own_keys')
+    .eq('org_id', orgId)
+    .single();
+
+  const config = data || {};
+  _orgConfigCache.set(orgId, { config, expires: Date.now() + ORG_CACHE_TTL_MS });
+  return config;
+}
+
+async function getOrgKeys(orgId) {
+  if (!orgId) return [];
+  const cached = _orgKeysCache.get(orgId);
+  if (cached && Date.now() < cached.expires) return cached.keys;
+
+  const { data } = await supabase
+    .from('org_api_keys')
+    .select('*')
+    .eq('org_id', orgId);
+
+  const keys = data || [];
+  _orgKeysCache.set(orgId, { keys, expires: Date.now() + ORG_CACHE_TTL_MS });
+  return keys;
 }
 
 // Force refresh (after admin changes)
@@ -116,17 +150,47 @@ export async function complete(taskType, messages, opts = {}) {
   const chatFn = PROVIDERS[provider];
   if (!chatFn) throw new Error(`[AI Hub] Unknown provider: ${provider}`);
 
-  const activeKeys = getActiveKeysForProvider(provider);
-  if (activeKeys.length === 0) {
+  const orgId = opts.orgId;
+
+  // Check if org uses custom keys
+  let keysToUse = [];
+  if (orgId) {
+    const orgConfig = await getOrgConfig(orgId);
+    if (orgConfig.use_own_keys) {
+      const orgKeys = await getOrgKeys(orgId);
+      const orgProviderKeys = orgKeys
+        .filter(k => k.provider === provider)
+        .map(k => ({
+          id: `org:${k.id}`,
+          label: `Org ${provider}`,
+          key_value: k.key_encrypted,
+          provider: k.provider,
+          is_active: true,
+        }));
+      if (orgProviderKeys.length > 0) {
+        keysToUse = orgProviderKeys;
+      }
+    }
+  }
+
+  // Fall back to global keys if no org keys
+  if (keysToUse.length === 0) {
+    keysToUse = getActiveKeysForProvider(provider);
+  }
+
+  if (keysToUse.length === 0) {
     throw new Error(`[AI Hub] All keys exhausted for provider: ${provider} (task: ${taskType})`);
   }
 
   // Try each active key
   let lastError = null;
-  for (const key of activeKeys) {
+  for (const key of keysToUse) {
     try {
       const result = await chatFn(messages, { ...opts, model }, key.key_value);
-      await markKeyUsed(key.id);
+      // Only mark global keys as used (org keys don't have tracking)
+      if (!key.id.startsWith('org:')) {
+        await markKeyUsed(key.id);
+      }
       return result;
     } catch (err) {
       lastError = err;
@@ -139,18 +203,23 @@ export async function complete(taskType, messages, opts = {}) {
 
       if (isRateLimit) {
         console.warn(`[AI Hub] Key ${key.label} (${key.id.slice(0, 8)}) rate limited. Disabling for ${config.cooldown_minutes}min.`);
-        await markKeyFailed(key.id);
+        // Only disable global keys (org keys can't be disabled)
+        if (!key.id.startsWith('org:')) {
+          await markKeyFailed(key.id);
+        }
         continue; // Try next key
       }
 
       // Non-rate-limit error: still try next key
       console.warn(`[AI Hub] Key ${key.label} error: ${err.message}. Trying next key...`);
-      await markKeyFailed(key.id);
+      if (!key.id.startsWith('org:')) {
+        await markKeyFailed(key.id);
+      }
       continue;
     }
   }
 
-  throw new Error(`[AI Hub] All ${activeKeys.length} keys for ${provider} failed on task ${taskType}. Last error: ${lastError?.message}`);
+  throw new Error(`[AI Hub] All ${keysToUse.length} keys for ${provider} failed on task ${taskType}. Last error: ${lastError?.message}`);
 }
 
 // ─── Admin Helpers ───────────────────────────────────────────────────────────

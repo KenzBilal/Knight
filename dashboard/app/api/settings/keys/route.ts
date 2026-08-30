@@ -22,9 +22,17 @@ export async function GET(req: Request) {
     // Return which providers have keys (not the actual keys)
     const providers = (keys || []).map(k => k.provider);
 
+    // Get BYOK toggle state
+    const { data: orgConfig } = await supabase
+      .from("org_config")
+      .select("use_own_keys")
+      .eq("org_id", org.id)
+      .single();
+
     return NextResponse.json({ 
       hasKeys: providers.length > 0,
-      providers 
+      providers,
+      useOwnKeys: orgConfig?.use_own_keys || false
     });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -46,7 +54,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { cohere_key, gemini_key, openrouter_key } = await req.json();
+    const { cohere_key, gemini_key, openrouter_key, use_own_keys } = await req.json();
 
     const supabase = createServiceClient();
 
@@ -78,6 +86,14 @@ export async function POST(req: Request) {
         .delete()
         .eq("org_id", org.id)
         .eq("provider", provider);
+    }
+
+    // Update BYOK toggle state
+    if (typeof use_own_keys === "boolean") {
+      await supabase
+        .from("org_config")
+        .update({ use_own_keys })
+        .eq("org_id", org.id);
     }
 
     return NextResponse.json({ ok: true });

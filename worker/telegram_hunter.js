@@ -74,7 +74,7 @@ async function saveLead({ chatId, username, fullName, phone, email, instagram, l
 }
 
 // ─── Generate Daily Search Keywords ──────────────────────────────────────────
-export async function generateSearchKeywords() {
+export async function generateSearchKeywords(orgId) {
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
   const result = await complete('keyword_generate', [{
     role: 'user',
@@ -82,7 +82,7 @@ export async function generateSearchKeywords() {
 Today is ${today}. Vary the niches: include some of these types: crypto signals, movies/series sharing, exam question banks, online stores, freelancers, coaching/courses, real estate, food delivery, clothing shops, travel agents, resellers.
 Return ONLY a JSON array of strings. No explanation.
 Example: ["crypto vip signals group", "NEET exam question bank", "dropshipping business owners"]`,
-  }], { maxTokens: 200 });
+  }], { maxTokens: 200, orgId });
 
   try {
     const content = result.content.trim();
@@ -152,7 +152,7 @@ export async function processTelegramChannel(channel, participants, sendPitchFn,
     });
   }
 
-  const category = await categorizeChannel(channelName, bio);
+  const category = await categorizeChannel(channelName, bio, orgId);
 
   for (const participant of participants) {
     if (dmCount >= dailyLimit) {
@@ -231,7 +231,7 @@ export async function processSniperMessage(chatId, username, message, groupName,
 }
 
 // ─── Categorize Channel ───────────────────────────────────────────────────────
-async function categorizeChannel(name, bio) {
+async function categorizeChannel(name, bio, orgId) {
   try {
     const result = await complete('channel_categorize', [{
       role: 'user',
@@ -239,7 +239,7 @@ async function categorizeChannel(name, bio) {
 Name: ${name}
 Bio: ${bio}
 Return ONLY the category, nothing else. Examples: "Crypto Signals", "Movie Sharing", "Exam Question Bank", "Online Clothing Store", "Coaching/Courses"`,
-    }], { maxTokens: 20 });
+    }], { maxTokens: 20, orgId });
     return result.content.trim();
   } catch {
     return 'Unknown Business';
@@ -269,7 +269,7 @@ The message should:
 
 Do NOT mention you found them on Telegram. Do NOT be salesy. Sound like a human.
 Return ONLY the message, nothing else.`,
-  }], { maxTokens: 100 });
+  }], { maxTokens: 100, orgId });
   return result.content.trim();
 }
 

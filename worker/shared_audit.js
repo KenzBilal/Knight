@@ -81,7 +81,7 @@ export async function fetchLighthouseData(url, attempt = 1) {
   }
 }
 
-export async function runAudit(url) {
+export async function runAudit(url, orgId) {
   console.log(`[Audit] Auditing ${url}...`);
   if (!url.startsWith('http')) url = 'https://' + url;
 
@@ -300,7 +300,7 @@ export async function runAudit(url) {
 
     let semanticData = null;
     try {
-      semanticData = await extractSemanticBusinessData(rawText);
+      semanticData = await extractSemanticBusinessData(rawText, orgId);
     } catch (e) {
       console.error('[Audit] Semantic extraction failed:', e.message);
     }
@@ -396,7 +396,7 @@ export async function extractContacts(page) {
   });
 }
 
-export async function extractSemanticBusinessData(rawText) {
+export async function extractSemanticBusinessData(rawText, orgId) {
   const cleanText = rawText.replace(/\s+/g, ' ').trim().slice(0, 10000);
   const messages = [{
     role: 'user',
@@ -416,11 +416,11 @@ Return a JSON object with exactly these keys:
   }];
 
   console.log('[Semantic] Extracting business data...');
-  const result = await complete('semantic_extract', messages, { responseFormat: 'json' });
+  const result = await complete('semantic_extract', messages, { responseFormat: 'json', orgId });
   return JSON.parse(stripJsonFences(result.content));
 }
 
-export async function analyzeWithCohere(auditData) {
+export async function analyzeWithCohere(auditData, orgId) {
   console.log('[AI Hub] Analyzing with audit_pitch...');
   const issuesSummary = auditData.issues?.map(i => `[${i.severity.toUpperCase()}] ${i.category}: ${i.issue}`).join('\n') || 'None';
 
@@ -466,7 +466,7 @@ export async function analyzeWithCohere(auditData) {
   }];
 
   try {
-    const result = await complete('audit_pitch', messages, { responseFormat: 'json' });
+    const result = await complete('audit_pitch', messages, { responseFormat: 'json', orgId });
     return JSON.parse(stripJsonFences(result.content));
   } catch (e) {
     console.error('[AI Hub] audit_pitch failed:', e.message);
@@ -474,7 +474,7 @@ export async function analyzeWithCohere(auditData) {
   }
 }
 
-export async function analyzeWithGroq(auditData) {
+export async function analyzeWithGroq(auditData, orgId) {
   console.log('[AI Hub] Generating internal suggestions...');
   const messages = [{
     role: 'user',
@@ -499,7 +499,7 @@ export async function analyzeWithGroq(auditData) {
   }];
 
   try {
-    const result = await complete('internal_suggestions', messages);
+    const result = await complete('internal_suggestions', messages, { orgId });
     return result.content || 'No suggestions generated.';
   } catch (e) {
     console.error('[AI Hub] internal_suggestions failed:', e.message);

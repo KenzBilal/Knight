@@ -57,7 +57,10 @@ export default function SettingsPage() {
 
     fetch("/api/settings/keys")
       .then(r => r.json())
-      .then(data => { if (data.hasKeys) setUseCustomKeys(true); })
+      .then(data => { 
+        if (data.hasKeys) setUseCustomKeys(true);
+        if (data.useOwnKeys !== undefined) setUseCustomKeys(data.useOwnKeys);
+      })
       .catch(() => {});
   }, []);
 
@@ -93,10 +96,11 @@ export default function SettingsPage() {
         cohere_key: cohereKey || null,
         gemini_key: geminiKey || null,
         openrouter_key: openrouterKey || null,
+        use_own_keys: useCustomKeys,
       }),
     }).then(async res => { if (!res.ok) throw new Error("Failed"); return res.json(); });
 
-    track("api_keys_saved", { has_cohere: !!cohereKey, has_gemini: !!geminiKey, has_openrouter: !!openrouterKey });
+    track("api_keys_saved", { has_cohere: !!cohereKey, has_gemini: !!geminiKey, has_openrouter: !!openrouterKey, use_own_keys: useCustomKeys });
     toast.promise(promise, { loading: "Saving keys...", success: "Keys saved!", error: "Failed" });
   }
 

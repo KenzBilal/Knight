@@ -125,6 +125,7 @@ export async function generateReply(lead, userMessage, orgId) {
   const result = await complete('telegram_reply', messages, {
     temperature: 0.8,
     maxTokens: 200,
+    orgId,
   });
 
   const reply = result.content.trim();
@@ -139,7 +140,7 @@ export async function generateReply(lead, userMessage, orgId) {
 }
 
 // ─── Generate AI Executive Summary ────────────────────────────────────────────
-export async function generateSummary(lead) {
+export async function generateSummary(lead, orgId) {
   const chatText = (lead.chat_history || [])
     .map(m => `${m.role === 'assistant' ? 'Sales Rep' : 'Client'}: ${m.content}`)
     .join('\n');
@@ -160,6 +161,7 @@ ${chatText}`,
   }], {
     responseFormat: 'json',
     maxTokens: 250,
+    orgId,
   });
 
   try {
@@ -240,9 +242,9 @@ export async function processIncomingMessage(chatId, userMessage, sendMessageFn,
 
     await sendMessageFn(chatId, "lemme pull that up and run a quick check on it rn tbh...");
 
-    const { auditData } = await runAudit(url);
-    const aiAnalysis = await analyzeWithCohere(auditData);
-    const groqSuggestions = await analyzeWithGroq(auditData);
+    const { auditData } = await runAudit(url, orgId);
+    const aiAnalysis = await analyzeWithCohere(auditData, orgId);
+    const groqSuggestions = await analyzeWithGroq(auditData, orgId);
 
     augmentedUserMessage = `${userMessage}\n\n[SYSTEM NOTE: The user shared the website ${url}. A deep web scrape and audit generated the following intelligence:
 - Tech Stack: ${auditData.techStack}
@@ -281,7 +283,7 @@ Mention 1-2 of these exact technical flaws or suggestions casually in your next 
 
   if (isClosing) {
     newStatus = 'NEEDS_APPROVAL';
-    const extractedData = await generateSummary({ ...lead, chat_history: updatedHistory });
+    const extractedData = await generateSummary({ ...lead, chat_history: updatedHistory }, orgId);
     await supabase.from('telegram_leads').update({
       status: newStatus,
       chat_history: updatedHistory,

@@ -509,7 +509,7 @@ async function handleScrape(job) {
     }
   }
 
-  const { auditData, contacts } = await runAudit(target);
+  const { auditData, contacts } = await runAudit(target, orgId);
 
   const hasEmail = contacts && contacts.length > 0 && contacts.some(c => c.email);
   const hasPhone = contacts && contacts.length > 0 && contacts.some(c => c.phone);
@@ -566,7 +566,7 @@ async function handleScrape(job) {
 
   let aiAnalysis;
   if (hasPitch && aiPitchingEnabled) {
-    aiAnalysis = await analyzeWithCohere(auditData);
+    aiAnalysis = await analyzeWithCohere(auditData, orgId);
   } else {
     // Kill switch active or plan doesn't include AI — use static template
     if (!aiPitchingEnabled) {
@@ -574,7 +574,7 @@ async function handleScrape(job) {
     }
     aiAnalysis = { pitch: '', companyName: target, industry: 'Unknown', leadScore: 50 };
   }
-  const groqSuggestions = hasPitch ? await analyzeWithGroq(auditData) : '';
+  const groqSuggestions = hasPitch ? await analyzeWithGroq(auditData, orgId) : '';
 
   const companyName = clearbit?.name || aiAnalysis.companyName || target;
 
@@ -847,7 +847,7 @@ async function handleProcessReply(job) {
   const intentResult = await complete('reply_classification', [{
     role: 'user',
     content: `Analyze this email reply to a cold outreach. Is the prospect rejecting us/not interested? Reply ONLY with "REJECTED" or "INTERESTED". Email: "${body_text}"`,
-  }], { temperature: 0.3 });
+  }], { temperature: 0.3, orgId });
 
   const intent = intentResult.content?.trim().toUpperCase();
 
@@ -908,7 +908,7 @@ Respond with only the exact text of the email draft. No markdown, no preambles.`
     try {
       const result = await complete('reply_draft', [
         { role: 'user', content: prompt },
-      ]);
+      ], { orgId });
       draftText = result.content.trim();
     } catch (err) {
       console.error('[ProcessReply] AI draft failed:', err.message);

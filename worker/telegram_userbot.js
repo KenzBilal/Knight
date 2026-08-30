@@ -330,7 +330,7 @@ async function main() {
   // ─── Daily Hunter ───────────────────────────────────────────────────────────
   const runDailyHunt = async () => {
     console.log(`[HUNTER] Starting daily hunt for org ${orgId}...`);
-    const keywords = await generateSearchKeywords();
+    const keywords = await generateSearchKeywords(orgId);
     console.log('[HUNTER] Keywords:', keywords);
 
     for (const keyword of keywords) {
@@ -465,7 +465,7 @@ async function connectOrgUserbot(orgId, sessionString) {
   // ─── Daily Hunter for dynamically-loaded orgs ────────────────────────────
   const runDailyHunt = async () => {
     console.log(`[HUNTER] Starting daily hunt for org ${orgId}...`);
-    const keywords = await generateSearchKeywords();
+    const keywords = await generateSearchKeywords(orgId);
     console.log('[HUNTER] Keywords:', keywords);
 
     for (const keyword of keywords) {
