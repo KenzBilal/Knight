@@ -11,6 +11,7 @@ import { complete } from './ai_hub.js';
 import { getGlobalConfig } from './global_config.js';
 import { generateEmbedding, companyToText, auditToText } from './embeddings.js';
 import { captureEvent, isFeatureEnabled, flush } from './analytics.js';
+import { datadog } from './datadog.js';
 
 
 dotenv.config();
@@ -219,6 +220,7 @@ async function handleJob(job) {
   if (job.status !== 'PENDING') return;
   const attempts = (job.attempts || 0) + 1;
   console.log(`[Job] ${job.type} ${job.id} | org: ${job.org_id} | attempt ${attempts}/${MAX_ATTEMPTS}`);
+  datadog.info('job.started', { job_type: job.type, job_id: job.id, org_id: job.org_id, attempt: attempts });
 
   const { error: startError } = await supabase.from('jobs').update({
     status: 'RUNNING',
@@ -261,8 +263,10 @@ async function handleJob(job) {
     if (completeError) {
       console.error(`[Job] Failed to mark job ${job.id} as COMPLETED:`, completeError.message);
     }
+    datadog.info('job.completed', { job_type: job.type, job_id: job.id, org_id: job.org_id });
   } catch (error) {
     console.error(`[Job] ${job.id} failed (attempt ${attempts}):`, error.message);
+    datadog.error('job.failed', { job_type: job.type, job_id: job.id, org_id: job.org_id, error: error.message, attempt: attempts });
 
     if (attempts >= MAX_ATTEMPTS) {
       const { error: failError } = await supabase.from('jobs').update({
@@ -452,6 +456,7 @@ async function handleDiscover(job) {
     }
 
     console.log(`[Discover] Queued ${queued} quality sites for audit`);
+    datadog.info('discovery.completed', { query, queued, org_id: job.org_id });
   } finally {
     await browser.close();
   }
@@ -874,8 +879,10 @@ async function handleScrape(job) {
           ]);
           console.log(`[Scrape] Queued followups for ${targetEmail}`);
         }
+        datadog.info('email.sent', { company: company.name, to: targetEmail, score: auditData.score, org_id: orgId });
       } catch (err) {
         console.error('[Scrape] Auto-send failed:', err.message);
+        datadog.error('email.failed', { error: err.message, org_id: orgId });
       }
     }
   }

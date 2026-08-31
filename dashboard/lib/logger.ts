@@ -11,6 +11,43 @@ interface LogEntry {
   error?: string;
 }
 
+const DD_API_KEY = process.env.DATADOG_API_KEY;
+const DD_SITE = process.env.DATADOG_SITE || "datadoghq.com";
+const DD_SERVICE = "knight-dashboard";
+const DD_URL = `https://http-intake.logs.${DD_SITE}/api/v2/logs`;
+
+let _buffer: LogEntry[] = [];
+let _flushTimer: ReturnType<typeof setInterval> | null = null;
+const FLUSH_INTERVAL_MS = 10000;
+const MAX_BUFFER_SIZE = 50;
+
+async function flushToDatadog() {
+  if (!DD_API_KEY || _buffer.length === 0) return;
+  const batch = _buffer.splice(0, MAX_BUFFER_SIZE);
+  try {
+    await fetch(DD_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "DD-API-KEY": DD_API_KEY },
+      body: JSON.stringify(batch.map(e => ({
+        ddsource: "nodejs",
+        service: DD_SERVICE,
+        env: process.env.NODE_ENV || "production",
+        level: e.level,
+        message: e.message,
+        context: e.context,
+        data: e.data,
+        error: e.error,
+        timestamp: e.timestamp,
+      }))),
+    });
+  } catch { /* silent */ }
+}
+
+function startFlushTimer() {
+  if (_flushTimer) return;
+  _flushTimer = setInterval(flushToDatadog, FLUSH_INTERVAL_MS);
+}
+
 class Logger {
   private context: string;
 
@@ -34,12 +71,14 @@ class Logger {
       }
     }
 
-    // In production, send to external logging service
     if (process.env.NODE_ENV === "production") {
-      // TODO: Send to Sentry, Datadog, etc.
+      // Send to Datadog
+      _buffer.push(entry);
+      startFlushTimer();
+      if (_buffer.length >= MAX_BUFFER_SIZE) flushToDatadog();
+      // Also log locally
       console.log(JSON.stringify(entry));
     } else {
-      // Dev: readable format
       const prefix = `[${entry.timestamp}] [${level.toUpperCase()}] [${this.context}]`;
       if (level === "error") {
         console.error(`${prefix} ${message}`, data || "");
@@ -67,7 +106,6 @@ class Logger {
     this.log("error", message, error);
   }
 
-  // Create child logger with additional context
   child(context: string): Logger {
     return new Logger(`${this.context}:${context}`);
   }
