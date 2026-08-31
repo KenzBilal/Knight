@@ -16,7 +16,7 @@ const DD_SITE = process.env.DATADOG_SITE || "datadoghq.com";
 const DD_SERVICE = "knight-dashboard";
 const DD_URL = `https://http-intake.logs.${DD_SITE}/api/v2/logs`;
 
-let _buffer: LogEntry[] = [];
+const _buffer: LogEntry[] = [];
 let _flushTimer: ReturnType<typeof setInterval> | null = null;
 const FLUSH_INTERVAL_MS = 10000;
 const MAX_BUFFER_SIZE = 50;
