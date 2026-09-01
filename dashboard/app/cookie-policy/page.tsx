@@ -81,7 +81,7 @@ export default function CookiePolicyPage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Contact</h2>
-            <p>Questions about our use of cookies? Email us at <a href="mailto:privacy@knight.app" className="text-white hover:underline">privacy@knight.app</a>.</p>
+            <p>Questions about our use of cookies? Email us at <a href="mailto:privacy@knightagency.tech" className="text-white hover:underline">privacy@knightagency.tech</a>.</p>
           </section>
         </div>
       </main>

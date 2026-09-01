@@ -787,7 +787,7 @@ async function handleScrape(job) {
       const targetEmail = contacts[0].email;
       const senderName = orgConfig?.company_name || 'Knight';
       const rawSenderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || '';
-      const senderEmail = rawSenderEmail.includes('@') ? rawSenderEmail : 'hello@knight.app';
+      const senderEmail = rawSenderEmail.includes('@') ? rawSenderEmail : 'hello@knightagency.tech';
 
       // Try to use default initial template
       const template = await getDefaultTemplate(orgId, 'initial');
@@ -1003,7 +1003,7 @@ async function handleFollowup(job) {
 
   const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
   const senderName = orgConfig?.company_name || 'Knight';
-  const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || 'hello@knight.ai';
+  const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || 'hello@knightagency.tech';
 
   const { data: contacts } = await supabase.from('contacts').select('first_name').eq('company_id', company_id).limit(1);
   const contactName = (contacts && contacts[0]?.first_name) ? contacts[0].first_name : 'there';

@@ -109,7 +109,7 @@ export default function PrivacyPage() {
                 </div>
               ))}
             </div>
-            <p className="mt-6">To exercise any of these rights, email <a href="mailto:privacy@knight.app" className="text-white hover:underline">privacy@knight.app</a>. We will respond within 30 days.</p>
+            <p className="mt-6">To exercise any of these rights, email <a href="mailto:privacy@knightagency.tech" className="text-white hover:underline">privacy@knightagency.tech</a>. We will respond within 30 days.</p>
           </section>
 
           <section className="border-t border-white/[0.05] pt-12">
@@ -134,7 +134,7 @@ export default function PrivacyPage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">10. Contact</h2>
-            <p>For privacy-related questions or to exercise your rights, email <a href="mailto:privacy@knight.app" className="text-white hover:underline">privacy@knight.app</a>.</p>
+            <p>For privacy-related questions or to exercise your rights, email <a href="mailto:privacy@knightagency.tech" className="text-white hover:underline">privacy@knightagency.tech</a>.</p>
           </section>
         </div>
       </main>

@@ -71,7 +71,7 @@ const faqItems = [
   },
   {
     q: "How do I report a security vulnerability?",
-    a: "Email security@knight.app with a description of the issue. We follow a 90-day responsible disclosure policy and will acknowledge your report within 48 hours.",
+    a: "Email security@knightagency.tech with a description of the issue. We follow a 90-day responsible disclosure policy and will acknowledge your report within 48 hours.",
   },
 ];
 
@@ -238,7 +238,7 @@ export default function SecurityPage() {
                 </p>
                 <ul className="space-y-3 mb-8">
                   {[
-                    "Email security@knight.app with a clear description of the issue",
+                    "Email security@knightagency.tech with a clear description of the issue",
                     "Include steps to reproduce and potential impact",
                     "We will acknowledge your report within 48 hours",
                     "We follow a 90-day disclosure window before public disclosure",
@@ -254,7 +254,7 @@ export default function SecurityPage() {
                   ))}
                 </ul>
                 <a
-                  href="mailto:security@knight.app"
+                  href="mailto:security@knightagency.tech"
                   className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
                 >
                   Report a vulnerability

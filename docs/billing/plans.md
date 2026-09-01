@@ -84,7 +84,7 @@ You keep access until the end of your billing period.
 
 - New subscriptions: Full refund within 7 days
 - Renewals: Non-refundable
-- See [Refund Policy](https://knight.com/refund) for details
+- See [Refund Policy](https://knightagency.tech/refund) for details
 
 ## Payment Methods
 
@@ -99,4 +99,4 @@ Yes. Upgrades take effect immediately. Downgrades take effect at the end of your
 Not yet. We're working on it.
 
 **Is there a discount for nonprofits?**
-Contact us at billing@knight.com to discuss nonprofit pricing.
+Contact us at billing@knightagency.tech to discuss nonprofit pricing.

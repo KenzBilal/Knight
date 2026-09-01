@@ -1,0 +1,1387 @@
+{
+  "/home/kenz/Projects/Knight/admin-app/knight-admin.js": {
+    "mtime": 1783829192.0620196,
+    "ast_hash": "15f698cf5da79eb5be56ef845adf685a",
+    "semantic_hash": "15f698cf5da79eb5be56ef845adf685a"
+  },
+  "/home/kenz/Projects/Knight/admin-app/package.json": {
+    "mtime": 1785314884.7056181,
+    "ast_hash": "7b7deb7248ec8344eb538565e0aee3ca",
+    "semantic_hash": "7b7deb7248ec8344eb538565e0aee3ca"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/App.tsx": {
+    "mtime": 1784822998.3117466,
+    "ast_hash": "b62d589796a11f75fa3bdb6aabdf8813",
+    "semantic_hash": "b62d589796a11f75fa3bdb6aabdf8813"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/ActivityModule.tsx": {
+    "mtime": 1783829192.0630486,
+    "ast_hash": "1a733043aa400d32c5b0b0e0c5a08e24",
+    "semantic_hash": "1a733043aa400d32c5b0b0e0c5a08e24"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/ApiHubModule.tsx": {
+    "mtime": 1783845557.9672318,
+    "ast_hash": "9d27eda038158c7a10931da252304df6",
+    "semantic_hash": "9d27eda038158c7a10931da252304df6"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/Badge.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "202f44dddd8ea84fb3c9d89ed1718cfe",
+    "semantic_hash": "202f44dddd8ea84fb3c9d89ed1718cfe"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/BillingModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "9c9508871f7085705290bd9ba3405d77",
+    "semantic_hash": "9c9508871f7085705290bd9ba3405d77"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/DataTable.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "505a3018f9caf5bac3de03f41d7d3c19",
+    "semantic_hash": "505a3018f9caf5bac3de03f41d7d3c19"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/EmailsModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "5175aca0860e80a4c62b7f7a4b0e55ba",
+    "semantic_hash": "5175aca0860e80a4c62b7f7a4b0e55ba"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/IntegrationsModule.tsx": {
+    "mtime": 1784376586.307283,
+    "ast_hash": "5e7be6e0fbf23df7a34430f7d05071f0",
+    "semantic_hash": "5e7be6e0fbf23df7a34430f7d05071f0"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/JobsModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "7466716b72a168ec5af7f5675cdfec17",
+    "semantic_hash": "7466716b72a168ec5af7f5675cdfec17"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/LeadsModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "34c2549fe7919ddf72be3d3f4c1c9c13",
+    "semantic_hash": "34c2549fe7919ddf72be3d3f4c1c9c13"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/LogViewer.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "82afcbda9c23873258bdd53ea5569234",
+    "semantic_hash": "82afcbda9c23873258bdd53ea5569234"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/OrgsModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "5b40a1291f2c00a7a9b966461cf7775c",
+    "semantic_hash": "5b40a1291f2c00a7a9b966461cf7775c"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/Overview.tsx": {
+    "mtime": 1783839570.8290968,
+    "ast_hash": "ce7094f0eea6de75f2dacc05777274a0",
+    "semantic_hash": "ce7094f0eea6de75f2dacc05777274a0"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/PageHeader.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "a05cb20b746f7461679c5d10abd84ba6",
+    "semantic_hash": "a05cb20b746f7461679c5d10abd84ba6"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/PlansModule.tsx": {
+    "mtime": 1784219064.9900887,
+    "ast_hash": "5fdde349954e862c8e53c4caf11e8f16",
+    "semantic_hash": "5fdde349954e862c8e53c4caf11e8f16"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/PostHogModule.tsx": {
+    "mtime": 1785313405.2176518,
+    "ast_hash": "305b3bc7c8496aff4ccf63195da01f1d",
+    "semantic_hash": "305b3bc7c8496aff4ccf63195da01f1d"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/SearchInput.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "f80d563faa2a57d2bd8667afaf0e431a",
+    "semantic_hash": "f80d563faa2a57d2bd8667afaf0e431a"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/SettingsModule.tsx": {
+    "mtime": 1783962929.6856873,
+    "ast_hash": "7989788d1bdb7644f39595f93c5ba400",
+    "semantic_hash": "7989788d1bdb7644f39595f93c5ba400"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/Sidebar.tsx": {
+    "mtime": 1784907004.6425514,
+    "ast_hash": "53d77513b0050540a28fa383d445700e",
+    "semantic_hash": "53d77513b0050540a28fa383d445700e"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/StatCard.tsx": {
+    "mtime": 1783839558.2800965,
+    "ast_hash": "47a57b9d00ac01b99ac268552dfcf7f4",
+    "semantic_hash": "47a57b9d00ac01b99ac268552dfcf7f4"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/SupportModule.tsx": {
+    "mtime": 1784219624.6890628,
+    "ast_hash": "bc5f7bb92764872c504b4b0acf078260",
+    "semantic_hash": "bc5f7bb92764872c504b4b0acf078260"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/TeamModule.tsx": {
+    "mtime": 1784219028.1930904,
+    "ast_hash": "8d074e053a0c6c4cc585230f0220359f",
+    "semantic_hash": "8d074e053a0c6c4cc585230f0220359f"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/TelegramModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "c773d1bb15ff3eccb7645cb1b4de9b84",
+    "semantic_hash": "c773d1bb15ff3eccb7645cb1b4de9b84"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/Titlebar.tsx": {
+    "mtime": 1783839247.8630896,
+    "ast_hash": "187b9e562c7bb90324d711df77a89a5d",
+    "semantic_hash": "187b9e562c7bb90324d711df77a89a5d"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/Toast.tsx": {
+    "mtime": 1783845518.839231,
+    "ast_hash": "4b78c83b1fb2918fbb2afdb9725a3a23",
+    "semantic_hash": "4b78c83b1fb2918fbb2afdb9725a3a23"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/UsersModule.tsx": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "84dac852c7d6458ac525b8711e9fc816",
+    "semantic_hash": "84dac852c7d6458ac525b8711e9fc816"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/WebsiteModule.tsx": {
+    "mtime": 1784013033.4568727,
+    "ast_hash": "673a168c023898b14e7cc54211e2f0f3",
+    "semantic_hash": "673a168c023898b14e7cc54211e2f0f3"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/components/WorkerModule.tsx": {
+    "mtime": 1783845583.3212323,
+    "ast_hash": "df7ee98c7029dee61472888858939315",
+    "semantic_hash": "df7ee98c7029dee61472888858939315"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/lib/settings.ts": {
+    "mtime": 1783845536.9802313,
+    "ast_hash": "3f974063975a496083b13ee2cbb4a510",
+    "semantic_hash": "3f974063975a496083b13ee2cbb4a510"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/lib/supabase.ts": {
+    "mtime": 1783829192.0632138,
+    "ast_hash": "f9b3f309131075e0984c7d063c9ec88f",
+    "semantic_hash": "f9b3f309131075e0984c7d063c9ec88f"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/lib/types.ts": {
+    "mtime": 1783845532.9722314,
+    "ast_hash": "bc57415902dd4b0e37dfd93076dbfa50",
+    "semantic_hash": "bc57415902dd4b0e37dfd93076dbfa50"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/main.tsx": {
+    "mtime": 1783829192.0640428,
+    "ast_hash": "787e5a07efeb2bf6209d5937195f2f68",
+    "semantic_hash": "787e5a07efeb2bf6209d5937195f2f68"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/vite-env.d.ts": {
+    "mtime": 1783829192.0640428,
+    "ast_hash": "78be9b9bbcbb27c04515d96328ab6fc0",
+    "semantic_hash": "78be9b9bbcbb27c04515d96328ab6fc0"
+  },
+  "/home/kenz/Projects/Knight/admin-app/tsconfig.app.json": {
+    "mtime": 1783829192.0640428,
+    "ast_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a",
+    "semantic_hash": "5f2dafd737dea8a4ddcbb10f5113ac5a"
+  },
+  "/home/kenz/Projects/Knight/admin-app/tsconfig.json": {
+    "mtime": 1783829192.0640428,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "/home/kenz/Projects/Knight/admin-app/tsconfig.node.json": {
+    "mtime": 1783829192.0640428,
+    "ast_hash": "f9cb81ddcea69ffdab672fc8c48dca66",
+    "semantic_hash": "f9cb81ddcea69ffdab672fc8c48dca66"
+  },
+  "/home/kenz/Projects/Knight/admin-app/vite.config.ts": {
+    "mtime": 1783932453.436026,
+    "ast_hash": "6da67ef89f204507387efb2206fcf22d",
+    "semantic_hash": "6da67ef89f204507387efb2206fcf22d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/about/page.tsx": {
+    "mtime": 1784036932.3272312,
+    "ast_hash": "6838b48bbdcbbe2bcdce606a6641dca8",
+    "semantic_hash": "6838b48bbdcbbe2bcdce606a6641dca8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/acceptable-use/page.tsx": {
+    "mtime": 1784036985.9492342,
+    "ast_hash": "f77bd003db15c87d53f0cd6c5d7bd537",
+    "semantic_hash": "f77bd003db15c87d53f0cd6c5d7bd537"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/ai-policy/page.tsx": {
+    "mtime": 1784037021.7242362,
+    "ast_hash": "e1055e52a5825cfd82990f6f64cb1ad2",
+    "semantic_hash": "e1055e52a5825cfd82990f6f64cb1ad2"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/admin/users/[userId]/reset-usage/route.ts": {
+    "mtime": 1785312990.2396615,
+    "ast_hash": "e876117f2b3a097d247f939d37730eef",
+    "semantic_hash": "e876117f2b3a097d247f939d37730eef"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/admin/users/[userId]/route.ts": {
+    "mtime": 1785312974.6556616,
+    "ast_hash": "dd6b580d114e4892fbcdb05aff437b1c",
+    "semantic_hash": "dd6b580d114e4892fbcdb05aff437b1c"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/admin/users/[userId]/suspend/route.ts": {
+    "mtime": 1785313001.988661,
+    "ast_hash": "f3dabb5bd616f319261524f213628437",
+    "semantic_hash": "f3dabb5bd616f319261524f213628437"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/admin/users/route.ts": {
+    "mtime": 1785312946.2336624,
+    "ast_hash": "be8b6dff6e68362160cb4231ee66cefe",
+    "semantic_hash": "be8b6dff6e68362160cb4231ee66cefe"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/events/route.ts": {
+    "mtime": 1784888342.879696,
+    "ast_hash": "f969d1317b7434f280fd8c55961c1e9f",
+    "semantic_hash": "f969d1317b7434f280fd8c55961c1e9f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/flags/[id]/toggle/route.ts": {
+    "mtime": 1784888317.8776946,
+    "ast_hash": "bd4a2f101447d7fc87454b89be4af6d0",
+    "semantic_hash": "bd4a2f101447d7fc87454b89be4af6d0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/flags/route.ts": {
+    "mtime": 1784889745.9397602,
+    "ast_hash": "7d40646c4d24963f22761ad273c21b87",
+    "semantic_hash": "7d40646c4d24963f22761ad273c21b87"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/identify/route.ts": {
+    "mtime": 1784888274.5126927,
+    "ast_hash": "19ba604ee3e53866d1821ddd302de4ab",
+    "semantic_hash": "19ba604ee3e53866d1821ddd302de4ab"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/persons/route.ts": {
+    "mtime": 1784888369.9676971,
+    "ast_hash": "91ef61006bb669e924a92e449b75cf32",
+    "semantic_hash": "91ef61006bb669e924a92e449b75cf32"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/stats/route.ts": {
+    "mtime": 1784888403.6576986,
+    "ast_hash": "5d1afec18a09e8e5327b0754a1530c87",
+    "semantic_hash": "5d1afec18a09e8e5327b0754a1530c87"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/analytics/track/route.ts": {
+    "mtime": 1784888253.1666918,
+    "ast_hash": "4c3fcac73f90704d8865989adb7078da",
+    "semantic_hash": "4c3fcac73f90704d8865989adb7078da"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/audit/route.ts": {
+    "mtime": 1785249642.6465518,
+    "ast_hash": "df8c305cf8b6a2eb7b384e9047f5ca95",
+    "semantic_hash": "df8c305cf8b6a2eb7b384e9047f5ca95"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/audits/route.ts": {
+    "mtime": 1784358982.2241044,
+    "ast_hash": "6f0fe1ccc87d9526da61c1f3321f8779",
+    "semantic_hash": "6f0fe1ccc87d9526da61c1f3321f8779"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/auth/login/route.ts": {
+    "mtime": 1784218842.464099,
+    "ast_hash": "c38bb4d875556d5c5ab998c2a2d91669",
+    "semantic_hash": "c38bb4d875556d5c5ab998c2a2d91669"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/auth/logout/route.ts": {
+    "mtime": 1783644305.2573907,
+    "ast_hash": "e0c835fe17c0708d130c99923d669329",
+    "semantic_hash": "e0c835fe17c0708d130c99923d669329"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/auth/refresh/route.ts": {
+    "mtime": 1784218866.738098,
+    "ast_hash": "9d64690c46c3fce63b8375da3161c9b4",
+    "semantic_hash": "9d64690c46c3fce63b8375da3161c9b4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/auth/signup/route.ts": {
+    "mtime": 1784218851.2720985,
+    "ast_hash": "b721ef45b96c605331a1a1d7b5b11f31",
+    "semantic_hash": "b721ef45b96c605331a1a1d7b5b11f31"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/billing/checkout/route.ts": {
+    "mtime": 1783791078.333004,
+    "ast_hash": "9b466aa1bdbc8ff45cf6f9274db1db3f",
+    "semantic_hash": "9b466aa1bdbc8ff45cf6f9274db1db3f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/billing/portal/route.ts": {
+    "mtime": 1783665697.6762676,
+    "ast_hash": "636fb605e94c12457c65a96e5a812b77",
+    "semantic_hash": "636fb605e94c12457c65a96e5a812b77"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/billing/webhook/route.ts": {
+    "mtime": 1784218900.7510962,
+    "ast_hash": "e9e8b1d5af82d73051a44a8c576b5fa4",
+    "semantic_hash": "e9e8b1d5af82d73051a44a8c576b5fa4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/config/route.ts": {
+    "mtime": 1784303055.049057,
+    "ast_hash": "dafbdf1783a50231e3a974f7f0aebee4",
+    "semantic_hash": "dafbdf1783a50231e3a974f7f0aebee4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/contact/route.ts": {
+    "mtime": 1784046534.8017771,
+    "ast_hash": "aa7ed0c7e7319b36a6334da6bf9a3f1a",
+    "semantic_hash": "aa7ed0c7e7319b36a6334da6bf9a3f1a"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/discover/route.ts": {
+    "mtime": 1785249640.3715518,
+    "ast_hash": "c5d04ce52a3a806a5a6fa351dc48fe49",
+    "semantic_hash": "c5d04ce52a3a806a5a6fa351dc48fe49"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/draft/route.ts": {
+    "mtime": 1785249644.7985518,
+    "ast_hash": "17796932773b921eee1616dfe4c7b4f9",
+    "semantic_hash": "17796932773b921eee1616dfe4c7b4f9"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/engine/route.ts": {
+    "mtime": 1783645118.245372,
+    "ast_hash": "9f045ce776853569b2d29e71d8578dd4",
+    "semantic_hash": "9f045ce776853569b2d29e71d8578dd4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/health/route.ts": {
+    "mtime": 1783829660.1688735,
+    "ast_hash": "57c1852c3f1fd16a3dd6434b234773ff",
+    "semantic_hash": "57c1852c3f1fd16a3dd6434b234773ff"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/inbox/route.ts": {
+    "mtime": 1784366504.6291807,
+    "ast_hash": "682938bbd2d1628fe8e948e54018b62b",
+    "semantic_hash": "682938bbd2d1628fe8e948e54018b62b"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/integrations/mcp/route.ts": {
+    "mtime": 1785249632.661552,
+    "ast_hash": "a88d006cc9ed783bbe44f7e5dad2e60a",
+    "semantic_hash": "a88d006cc9ed783bbe44f7e5dad2e60a"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/integrations/webhooks/route.ts": {
+    "mtime": 1785249623.6115522,
+    "ast_hash": "1a9d54ab23dd1002472ee9d1eebaef40",
+    "semantic_hash": "1a9d54ab23dd1002472ee9d1eebaef40"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/kill-switches/route.ts": {
+    "mtime": 1785313067.4236596,
+    "ast_hash": "540875d307d4819d185bb5fb885455a9",
+    "semantic_hash": "540875d307d4819d185bb5fb885455a9"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/landing-content/route.ts": {
+    "mtime": 1784270609.6328185,
+    "ast_hash": "7b8f6942849b32b0b9bd600eef944f10",
+    "semantic_hash": "7b8f6942849b32b0b9bd600eef944f10"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/landing-content/save/route.ts": {
+    "mtime": 1783942977.699909,
+    "ast_hash": "0b96501be7109c60e77c9b592d3f1d82",
+    "semantic_hash": "0b96501be7109c60e77c9b592d3f1d82"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/leads/route.ts": {
+    "mtime": 1784218934.9040947,
+    "ast_hash": "00563639f67493859f5c83931d2d9e69",
+    "semantic_hash": "00563639f67493859f5c83931d2d9e69"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/mcp/route.ts": {
+    "mtime": 1784318962.1756837,
+    "ast_hash": "f13e826f626a4afddca20b3b0568fa25",
+    "semantic_hash": "f13e826f626a4afddca20b3b0568fa25"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/org/route.ts": {
+    "mtime": 1783817217.7465932,
+    "ast_hash": "6f21cf03aadf1868cb09b9359051e614",
+    "semantic_hash": "6f21cf03aadf1868cb09b9359051e614"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/overview/route.ts": {
+    "mtime": 1784370314.0032194,
+    "ast_hash": "3bd5c7c27135e72bf0b45081e7f870b1",
+    "semantic_hash": "3bd5c7c27135e72bf0b45081e7f870b1"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/plans/revalidate/route.ts": {
+    "mtime": 1783946667.443868,
+    "ast_hash": "1b7e9abba044ff2ada227cff3c4c0d6a",
+    "semantic_hash": "1b7e9abba044ff2ada227cff3c4c0d6a"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/plans/route.ts": {
+    "mtime": 1783791074.937004,
+    "ast_hash": "fc8075414bd1d3f0a8b2840bd9a12130",
+    "semantic_hash": "fc8075414bd1d3f0a8b2840bd9a12130"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/prospects/route.ts": {
+    "mtime": 1784368585.928202,
+    "ast_hash": "e908a650bbd350ad31244bdd1ceca503",
+    "semantic_hash": "e908a650bbd350ad31244bdd1ceca503"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/reject/route.ts": {
+    "mtime": 1783797297.1301444,
+    "ast_hash": "5ac2c5315842b58c7b0cbb61c2b7591d",
+    "semantic_hash": "5ac2c5315842b58c7b0cbb61c2b7591d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/search/route.ts": {
+    "mtime": 1784826380.4768229,
+    "ast_hash": "7473d849e7b71b00b6d5e35228c14e58",
+    "semantic_hash": "7473d849e7b71b00b6d5e35228c14e58"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/send-reply/route.ts": {
+    "mtime": 1783707747.0872154,
+    "ast_hash": "77498167b7056495b701946b477affd8",
+    "semantic_hash": "77498167b7056495b701946b477affd8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/sentry-tunnel/route.ts": {
+    "mtime": 1784388940.4634082,
+    "ast_hash": "12cda31171411f68aba671d596c7144e",
+    "semantic_hash": "12cda31171411f68aba671d596c7144e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/settings/domain/route.ts": {
+    "mtime": 1784382588.3353438,
+    "ast_hash": "26498b094e1040a48ba42d47473a9500",
+    "semantic_hash": "26498b094e1040a48ba42d47473a9500"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/settings/keys/route.ts": {
+    "mtime": 1784361362.1011286,
+    "ast_hash": "3fd61baeec9fb3369312dc58e7a41702",
+    "semantic_hash": "3fd61baeec9fb3369312dc58e7a41702"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/similar/route.ts": {
+    "mtime": 1785249673.1755512,
+    "ast_hash": "470de4ed4abab922c1e9f75e8f79637f",
+    "semantic_hash": "470de4ed4abab922c1e9f75e8f79637f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/support/[id]/route.ts": {
+    "mtime": 1783847609.085278,
+    "ast_hash": "4f7f9c4248f87809f530b377fbd79be0",
+    "semantic_hash": "4f7f9c4248f87809f530b377fbd79be0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/support/route.ts": {
+    "mtime": 1783847599.4012778,
+    "ast_hash": "7cbbbc64fe6388fde80fc74ed3382f78",
+    "semantic_hash": "7cbbbc64fe6388fde80fc74ed3382f78"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/support/unseen/route.ts": {
+    "mtime": 1783847613.4652781,
+    "ast_hash": "0eda93f17cb882dedb7258ede9e841e3",
+    "semantic_hash": "0eda93f17cb882dedb7258ede9e841e3"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/team/accept/route.ts": {
+    "mtime": 1783817478.165599,
+    "ast_hash": "641aca438557b85e9eb7e16f9b928a32",
+    "semantic_hash": "641aca438557b85e9eb7e16f9b928a32"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/team/invite/route.ts": {
+    "mtime": 1783817199.0405927,
+    "ast_hash": "8a164f908b214e064812a8e2e2467f34",
+    "semantic_hash": "8a164f908b214e064812a8e2e2467f34"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/team/member/route.ts": {
+    "mtime": 1783817205.539593,
+    "ast_hash": "521f606ddae0d6a8d78832e7f33e28ed",
+    "semantic_hash": "521f606ddae0d6a8d78832e7f33e28ed"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/team/route.ts": {
+    "mtime": 1783817715.6086044,
+    "ast_hash": "ac568c44d1deb6c20335b7b3241fdfdb",
+    "semantic_hash": "ac568c44d1deb6c20335b7b3241fdfdb"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/action/route.ts": {
+    "mtime": 1785249666.9475513,
+    "ast_hash": "812f3a50d354f82126b037617c21a412",
+    "semantic_hash": "812f3a50d354f82126b037617c21a412"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/auth/confirm/route.ts": {
+    "mtime": 1785249656.8215516,
+    "ast_hash": "197cd25b97a9725fec7cc69ea745bd4e",
+    "semantic_hash": "197cd25b97a9725fec7cc69ea745bd4e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/auth/start/route.ts": {
+    "mtime": 1785249647.3335516,
+    "ast_hash": "811586a871db31cac6cba81677f25786",
+    "semantic_hash": "811586a871db31cac6cba81677f25786"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/auth/status/route.ts": {
+    "mtime": 1785249658.8125515,
+    "ast_hash": "292cc11290b86d643613890f83a00cae",
+    "semantic_hash": "292cc11290b86d643613890f83a00cae"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/auth/verify/route.ts": {
+    "mtime": 1785249654.1385515,
+    "ast_hash": "a3f581aa1652b49f4eb470f931f2c556",
+    "semantic_hash": "a3f581aa1652b49f4eb470f931f2c556"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/telegram/leads/route.ts": {
+    "mtime": 1785249661.1235514,
+    "ast_hash": "fa3dc2b5eaeaf2bce281fed370597199",
+    "semantic_hash": "fa3dc2b5eaeaf2bce281fed370597199"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/templates/route.ts": {
+    "mtime": 1784282276.7825446,
+    "ast_hash": "4d03701aa4c7b1e9e3432d16fd98583d",
+    "semantic_hash": "4d03701aa4c7b1e9e3432d16fd98583d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/usage/route.ts": {
+    "mtime": 1783791025.8090029,
+    "ast_hash": "f55ec02a777069face2eef5367e979db",
+    "semantic_hash": "f55ec02a777069face2eef5367e979db"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/version/route.ts": {
+    "mtime": 1784220959.1650014,
+    "ast_hash": "43f7451ab3d7926c2a37e0a840c95405",
+    "semantic_hash": "43f7451ab3d7926c2a37e0a840c95405"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/api/webhooks/resend/route.ts": {
+    "mtime": 1784218878.2660973,
+    "ast_hash": "f713af54ae7f6c5232cedc1704fd9c9e",
+    "semantic_hash": "f713af54ae7f6c5232cedc1704fd9c9e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/auth/layout.tsx": {
+    "mtime": 1784278029.2356443,
+    "ast_hash": "0973e914eb8413d58e1195d7e881a0fb",
+    "semantic_hash": "0973e914eb8413d58e1195d7e881a0fb"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/auth/login/page.tsx": {
+    "mtime": 1784888741.121714,
+    "ast_hash": "8a56cc53701f833e2c7250e7c1d8b230",
+    "semantic_hash": "8a56cc53701f833e2c7250e7c1d8b230"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/auth/signup/page.tsx": {
+    "mtime": 1784888818.3897176,
+    "ast_hash": "272111bc2d2374a43fa271db8d311e67",
+    "semantic_hash": "272111bc2d2374a43fa271db8d311e67"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/contact/layout.tsx": {
+    "mtime": 1784104770.2918336,
+    "ast_hash": "a5c7eded6c8de6f5af90e2c19d99bc36",
+    "semantic_hash": "a5c7eded6c8de6f5af90e2c19d99bc36"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/contact/page.tsx": {
+    "mtime": 1784046545.2587779,
+    "ast_hash": "6b9392272dfa97f0a454c66d379c4ce7",
+    "semantic_hash": "6b9392272dfa97f0a454c66d379c4ce7"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/cookie-policy/page.tsx": {
+    "mtime": 1784036956.6542327,
+    "ast_hash": "c0af9d3aa8fd2ff36701fd7bfd3289af",
+    "semantic_hash": "c0af9d3aa8fd2ff36701fd7bfd3289af"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/audits/error.tsx": {
+    "mtime": 1784357247.7720869,
+    "ast_hash": "127f439ec1a849457fa7e9f64e7e9b83",
+    "semantic_hash": "127f439ec1a849457fa7e9f64e7e9b83"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/audits/loading.tsx": {
+    "mtime": 1784140953.8504922,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/audits/page.tsx": {
+    "mtime": 1785242788.5007126,
+    "ast_hash": "d332d90c187b338d0ca6bf7b7a9c558d",
+    "semantic_hash": "d332d90c187b338d0ca6bf7b7a9c558d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/billing/loading.tsx": {
+    "mtime": 1784140974.6404932,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/billing/page.tsx": {
+    "mtime": 1784874277.8042881,
+    "ast_hash": "493a7c066af6d6251e3bb070bac0a4d8",
+    "semantic_hash": "493a7c066af6d6251e3bb070bac0a4d8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/inbox/loading.tsx": {
+    "mtime": 1784140971.1964931,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/inbox/page.tsx": {
+    "mtime": 1785243208.7317028,
+    "ast_hash": "28d974b63f63c78ef5d4c899f489b20a",
+    "semantic_hash": "28d974b63f63c78ef5d4c899f489b20a"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/integrations/page.tsx": {
+    "mtime": 1785242490.1067197,
+    "ast_hash": "739afc3e11f4eb4acb2bf81e270ba0bd",
+    "semantic_hash": "739afc3e11f4eb4acb2bf81e270ba0bd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/layout.tsx": {
+    "mtime": 1784297833.9851797,
+    "ast_hash": "e15426333bb9b2d4d60bc0a434e53463",
+    "semantic_hash": "e15426333bb9b2d4d60bc0a434e53463"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/loading.tsx": {
+    "mtime": 1784140991.040494,
+    "ast_hash": "ad267896bf04a11c93fe1533c6fb0b36",
+    "semantic_hash": "ad267896bf04a11c93fe1533c6fb0b36"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/page.tsx": {
+    "mtime": 1785242427.1197212,
+    "ast_hash": "678ac351571e7ce87f8d3e59a5aa98f9",
+    "semantic_hash": "678ac351571e7ce87f8d3e59a5aa98f9"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/pitches/loading.tsx": {
+    "mtime": 1784140968.113493,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/pitches/page.tsx": {
+    "mtime": 1784873899.5052793,
+    "ast_hash": "efabdf3027a66801205b3569ef10fcea",
+    "semantic_hash": "efabdf3027a66801205b3569ef10fcea"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/prospects/loading.tsx": {
+    "mtime": 1784140993.062388,
+    "ast_hash": "be266091cb15eb3502ccd793db68ae5f",
+    "semantic_hash": "be266091cb15eb3502ccd793db68ae5f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/prospects/page.tsx": {
+    "mtime": 1785242718.0347142,
+    "ast_hash": "ad61fe6b909df5f1c211979f9ecc77f8",
+    "semantic_hash": "ad61fe6b909df5f1c211979f9ecc77f8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/settings/loading.tsx": {
+    "mtime": 1784140964.2604928,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/settings/page.tsx": {
+    "mtime": 1784873928.62328,
+    "ast_hash": "9f954f355e20442fd249a06581fcba10",
+    "semantic_hash": "9f954f355e20442fd249a06581fcba10"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/support/page.tsx": {
+    "mtime": 1785242863.639711,
+    "ast_hash": "fe5c2ad93b1feb2854fd05792d7af9bc",
+    "semantic_hash": "fe5c2ad93b1feb2854fd05792d7af9bc"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/team/page.tsx": {
+    "mtime": 1785242546.3237183,
+    "ast_hash": "541b3aa1b9e35e86b06d34cfdeb7770e",
+    "semantic_hash": "541b3aa1b9e35e86b06d34cfdeb7770e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/telegram/loading.tsx": {
+    "mtime": 1784140978.4854934,
+    "ast_hash": "2d457675b7f30c5f9924a94f13d4b3cd",
+    "semantic_hash": "2d457675b7f30c5f9924a94f13d4b3cd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/telegram/page.tsx": {
+    "mtime": 1785242594.5627172,
+    "ast_hash": "c349077837379a7c65cdadf6890ff3f4",
+    "semantic_hash": "c349077837379a7c65cdadf6890ff3f4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/telegram/setup/page.tsx": {
+    "mtime": 1784379722.3513148,
+    "ast_hash": "abaae3eed3f10e77eba76915b488b0ae",
+    "semantic_hash": "abaae3eed3f10e77eba76915b488b0ae"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/templates/page.tsx": {
+    "mtime": 1784873894.6812792,
+    "ast_hash": "d5911935d6e68a30ab2efa3ef8b76fa9",
+    "semantic_hash": "d5911935d6e68a30ab2efa3ef8b76fa9"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/wizard/calendly/page.tsx": {
+    "mtime": 1785243009.6297073,
+    "ast_hash": "da4f7327d3be331c0e491cdcbef9e293",
+    "semantic_hash": "da4f7327d3be331c0e491cdcbef9e293"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/wizard/domain/page.tsx": {
+    "mtime": 1784888958.3027241,
+    "ast_hash": "4817d1bef24ed89a88e0fd4b0d3f65ab",
+    "semantic_hash": "4817d1bef24ed89a88e0fd4b0d3f65ab"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/wizard/keys/page.tsx": {
+    "mtime": 1785243042.5347066,
+    "ast_hash": "4790b323433e7fb603920bbbb97af8ca",
+    "semantic_hash": "4790b323433e7fb603920bbbb97af8ca"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/wizard/profile/page.tsx": {
+    "mtime": 1785243073.736706,
+    "ast_hash": "0b1541e06ec1ca3dcb3d3f70e495a418",
+    "semantic_hash": "0b1541e06ec1ca3dcb3d3f70e495a418"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/dashboard/wizard/telegram/page.tsx": {
+    "mtime": 1785242969.9247084,
+    "ast_hash": "9a922401b73954bc97f453a855703889",
+    "semantic_hash": "9a922401b73954bc97f453a855703889"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/enterprise/page.tsx": {
+    "mtime": 1784038800.3063376,
+    "ast_hash": "4128fef32bf6d0205dd899c929354bc4",
+    "semantic_hash": "4128fef32bf6d0205dd899c929354bc4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/global-error.tsx": {
+    "mtime": 1784388922.154408,
+    "ast_hash": "89ad7153a1ea2a844fe79b153c71a220",
+    "semantic_hash": "89ad7153a1ea2a844fe79b153c71a220"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/layout.tsx": {
+    "mtime": 1783770813.1955473,
+    "ast_hash": "9a3305276f0e3efb4c3efa127c5e8fe3",
+    "semantic_hash": "9a3305276f0e3efb4c3efa127c5e8fe3"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/page.tsx": {
+    "mtime": 1784301289.1400986,
+    "ast_hash": "85bdeabc2d1d707f20049ab888c00150",
+    "semantic_hash": "85bdeabc2d1d707f20049ab888c00150"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/pricing/page.tsx": {
+    "mtime": 1784011728.0127983,
+    "ast_hash": "4d54fc2d826cf73966f7a93362787389",
+    "semantic_hash": "4d54fc2d826cf73966f7a93362787389"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/privacy/page.tsx": {
+    "mtime": 1784037102.0592408,
+    "ast_hash": "cddcdd9439fe045bdb9b9e4a34bbe606",
+    "semantic_hash": "cddcdd9439fe045bdb9b9e4a34bbe606"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/refund/page.tsx": {
+    "mtime": 1784037132.9902427,
+    "ast_hash": "10c25e7e52fc7c01de526828c97e6cf5",
+    "semantic_hash": "10c25e7e52fc7c01de526828c97e6cf5"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/robots.ts": {
+    "mtime": 1784295599.474232,
+    "ast_hash": "2d26c11745dea2013ca92e39afa810b9",
+    "semantic_hash": "2d26c11745dea2013ca92e39afa810b9"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/security/page.tsx": {
+    "mtime": 1784036883.8322284,
+    "ast_hash": "d82fc2c9163dda5ffb0790f079673d2b",
+    "semantic_hash": "d82fc2c9163dda5ffb0790f079673d2b"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/sitemap.ts": {
+    "mtime": 1784295599.1392322,
+    "ast_hash": "27d72473bda5d3b7ef062922c41d13d5",
+    "semantic_hash": "27d72473bda5d3b7ef062922c41d13d5"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/success/page.tsx": {
+    "mtime": 1783776981.3106863,
+    "ast_hash": "2a666e08bdaf823ae11d5f86bfe0b69d",
+    "semantic_hash": "2a666e08bdaf823ae11d5f86bfe0b69d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/terms/page.tsx": {
+    "mtime": 1784037056.9462383,
+    "ast_hash": "593f813e2f825569da38e3c0d828e648",
+    "semantic_hash": "593f813e2f825569da38e3c0d828e648"
+  },
+  "/home/kenz/Projects/Knight/dashboard/app/trust/page.tsx": {
+    "mtime": 1784036335.0181973,
+    "ast_hash": "e74bcd4c7167b0d89db98c01df495560",
+    "semantic_hash": "e74bcd4c7167b0d89db98c01df495560"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Animations.tsx": {
+    "mtime": 1783702509.6140974,
+    "ast_hash": "6e1c43a2db4db655c73faf8b88fd96f8",
+    "semantic_hash": "6e1c43a2db4db655c73faf8b88fd96f8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/AuthHero.tsx": {
+    "mtime": 1784278046.816644,
+    "ast_hash": "6d4bb9abe1af332e80947ba651ea8900",
+    "semantic_hash": "6d4bb9abe1af332e80947ba651ea8900"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Button.tsx": {
+    "mtime": 1783702488.0260968,
+    "ast_hash": "f034f8b9e1d097318f799db8268e3f88",
+    "semantic_hash": "f034f8b9e1d097318f799db8268e3f88"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Card.tsx": {
+    "mtime": 1783702498.174097,
+    "ast_hash": "678ac8f943cbb0791ed04cc831912d58",
+    "semantic_hash": "678ac8f943cbb0791ed04cc831912d58"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/DashboardContent.tsx": {
+    "mtime": 1784384464.4363627,
+    "ast_hash": "3a4b0bb772f22155a24f218b26cf28bc",
+    "semantic_hash": "3a4b0bb772f22155a24f218b26cf28bc"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/DashboardShell.tsx": {
+    "mtime": 1785249752.7885492,
+    "ast_hash": "c0ea53db82d70eb4a6366ade84b69dac",
+    "semantic_hash": "c0ea53db82d70eb4a6366ade84b69dac"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/EmptyState.tsx": {
+    "mtime": 1783666708.6802905,
+    "ast_hash": "538602a2292207d1b131f0d4c501c5c0",
+    "semantic_hash": "538602a2292207d1b131f0d4c501c5c0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/ErrorBoundary.tsx": {
+    "mtime": 1783771107.6775541,
+    "ast_hash": "ece52c6bb6e312fa987087d0cad60aff",
+    "semantic_hash": "ece52c6bb6e312fa987087d0cad60aff"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Footer.tsx": {
+    "mtime": 1784098918.8475654,
+    "ast_hash": "80e439962b2821397b75fb547410c126",
+    "semantic_hash": "80e439962b2821397b75fb547410c126"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/HelpModal.tsx": {
+    "mtime": 1783666700.2942903,
+    "ast_hash": "f3f234344f34d5eebc6d2a044dbaabc8",
+    "semantic_hash": "f3f234344f34d5eebc6d2a044dbaabc8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/KnightLogo.tsx": {
+    "mtime": 1784098862.8255627,
+    "ast_hash": "757fb68284b3ebb68ba59cf19a4fdd70",
+    "semantic_hash": "757fb68284b3ebb68ba59cf19a4fdd70"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/LandingExtras.tsx": {
+    "mtime": 1784297211.4031942,
+    "ast_hash": "cf1504ba7129d7268a8de3c00858d360",
+    "semantic_hash": "cf1504ba7129d7268a8de3c00858d360"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/LandingPage.tsx": {
+    "mtime": 1784297560.293186,
+    "ast_hash": "14cfbbdbc8d4e9fc46de5b16cf2ab8a4",
+    "semantic_hash": "14cfbbdbc8d4e9fc46de5b16cf2ab8a4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Navbar.tsx": {
+    "mtime": 1784098881.9705637,
+    "ast_hash": "0a2c798de878c301788f08e2b8651758",
+    "semantic_hash": "0a2c798de878c301788f08e2b8651758"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/OnboardingChecklist.tsx": {
+    "mtime": 1783765288.496423,
+    "ast_hash": "7917e40b81ed617cc9eb02fdaba12a25",
+    "semantic_hash": "7917e40b81ed617cc9eb02fdaba12a25"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/PageTracker.tsx": {
+    "mtime": 1785239473.8007903,
+    "ast_hash": "7fc3bd170b5ecb364485eef85090dbc0",
+    "semantic_hash": "7fc3bd170b5ecb364485eef85090dbc0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Providers.tsx": {
+    "mtime": 1785239482.4557903,
+    "ast_hash": "4705d6d32353ad9953ea20cf7f047326",
+    "semantic_hash": "4705d6d32353ad9953ea20cf7f047326"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/SentryUserProvider.tsx": {
+    "mtime": 1784388682.6614056,
+    "ast_hash": "da04c138821eaa7e3e3c8279dabe368c",
+    "semantic_hash": "da04c138821eaa7e3e3c8279dabe368c"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/SetupRequiredModal.tsx": {
+    "mtime": 1784301126.9861023,
+    "ast_hash": "f87595c1b3f15cfdcd94e4e73ee2a74c",
+    "semantic_hash": "f87595c1b3f15cfdcd94e4e73ee2a74c"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Sidebar.tsx": {
+    "mtime": 1785249724.87355,
+    "ast_hash": "cbe52b08f33263918cf7c699bb74ae07",
+    "semantic_hash": "cbe52b08f33263918cf7c699bb74ae07"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Skeleton.tsx": {
+    "mtime": 1783702523.4680977,
+    "ast_hash": "cf499c439d12737042765420939bc2f8",
+    "semantic_hash": "cf499c439d12737042765420939bc2f8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/TemplateManager.tsx": {
+    "mtime": 1784393410.5784535,
+    "ast_hash": "29fb5a6d6c5033cae17c770feb029859",
+    "semantic_hash": "29fb5a6d6c5033cae17c770feb029859"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/Tooltip.tsx": {
+    "mtime": 1783666690.5302901,
+    "ast_hash": "04ac5f3f9f972185e439e730bf082b7d",
+    "semantic_hash": "04ac5f3f9f972185e439e730bf082b7d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/UpdateChecker.tsx": {
+    "mtime": 1784301149.390102,
+    "ast_hash": "177037105cf351ba2d23b38de6d66bff",
+    "semantic_hash": "177037105cf351ba2d23b38de6d66bff"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/WizardLayout.tsx": {
+    "mtime": 1784380365.0813212,
+    "ast_hash": "7751ed2df7f09139414f6914cd21dd19",
+    "semantic_hash": "7751ed2df7f09139414f6914cd21dd19"
+  },
+  "/home/kenz/Projects/Knight/dashboard/components/ui/svg-follow-scroll.tsx": {
+    "mtime": 1784310905.426873,
+    "ast_hash": "649e05ac4c8d105518d9d4940da59fc7",
+    "semantic_hash": "649e05ac4c8d105518d9d4940da59fc7"
+  },
+  "/home/kenz/Projects/Knight/dashboard/eslint.config.mjs": {
+    "mtime": 1783655262.9500325,
+    "ast_hash": "729e3dda12921f8c103dc54cef265c31",
+    "semantic_hash": "729e3dda12921f8c103dc54cef265c31"
+  },
+  "/home/kenz/Projects/Knight/dashboard/generate-ascii.js": {
+    "mtime": 1784099332.6705842,
+    "ast_hash": "46a480ba43f4feaed3e0d87add9bf310",
+    "semantic_hash": "46a480ba43f4feaed3e0d87add9bf310"
+  },
+  "/home/kenz/Projects/Knight/dashboard/hooks/useKillSwitches.ts": {
+    "mtime": 1785249701.6745503,
+    "ast_hash": "b31e89f5201a7c9756946f19ce438f01",
+    "semantic_hash": "b31e89f5201a7c9756946f19ce438f01"
+  },
+  "/home/kenz/Projects/Knight/dashboard/instrumentation.ts": {
+    "mtime": 1784388469.6014035,
+    "ast_hash": "a3b1491656c4241d119d0d241196aa56",
+    "semantic_hash": "a3b1491656c4241d119d0d241196aa56"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/analytics.ts": {
+    "mtime": 1784889729.4247594,
+    "ast_hash": "a65f776220cddf2b8b35c31c07c40a3b",
+    "semantic_hash": "a65f776220cddf2b8b35c31c07c40a3b"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/auth.ts": {
+    "mtime": 1784218818.0801,
+    "ast_hash": "777e9688e2c5218b5251ecb55e5d58b0",
+    "semantic_hash": "777e9688e2c5218b5251ecb55e5d58b0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/kill-switches.ts": {
+    "mtime": 1785313610.3906472,
+    "ast_hash": "1e20b6485e6f09d9cd0498e1d8ae2e44",
+    "semantic_hash": "1e20b6485e6f09d9cd0498e1d8ae2e44"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/lemonsqueezy.ts": {
+    "mtime": 1783791100.3450046,
+    "ast_hash": "9e4e1df647d961a3634b7ab92a7d49a5",
+    "semantic_hash": "9e4e1df647d961a3634b7ab92a7d49a5"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/limits.ts": {
+    "mtime": 1784387640.528395,
+    "ast_hash": "3716503d53c4d9b248f08b336d682e28",
+    "semantic_hash": "3716503d53c4d9b248f08b336d682e28"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/logger.ts": {
+    "mtime": 1783703410.3591175,
+    "ast_hash": "c76d5c019d5bc6becbc1523dface5fdd",
+    "semantic_hash": "c76d5c019d5bc6becbc1523dface5fdd"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/rate-limit.ts": {
+    "mtime": 1783703387.704117,
+    "ast_hash": "4e15438921fc939d3cdd34ccadf4c723",
+    "semantic_hash": "4e15438921fc939d3cdd34ccadf4c723"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/styles.ts": {
+    "mtime": 1784125918.756803,
+    "ast_hash": "b6f9673da9880df564a5198958b0a808",
+    "semantic_hash": "b6f9673da9880df564a5198958b0a808"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/supabase.ts": {
+    "mtime": 1783644246.117392,
+    "ast_hash": "7f767586924514c951686579425eb135",
+    "semantic_hash": "7f767586924514c951686579425eb135"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/telegram-auth.ts": {
+    "mtime": 1784208153.0025918,
+    "ast_hash": "3149ebd6451d8157e963161c257b769d",
+    "semantic_hash": "3149ebd6451d8157e963161c257b769d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/templates.ts": {
+    "mtime": 1783707730.018215,
+    "ast_hash": "456df19ffa6025650560706106f446a4",
+    "semantic_hash": "456df19ffa6025650560706106f446a4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/lib/utils.ts": {
+    "mtime": 1783644261.4263916,
+    "ast_hash": "83103bae8ab305276f7cf0546bfed7b0",
+    "semantic_hash": "83103bae8ab305276f7cf0546bfed7b0"
+  },
+  "/home/kenz/Projects/Knight/dashboard/next-env.d.ts": {
+    "mtime": 1783655248.3340323,
+    "ast_hash": "ba64ff7d54714a8f64db89b1003207d8",
+    "semantic_hash": "ba64ff7d54714a8f64db89b1003207d8"
+  },
+  "/home/kenz/Projects/Knight/dashboard/next.config.ts": {
+    "mtime": 1784388902.1174078,
+    "ast_hash": "71d266c64f0f4c3abca6b794501be2e7",
+    "semantic_hash": "71d266c64f0f4c3abca6b794501be2e7"
+  },
+  "/home/kenz/Projects/Knight/dashboard/package.json": {
+    "mtime": 1784889019.5227268,
+    "ast_hash": "3985f2703ef4e799937dea091189971d",
+    "semantic_hash": "3985f2703ef4e799937dea091189971d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/postcss.config.mjs": {
+    "mtime": 1783644222.6373925,
+    "ast_hash": "239f3ebf717465dc636818a1a619398d",
+    "semantic_hash": "239f3ebf717465dc636818a1a619398d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/scripts/fix-audits.mjs": {
+    "mtime": 1784152291.248012,
+    "ast_hash": "63a89d4397b491ecf76aba8c0b9e4c4b",
+    "semantic_hash": "63a89d4397b491ecf76aba8c0b9e4c4b"
+  },
+  "/home/kenz/Projects/Knight/dashboard/scripts/seed-test-data.mjs": {
+    "mtime": 1784151875.491993,
+    "ast_hash": "84c66f5892b824b12a48e06852e4ba36",
+    "semantic_hash": "84c66f5892b824b12a48e06852e4ba36"
+  },
+  "/home/kenz/Projects/Knight/dashboard/sentry.client.config.ts": {
+    "mtime": 1784388480.1844034,
+    "ast_hash": "ed255d1107d70ded8876fb826ef9d00f",
+    "semantic_hash": "ed255d1107d70ded8876fb826ef9d00f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/sentry.edge.config.ts": {
+    "mtime": 1783706611.3171897,
+    "ast_hash": "83dbfe4392c36100d40b05c551806039",
+    "semantic_hash": "83dbfe4392c36100d40b05c551806039"
+  },
+  "/home/kenz/Projects/Knight/dashboard/sentry.server.config.ts": {
+    "mtime": 1784388489.6034036,
+    "ast_hash": "83dbfe4392c36100d40b05c551806039",
+    "semantic_hash": "83dbfe4392c36100d40b05c551806039"
+  },
+  "/home/kenz/Projects/Knight/dashboard/tsconfig.json": {
+    "mtime": 1783655229.3270319,
+    "ast_hash": "11b5de48c49000a0f87fe9a2992b655a",
+    "semantic_hash": "11b5de48c49000a0f87fe9a2992b655a"
+  },
+  "/home/kenz/Projects/Knight/deploy.sh": {
+    "mtime": 1785176120.2639823,
+    "ast_hash": "b12ade63b0b63b6e49793fce04600390",
+    "semantic_hash": "b12ade63b0b63b6e49793fce04600390"
+  },
+  "/home/kenz/Projects/Knight/package.json": {
+    "mtime": 1784310128.901891,
+    "ast_hash": "9a9fe7e732616e9ed1e82247611dea84",
+    "semantic_hash": "9a9fe7e732616e9ed1e82247611dea84"
+  },
+  "/home/kenz/Projects/Knight/supa.js": {
+    "mtime": 1784270663.5948172,
+    "ast_hash": "3154230d88f9fd43259c98ee57d4f91f",
+    "semantic_hash": "3154230d88f9fd43259c98ee57d4f91f"
+  },
+  "/home/kenz/Projects/Knight/supabase/.temp/linked-project.json": {
+    "mtime": 1784270450.0018222,
+    "ast_hash": "397d51ba3993df3ae2e85d44a0286649",
+    "semantic_hash": "397d51ba3993df3ae2e85d44a0286649"
+  },
+  "/home/kenz/Projects/Knight/supabase/migrations/018_add_scheduled_jobs.sql": {
+    "mtime": 1784269194.8598516,
+    "ast_hash": "bdee14031f728c63b3ca000269ff8529",
+    "semantic_hash": "bdee14031f728c63b3ca000269ff8529"
+  },
+  "/home/kenz/Projects/Knight/supabase/migrations/add_telegram_welcome_sent.sql": {
+    "mtime": 1784315235.7347713,
+    "ast_hash": "58b2e4051b1a6a28de1beffde3aad199",
+    "semantic_hash": "58b2e4051b1a6a28de1beffde3aad199"
+  },
+  "/home/kenz/Projects/Knight/supabase/migrations/create_webhooks_table.sql": {
+    "mtime": 1784318555.3626933,
+    "ast_hash": "bc7d0244ecfa9d2e45abd54edf844613",
+    "semantic_hash": "bc7d0244ecfa9d2e45abd54edf844613"
+  },
+  "/home/kenz/Projects/Knight/supabase/schema.sql": {
+    "mtime": 1784218991.6070921,
+    "ast_hash": "3f8401ee4fd4260b0f986393cdef84dd",
+    "semantic_hash": "3f8401ee4fd4260b0f986393cdef84dd"
+  },
+  "/home/kenz/Projects/Knight/worker/ai_hub.js": {
+    "mtime": 1784218684.9301062,
+    "ast_hash": "e62ed5c9ef02350c2233b5f645cdc457",
+    "semantic_hash": "e62ed5c9ef02350c2233b5f645cdc457"
+  },
+  "/home/kenz/Projects/Knight/worker/analytics.js": {
+    "mtime": 1784888457.450701,
+    "ast_hash": "9baee0584b3efce0c6e3eee5c648aee8",
+    "semantic_hash": "9baee0584b3efce0c6e3eee5c648aee8"
+  },
+  "/home/kenz/Projects/Knight/worker/embeddings.js": {
+    "mtime": 1784821222.0697067,
+    "ast_hash": "0c38988d26f7f9234361cbc93f3dbaa6",
+    "semantic_hash": "0c38988d26f7f9234361cbc93f3dbaa6"
+  },
+  "/home/kenz/Projects/Knight/worker/global_config.js": {
+    "mtime": 1784376250.9622796,
+    "ast_hash": "386c908caaabc5990ff9e684d577216a",
+    "semantic_hash": "386c908caaabc5990ff9e684d577216a"
+  },
+  "/home/kenz/Projects/Knight/worker/index.js": {
+    "mtime": 1784888506.3567033,
+    "ast_hash": "c0d27ee85eac10f976df3b146f50ad59",
+    "semantic_hash": "c0d27ee85eac10f976df3b146f50ad59"
+  },
+  "/home/kenz/Projects/Knight/worker/package.json": {
+    "mtime": 1784822227.3847294,
+    "ast_hash": "8936b25be52f3c91c689974db971f543",
+    "semantic_hash": "8936b25be52f3c91c689974db971f543"
+  },
+  "/home/kenz/Projects/Knight/worker/posthog.js": {
+    "mtime": 1784822783.3837419,
+    "ast_hash": "cae5d114bb2ae52281774a4dbc088464",
+    "semantic_hash": "cae5d114bb2ae52281774a4dbc088464"
+  },
+  "/home/kenz/Projects/Knight/worker/providers/cohere.js": {
+    "mtime": 1783832058.2749276,
+    "ast_hash": "c3d7a92125e4d9ecdd1910b2a87fba02",
+    "semantic_hash": "c3d7a92125e4d9ecdd1910b2a87fba02"
+  },
+  "/home/kenz/Projects/Knight/worker/providers/gemini.js": {
+    "mtime": 1784313269.5008173,
+    "ast_hash": "6fb0f718c5c7eb7e1bfff87301bdb47f",
+    "semantic_hash": "6fb0f718c5c7eb7e1bfff87301bdb47f"
+  },
+  "/home/kenz/Projects/Knight/worker/providers/groq.js": {
+    "mtime": 1783832062.0799277,
+    "ast_hash": "03469a8c205fdf71fe2dd09092868045",
+    "semantic_hash": "03469a8c205fdf71fe2dd09092868045"
+  },
+  "/home/kenz/Projects/Knight/worker/providers/openrouter.js": {
+    "mtime": 1783832064.3219278,
+    "ast_hash": "b7fe850a2a038fb795f5d94c9847c450",
+    "semantic_hash": "b7fe850a2a038fb795f5d94c9847c450"
+  },
+  "/home/kenz/Projects/Knight/worker/shared_audit.js": {
+    "mtime": 1784383855.6733565,
+    "ast_hash": "7ebc6d90ed7f9dfaba3d9018f43ac227",
+    "semantic_hash": "7ebc6d90ed7f9dfaba3d9018f43ac227"
+  },
+  "/home/kenz/Projects/Knight/worker/start.js": {
+    "mtime": 1783832335.479934,
+    "ast_hash": "b7f2d7507bbaf171ec8824fe9ab5943b",
+    "semantic_hash": "b7f2d7507bbaf171ec8824fe9ab5943b"
+  },
+  "/home/kenz/Projects/Knight/worker/telegram_admin.js": {
+    "mtime": 1784378889.8573062,
+    "ast_hash": "e7067e23468d8ac6e96f3ec1d1ba63d6",
+    "semantic_hash": "e7067e23468d8ac6e96f3ec1d1ba63d6"
+  },
+  "/home/kenz/Projects/Knight/worker/telegram_agent.js": {
+    "mtime": 1784888542.961705,
+    "ast_hash": "5d976a5b26b2cc7edc12b273adbc315c",
+    "semantic_hash": "5d976a5b26b2cc7edc12b273adbc315c"
+  },
+  "/home/kenz/Projects/Knight/worker/telegram_hunter.js": {
+    "mtime": 1784218712.183105,
+    "ast_hash": "f2b2640df6aa3b54380ea8bd209987db",
+    "semantic_hash": "f2b2640df6aa3b54380ea8bd209987db"
+  },
+  "/home/kenz/Projects/Knight/worker/telegram_userbot.js": {
+    "mtime": 1785255614.7004116,
+    "ast_hash": "99ecbc7db8a1070f6736ccc8833ffa05",
+    "semantic_hash": "99ecbc7db8a1070f6736ccc8833ffa05"
+  },
+  "/home/kenz/Projects/Knight/worker/utils/crypto.js": {
+    "mtime": 1783771132.7225547,
+    "ast_hash": "d2d32801832c32ed104a68e587ed0a02",
+    "semantic_hash": "d2d32801832c32ed104a68e587ed0a02"
+  },
+  "/home/kenz/Projects/Knight/.github/workflows/deploy.yml": {
+    "mtime": 1785176057.5379837,
+    "ast_hash": "1e3cdab6c6fc437f2e736dec23f46dac",
+    "semantic_hash": "1e3cdab6c6fc437f2e736dec23f46dac"
+  },
+  "/home/kenz/Projects/Knight/CONTRIBUTING.md": {
+    "mtime": 1783964480.51667,
+    "ast_hash": "b3f29dc43c13ec05ba11c2a41981406d",
+    "semantic_hash": "b3f29dc43c13ec05ba11c2a41981406d"
+  },
+  "/home/kenz/Projects/Knight/README.md": {
+    "mtime": 1784274461.518728,
+    "ast_hash": "deb33ddcb355401f7001f53a37d11a39",
+    "semantic_hash": "deb33ddcb355401f7001f53a37d11a39"
+  },
+  "/home/kenz/Projects/Knight/admin-app/.github/workflows/auto-release.yml": {
+    "mtime": 1785314884.7077966,
+    "ast_hash": "a97b2861b90074c0cc872fe877162468",
+    "semantic_hash": "a97b2861b90074c0cc872fe877162468"
+  },
+  "/home/kenz/Projects/Knight/admin-app/.github/workflows/build-desktop.yml": {
+    "mtime": 1785245760.2296429,
+    "ast_hash": "6ec49911a2e477b37cd3f126bf895555",
+    "semantic_hash": "6ec49911a2e477b37cd3f126bf895555"
+  },
+  "/home/kenz/Projects/Knight/admin-app/README.md": {
+    "mtime": 1783964429.3326705,
+    "ast_hash": "12dd68648edcb08bc89e40502dc773e4",
+    "semantic_hash": "12dd68648edcb08bc89e40502dc773e4"
+  },
+  "/home/kenz/Projects/Knight/admin-app/index.html": {
+    "mtime": 1783829192.0620196,
+    "ast_hash": "e6d3d8a53746505421aa9060996db696",
+    "semantic_hash": "e6d3d8a53746505421aa9060996db696"
+  },
+  "/home/kenz/Projects/Knight/dashboard/ascii-output.txt": {
+    "mtime": 1784100801.6084533,
+    "ast_hash": "0397a33e6eb70ab24f84a4ce2f710db6",
+    "semantic_hash": "0397a33e6eb70ab24f84a4ce2f710db6"
+  },
+  "/home/kenz/Projects/Knight/dashboard/ascii_hands.txt": {
+    "mtime": 1784103228.2542346,
+    "ast_hash": "1d89cdf72effcb827d80353cada89761",
+    "semantic_hash": "1d89cdf72effcb827d80353cada89761"
+  },
+  "/home/kenz/Projects/Knight/docker-compose.yml": {
+    "mtime": 1785230711.477996,
+    "ast_hash": "1d0814f5848e44be286247052e4db38e",
+    "semantic_hash": "1d0814f5848e44be286247052e4db38e"
+  },
+  "/home/kenz/Projects/Knight/docs/billing/plans.md": {
+    "mtime": 1783666862.776294,
+    "ast_hash": "fd1a9930587462d95d9c415e892f032b",
+    "semantic_hash": "fd1a9930587462d95d9c415e892f032b"
+  },
+  "/home/kenz/Projects/Knight/docs/features/discovery.md": {
+    "mtime": 1783666850.1082938,
+    "ast_hash": "012b6d0ff2f6ba4d574d31988512ffbe",
+    "semantic_hash": "012b6d0ff2f6ba4d574d31988512ffbe"
+  },
+  "/home/kenz/Projects/Knight/docs/features/index.md": {
+    "mtime": 1783666897.1102948,
+    "ast_hash": "6a7a7b20d387b95c50cd48aca86b3980",
+    "semantic_hash": "6a7a7b20d387b95c50cd48aca86b3980"
+  },
+  "/home/kenz/Projects/Knight/docs/index.md": {
+    "mtime": 1783964458.66667,
+    "ast_hash": "bcf3983503f7bf2e1e727e68f0867fd5",
+    "semantic_hash": "bcf3983503f7bf2e1e727e68f0867fd5"
+  },
+  "/home/kenz/Projects/Knight/docs/quick-start.md": {
+    "mtime": 1783666839.4312935,
+    "ast_hash": "df4d87c7eaf1bd76c80241f0f96641cc",
+    "semantic_hash": "df4d87c7eaf1bd76c80241f0f96641cc"
+  },
+  "/home/kenz/Projects/Knight/docs/settings/company-profile.md": {
+    "mtime": 1783666870.4052942,
+    "ast_hash": "0daa2d088bcfde2bd242e8a90068dac1",
+    "semantic_hash": "0daa2d088bcfde2bd242e8a90068dac1"
+  },
+  "/home/kenz/Projects/Knight/docs/superpowers/specs/2026-07-28-per-user-admin-controls-design.md": {
+    "mtime": 1785312879.339664,
+    "ast_hash": "f49a6793df23b6a221b176d1349c1e02",
+    "semantic_hash": "f49a6793df23b6a221b176d1349c1e02"
+  },
+  "/home/kenz/Projects/Knight/docs/troubleshooting/common-issues.md": {
+    "mtime": 1783666884.4732945,
+    "ast_hash": "35e2aab01e5fd32c44415c98e1a2f6e3",
+    "semantic_hash": "35e2aab01e5fd32c44415c98e1a2f6e3"
+  },
+  "/home/kenz/Projects/Knight/searxng/settings.yml": {
+    "mtime": 1784278554.9257731,
+    "ast_hash": "d6edd2bee696f4d76b2ebc11fe66979b",
+    "semantic_hash": "d6edd2bee696f4d76b2ebc11fe66979b"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icon.png": {
+    "mtime": 1783829275.142865,
+    "ast_hash": "243b5d8681b8bc2130b7182b2244ad8c",
+    "semantic_hash": "243b5d8681b8bc2130b7182b2244ad8c"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-128x128.png": {
+    "mtime": 1783829274.9728649,
+    "ast_hash": "9fa182673f06abedf3f18244106b1565",
+    "semantic_hash": "9fa182673f06abedf3f18244106b1565"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-16x16.png": {
+    "mtime": 1783829274.9408648,
+    "ast_hash": "5fa93e2bd7a132a0778cf0a66f067f8a",
+    "semantic_hash": "5fa93e2bd7a132a0778cf0a66f067f8a"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-256x256.png": {
+    "mtime": 1783829274.991865,
+    "ast_hash": "64fbff93290e562bb68fa2c5935317ee",
+    "semantic_hash": "64fbff93290e562bb68fa2c5935317ee"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-32x32.png": {
+    "mtime": 1783829274.948865,
+    "ast_hash": "5ec269200664615ea9d201e96466406e",
+    "semantic_hash": "5ec269200664615ea9d201e96466406e"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-48x48.png": {
+    "mtime": 1783829274.9538648,
+    "ast_hash": "89409f3a2277a8ff1adc72deb41ab1f5",
+    "semantic_hash": "89409f3a2277a8ff1adc72deb41ab1f5"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-512x512.png": {
+    "mtime": 1783829275.070865,
+    "ast_hash": "243b5d8681b8bc2130b7182b2244ad8c",
+    "semantic_hash": "243b5d8681b8bc2130b7182b2244ad8c"
+  },
+  "/home/kenz/Projects/Knight/admin-app/electron/icons/icon-64x64.png": {
+    "mtime": 1783829274.9568648,
+    "ast_hash": "86cf1d88cbc00a2f015e016426821e49",
+    "semantic_hash": "86cf1d88cbc00a2f015e016426821e49"
+  },
+  "/home/kenz/Projects/Knight/admin-app/public/favicon.svg": {
+    "mtime": 1783829192.0620196,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "/home/kenz/Projects/Knight/admin-app/public/icons.svg": {
+    "mtime": 1783829192.062765,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/assets/hero.png": {
+    "mtime": 1783829192.0629508,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/assets/react.svg": {
+    "mtime": 1783829192.0630486,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "/home/kenz/Projects/Knight/admin-app/src/assets/vite.svg": {
+    "mtime": 1783829192.0630486,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  },
+  "/home/kenz/Projects/Knight/dashboard/800px-Michelangelo_-_Creation_of_Adam_%28cropped%29.jpg": {
+    "mtime": 1784100627.335781,
+    "ast_hash": "dfe80d9fa43994fb0f319e1e28b53e6d",
+    "semantic_hash": "dfe80d9fa43994fb0f319e1e28b53e6d"
+  },
+  "/home/kenz/Projects/Knight/dashboard/hands.jpg": {
+    "mtime": 1784100658.6001363,
+    "ast_hash": "60df10d5e1dfed69366d03803dec647e",
+    "semantic_hash": "60df10d5e1dfed69366d03803dec647e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/apple-touch-icon.png": {
+    "mtime": 1783838183.8600657,
+    "ast_hash": "c96c9a94b40a2bd28a1210630843bd85",
+    "semantic_hash": "c96c9a94b40a2bd28a1210630843bd85"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/hands.png": {
+    "mtime": 1784102098.3667111,
+    "ast_hash": "b13238e2a8f9f1d877029424d24e754a",
+    "semantic_hash": "b13238e2a8f9f1d877029424d24e754a"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/icon-16.png": {
+    "mtime": 1783838183.7620656,
+    "ast_hash": "3271e242f908d75f1c058daec98394a4",
+    "semantic_hash": "3271e242f908d75f1c058daec98394a4"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/icon-192.png": {
+    "mtime": 1783838183.9120657,
+    "ast_hash": "9b76077d5584620770fee257cf24187f",
+    "semantic_hash": "9b76077d5584620770fee257cf24187f"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/icon-32.png": {
+    "mtime": 1783838183.8080657,
+    "ast_hash": "84c2bc605ed7fc0f19407074ac6df04e",
+    "semantic_hash": "84c2bc605ed7fc0f19407074ac6df04e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/icon-512.png": {
+    "mtime": 1783838183.9660656,
+    "ast_hash": "b19b8bd2fedb37328e41f4258fc53819",
+    "semantic_hash": "b19b8bd2fedb37328e41f4258fc53819"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/knight_logo.png": {
+    "mtime": 1784098792.637312,
+    "ast_hash": "51b386a898d11bd76cc2125c8cb8b275",
+    "semantic_hash": "51b386a898d11bd76cc2125c8cb8b275"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/logo.svg": {
+    "mtime": 1783838171.6470654,
+    "ast_hash": "fb383134ae30327277cb7a4a20b600dc",
+    "semantic_hash": "fb383134ae30327277cb7a4a20b600dc"
+  },
+  "/home/kenz/Projects/Knight/admin-app/assets/sounds/error.wav": {
+    "mtime": 1783829275.2098649,
+    "ast_hash": "48116aa4b08f643f80569c48b95ebc78",
+    "semantic_hash": "48116aa4b08f643f80569c48b95ebc78"
+  },
+  "/home/kenz/Projects/Knight/admin-app/assets/sounds/notification.wav": {
+    "mtime": 1783829275.205865,
+    "ast_hash": "412ae526904c61e8bd49b0cf973ccfc6",
+    "semantic_hash": "412ae526904c61e8bd49b0cf973ccfc6"
+  },
+  "/home/kenz/Projects/Knight/admin-app/assets/sounds/success.wav": {
+    "mtime": 1783829275.208865,
+    "ast_hash": "a8cfab65ae1e6c4cd5e51200246b789f",
+    "semantic_hash": "a8cfab65ae1e6c4cd5e51200246b789f"
+  },
+  "/home/kenz/Projects/Knight/admin-app/assets/sounds/warning.wav": {
+    "mtime": 1783829275.2108648,
+    "ast_hash": "fb51810b7493edf8f18f60f018f3e29e",
+    "semantic_hash": "fb51810b7493edf8f18f60f018f3e29e"
+  },
+  "/home/kenz/Projects/Knight/dashboard/public/intro.mp4": {
+    "mtime": 1784019837.6642594,
+    "ast_hash": "804c15ccbaa0cc71c461626ed95004fa",
+    "semantic_hash": "804c15ccbaa0cc71c461626ed95004fa"
+  }
+}

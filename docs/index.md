@@ -141,6 +141,6 @@ Desktop App (Electron)   ──▶  Admin management
 
 ## Support
 
-- **Email:** support@knight.com
+- **Email:** support@knightagency.tech
 - **Dashboard:** Use the support ticket system
 - **Issues:** [GitHub Issues](https://github.com/KenzBilal/Knight/issues)

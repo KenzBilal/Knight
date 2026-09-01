@@ -4,7 +4,7 @@ Get up and running with Knight in under 5 minutes.
 
 ## Step 1: Create Your Account
 
-1. Go to [knight.com](https://knight.com)
+1. Go to [knightagency.tech](https://knightagency.tech)
 2. Click "Start free"
 3. Enter your name, email, and password
 4. Click "Create account"

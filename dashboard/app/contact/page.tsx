@@ -551,10 +551,10 @@ export default function ContactSalesPage() {
                   <div className="text-xs text-[#525252]">
                     Prefer email?{" "}
                     <a
-                      href="mailto:sales@knight.app"
+                      href="mailto:sales@knightagency.tech"
                       className="text-[#a3a3a3] hover:text-white transition-colors"
                     >
-                      sales@knight.app
+                      sales@knightagency.tech
                     </a>
                   </div>
                 </div>

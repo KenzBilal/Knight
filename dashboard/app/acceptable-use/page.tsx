@@ -101,12 +101,12 @@ export default function AcceptableUsePage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Reporting violations</h2>
-            <p>If you observe use of Knight that violates this policy, please report it to <a href="mailto:abuse@knight.app" className="text-white hover:underline">abuse@knight.app</a>. We investigate all reports seriously.</p>
+            <p>If you observe use of Knight that violates this policy, please report it to <a href="mailto:abuse@knightagency.tech" className="text-white hover:underline">abuse@knightagency.tech</a>. We investigate all reports seriously.</p>
           </section>
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Contact</h2>
-            <p>Questions about this policy? Email <a href="mailto:legal@knight.app" className="text-white hover:underline">legal@knight.app</a>.</p>
+            <p>Questions about this policy? Email <a href="mailto:legal@knightagency.tech" className="text-white hover:underline">legal@knightagency.tech</a>.</p>
           </section>
         </div>
       </main>

@@ -185,7 +185,7 @@ async function handleTool(name: string, args: Record<string, unknown>, orgId: st
         body,
         status: "QUEUED",
         sender_name: orgConfig?.company_name || "Knight",
-        sender_email: orgConfig?.sender_email || "hello@knight.app",
+        sender_email: orgConfig?.sender_email || "hello@knightagency.tech",
       });
 
       if (error) return { error: error.message };

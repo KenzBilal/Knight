@@ -12,7 +12,7 @@ function generateDNSRecords(domain: string, verificationToken: string) {
     dkim: {
       type: "CNAME",
       host: `resend._domainkey.${domain}`,
-      value: `resend._domainkey.knight.com`,
+      value: `resend._domainkey.knightagency.tech`,
       note: "DKIM record for email authentication",
     },
     spf: {
@@ -24,7 +24,7 @@ function generateDNSRecords(domain: string, verificationToken: string) {
     dmarc: {
       type: "TXT",
       host: `_dmarc.${domain}`,
-      value: `v=DMARC1; p=none; rua=mailto:dmarc@knight.com`,
+      value: `v=DMARC1; p=none; rua=mailto:dmarc@knightagency.tech`,
       note: "DMARC policy for email authentication",
     },
     verification: {

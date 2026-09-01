@@ -124,4 +124,4 @@ Solutions to frequently encountered problems.
 
 ## Still Need Help?
 
-Contact support at support@knight.com or visit our [contact page](https://knight.com/contact).
+Contact support at support@knightagency.tech or visit our [contact page](https://knightagency.tech/contact).

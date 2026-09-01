@@ -211,7 +211,7 @@ export default function DomainWizardPage() {
                 type="text"
                 value={domain}
                 onChange={(e) => setDomain(e.target.value)}
-                placeholder="yourdomain.com"
+                placeholder="knightagency.tech"
                 className={inputCls}
               />
               <button

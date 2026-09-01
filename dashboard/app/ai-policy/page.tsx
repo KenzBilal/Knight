@@ -97,7 +97,7 @@ export default function AIPolicyPage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Opting out of AI features</h2>
-            <p>You can use Knight without AI features. Lead discovery and website auditing do not require AI. You can choose to write your own email templates instead of using AI generation. Contact <a href="mailto:support@knight.app" className="text-white hover:underline">support@knight.app</a> if you need help configuring Knight to minimize AI-generated content.</p>
+            <p>You can use Knight without AI features. Lead discovery and website auditing do not require AI. You can choose to write your own email templates instead of using AI generation. Contact <a href="mailto:support@knightagency.tech" className="text-white hover:underline">support@knightagency.tech</a> if you need help configuring Knight to minimize AI-generated content.</p>
           </section>
 
           <section className="border-t border-white/[0.05] pt-12">
@@ -112,7 +112,7 @@ export default function AIPolicyPage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Contact</h2>
-            <p>Questions about our AI usage? Email <a href="mailto:legal@knight.app" className="text-white hover:underline">legal@knight.app</a>.</p>
+            <p>Questions about our AI usage? Email <a href="mailto:legal@knightagency.tech" className="text-white hover:underline">legal@knightagency.tech</a>.</p>
           </section>
         </div>
       </main>

@@ -217,7 +217,7 @@ export default function SettingsPage() {
               )}
               <form onSubmit={handleAddDomain} className="flex gap-2">
                 <input type="text" value={newDomain} onChange={e => setNewDomain(e.target.value)}
-                  placeholder="yourdomain.com"
+                  placeholder="knightagency.tech"
                   className="flex-1 rounded-xl input-base" />
                 <button type="submit" disabled={domainLoading || !newDomain}
                   className="rounded-xl bg-white text-[#080808] font-medium px-4 py-2.5 text-sm hover:bg-white/90 transition-all disabled:opacity-40 active:scale-[0.98]">
@@ -228,7 +228,7 @@ export default function SettingsPage() {
               {domains.some(d => d.status === "verified") && (
                 <div className="flex gap-2 items-center pt-2 border-t border-white/[0.06]">
                   <input type="email" value={testEmail} onChange={e => setTestEmail(e.target.value)}
-                    placeholder="test@yourdomain.com"
+                    placeholder="test@knightagency.tech"
                     className="flex-1 rounded-xl input-base text-sm" />
                   <button type="button" onClick={handleSendTest} disabled={testSending || !testEmail}
                     className="rounded-xl bg-white/[0.06] text-white font-medium px-4 py-2.5 text-sm hover:bg-white/[0.1] transition-all disabled:opacity-40 active:scale-[0.98]">

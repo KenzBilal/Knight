@@ -353,7 +353,7 @@ export default function TeamPage() {
                 type="email"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="teammate@example.com"
+                placeholder="teammate@knightagency.tech"
                 className={INPUT}
                 required
               />

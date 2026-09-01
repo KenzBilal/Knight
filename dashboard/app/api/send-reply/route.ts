@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       .single();
 
     const senderName = orgConfig?.company_name || "Knight";
-    const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || "hello@knight.ai";
+    const senderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || "hello@knightagency.tech";
 
     let emailSubject: string;
     let emailBody: string;

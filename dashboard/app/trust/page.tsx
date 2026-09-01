@@ -402,7 +402,7 @@ export default function TrustPage() {
                 address them.
               </p>
               <a
-                href="mailto:security@knight.app"
+                href="mailto:security@knightagency.tech"
                 className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-white/90 transition-colors"
               >
                 Report a Vulnerability
@@ -421,7 +421,7 @@ export default function TrustPage() {
                 </svg>
               </a>
               <p className="text-[#525252] text-xs mt-4">
-                security@knight.app · PGP key available on request
+                security@knightagency.tech · PGP key available on request
               </p>
             </div>
           </div>

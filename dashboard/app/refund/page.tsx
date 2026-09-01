@@ -19,7 +19,7 @@ export default function RefundPage() {
 
         <div className="space-y-12 text-[#525252] leading-relaxed">
           <section>
-            <p>We want you to be satisfied with Knight. This policy explains when and how refunds are available. If you have a question or concern not covered here, please reach out to <a href="mailto:billing@knight.app" className="text-white hover:underline">billing@knight.app</a>.</p>
+            <p>We want you to be satisfied with Knight. This policy explains when and how refunds are available. If you have a question or concern not covered here, please reach out to <a href="mailto:billing@knightagency.tech" className="text-white hover:underline">billing@knightagency.tech</a>.</p>
           </section>
 
           <section className="border-t border-white/[0.05] pt-12">
@@ -33,7 +33,7 @@ export default function RefundPage() {
             <ul className="space-y-2 list-disc list-inside ml-4">
               <li>The request must be made within 30 calendar days of initial payment</li>
               <li>The account must not have been suspended for Terms of Service violations</li>
-              <li>Contact billing@knight.app from the email address associated with your account</li>
+              <li>Contact billing@knightagency.tech from the email address associated with your account</li>
             </ul>
             <p className="mt-4">Refunds are processed within 5–10 business days and returned to the original payment method.</p>
           </section>
@@ -76,7 +76,7 @@ export default function RefundPage() {
             <div className="border border-white/[0.06] bg-[#0f0f0f] rounded-xl p-6">
               <ol className="space-y-3">
                 {[
-                  "Email billing@knight.app from your account email address",
+                  "Email billing@knightagency.tech from your account email address",
                   "Include the subject line: 'Refund Request — [your email]'",
                   "Briefly describe the reason for your request (optional but helpful)",
                   "We will confirm receipt within 24 hours and process within 5–10 business days",
@@ -97,7 +97,7 @@ export default function RefundPage() {
 
           <section className="border-t border-white/[0.05] pt-12">
             <h2 className="font-display text-2xl text-white mb-4">Contact</h2>
-            <p>Questions? Email <a href="mailto:billing@knight.app" className="text-white hover:underline">billing@knight.app</a>. We aim to respond within 24 hours on business days.</p>
+            <p>Questions? Email <a href="mailto:billing@knightagency.tech" className="text-white hover:underline">billing@knightagency.tech</a>. We aim to respond within 24 hours on business days.</p>
           </section>
         </div>
       </main>

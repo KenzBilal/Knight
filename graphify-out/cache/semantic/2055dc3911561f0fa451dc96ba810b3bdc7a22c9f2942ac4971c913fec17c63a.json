@@ -1,0 +1,1 @@
+{"nodes": [{"id": "knight_worker_embeddings_js", "label": "Cohere Embeddings Module", "file_type": "code", "source_file": "worker/embeddings.js", "source_location": null, "source_url": null, "captured_at": null, "author": null, "contributor": null}], "edges": [], "hyperedges": []}
