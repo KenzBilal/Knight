@@ -113,9 +113,9 @@ export function ScrollPathDecoration({ className = "" }: { className?: string })
       // Instead of stacked hard lines, we use one single shadowBlur pass.
       // Since DPR is capped and ghost track is cached, this won't lag.
       
-      ctx.shadowColor = "rgba(255, 255, 255, 0.8)";
+      ctx.shadowColor = "rgba(255, 255, 255, 0.2)";
       ctx.shadowBlur = 24; 
-      ctx.strokeStyle = "rgba(255, 255, 255, 1)";
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
       ctx.lineWidth = 4;
       ctx.stroke(path2D);
 

@@ -286,7 +286,7 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
       <HeroVideo />
 
       {/* ── Stats bar ── */}
-      <section className="border-y border-white/[0.05] bg-[#0f0f0f]">
+      <section className="relative z-10 border-y border-white/[0.05] bg-[#0f0f0f]">
         <div className="mx-auto max-w-4xl px-6 py-10">
           <div className="grid grid-cols-3 gap-8 text-center">
             {stats.map((stat) => (
@@ -406,7 +406,7 @@ export function LandingPage({ content }: { content: LandingContent | null }) {
       </section>
 
       {/* ── Final CTA ── */}
-      <section className="py-28 md:py-36 border-t border-white/[0.04] bg-[#0a0a0a]">
+      <section className="relative z-10 py-28 md:py-36 border-t border-white/[0.04] bg-[#0a0a0a]">
         <div className="mx-auto max-w-3xl px-6 text-center" ref={revealRef}>
           <div className="reveal">
             <h2 className="font-display text-4xl md:text-6xl font-700 text-white leading-tight mb-6">
