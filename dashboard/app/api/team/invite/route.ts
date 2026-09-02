@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         const acceptUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/team/accept?token=${token}`;
 
         await resend.emails.send({
-          from: "Knight <onboarding@resend.dev>",
+          from: "Knight <onboarding@knightagency.tech>",
           to: email,
           subject: `You've been invited to join ${org.name} on Knight`,
           html: `

@@ -27,7 +27,7 @@ const SAMPLE_VARS: Record<string, string> = {
   company_name: "Acme Corp",
   contact_name: "John Smith",
   sender_name: "Alex Knight",
-  sender_website: "knight.app",
+  sender_website: "knightagency.tech",
   calendly_link: "calendly.com/alex",
   audit_score: "85",
   issues_summary: "Slow load times, missing meta tags",

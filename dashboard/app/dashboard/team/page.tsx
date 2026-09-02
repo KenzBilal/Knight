@@ -471,7 +471,7 @@ export default function TeamPage() {
                 <div>
                   <label className={LABEL}>Slug (URL-friendly identifier)</label>
                   <div className="flex items-center gap-0">
-                    <span className="text-xs text-[#3a3a3a] bg-[#0f0f0f] rounded-l-xl px-3 py-2.5 input-base">knight.app/</span>
+                    <span className="text-xs text-[#3a3a3a] bg-[#0f0f0f] rounded-l-xl px-3 py-2.5 input-base">knightagency.tech/</span>
                     <input type="text" value={orgSlug} onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} className={`${INPUT} rounded-l-none`} pattern="[a-z0-9\-]+" />
                   </div>
                 </div>
