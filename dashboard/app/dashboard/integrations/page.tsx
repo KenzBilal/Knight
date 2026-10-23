@@ -15,9 +15,11 @@ interface Webhook {
   is_active: boolean;
   last_triggered_at: string | null;
   last_status: number | null;
-  secret: string;
+  secret?: string;
   created_at: string;
 }
+
+type CreatedWebhook = Omit<Webhook, "secret"> & { secret: string };
 
 interface McpKey {
   id: string;
@@ -67,7 +69,7 @@ export default function IntegrationsPage() {
   const [whLabel, setWhLabel] = useState("");
   const [whEvents, setWhEvents] = useState<string[]>(["audit.completed"]);
   const [whSaving, setWhSaving] = useState(false);
-  const [newWebhook, setNewWebhook] = useState<Webhook | null>(null);
+  const [newWebhook, setNewWebhook] = useState<CreatedWebhook | null>(null);
 
   const [detailWebhook, setDetailWebhook] = useState<Webhook | null>(null);
   const [detailMcpKey, setDetailMcpKey] = useState<McpKey | null>(null);
@@ -109,8 +111,13 @@ export default function IntegrationsPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setWebhooks(prev => [data.webhook, ...prev]);
-      setNewWebhook(data.webhook);
+      const webhook = data.webhook as Webhook;
+      if (typeof webhook?.secret !== "string" || !webhook.secret) {
+        throw new Error("Webhook was created without returning its signing secret");
+      }
+      const createdWebhook: CreatedWebhook = { ...webhook, secret: webhook.secret };
+      setWebhooks(prev => [createdWebhook, ...prev]);
+      setNewWebhook(createdWebhook);
       setShowWebhookCreate(false);
       track("webhook_created", { url: whUrl, label: whLabel || "My Webhook", events: whEvents });
       setWhUrl("");

@@ -26,7 +26,7 @@ export async function GET(_req: NextRequest) {
   try {
     const cookie = _req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
-    if (!tokenMatch) throw new Error("Unauthorized");
+    if (!tokenMatch) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
@@ -37,7 +37,8 @@ export async function GET(_req: NextRequest) {
       .from("user_overrides")
       .select("*")
       .eq("user_id", user.id)
-      .single();
+      .eq("org_id", org.id)
+      .maybeSingle();
 
     for (const key of FEATURE_FLAGS) {
       // 1. Check user override first
@@ -48,11 +49,11 @@ export async function GET(_req: NextRequest) {
       }
 
       // 2. Fall back to org-level flag
-      const { data } = await supabase.rpc("check_feature_flag", {
+      const { data, error } = await supabase.rpc("check_feature_flag", {
         flag_key: key,
         org_uuid: org.id,
       });
-      results[key] = data !== false; // fail-open: true if RPC fails
+      results[key] = !error && data === true;
     }
 
     // Check if suspended
@@ -60,9 +61,9 @@ export async function GET(_req: NextRequest) {
 
     return NextResponse.json({ flags: results, isSuspended });
   } catch (err: any) {
-    // Fail-open: all features enabled if check fails
+    console.error("[kill-switches] Unable to load feature state:", err);
     const fallback: Record<string, boolean> = {};
-    for (const key of FEATURE_FLAGS) fallback[key] = true;
-    return NextResponse.json({ flags: fallback, isSuspended: false });
+    for (const key of FEATURE_FLAGS) fallback[key] = false;
+    return NextResponse.json({ flags: fallback, isSuspended: false }, { status: 503 });
   }
 }

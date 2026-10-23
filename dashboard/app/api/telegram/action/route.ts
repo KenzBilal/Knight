@@ -23,8 +23,14 @@ export async function POST(req: Request) {
     // Verify origin matches host (CSRF protection)
     const origin = req.headers.get("origin");
     const host = req.headers.get("host");
-    if (origin && host && !origin.includes(host)) {
-      return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+    if (origin && host) {
+      try {
+        if (new URL(origin).host !== host) {
+          return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+        }
+      } catch {
+        return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+      }
     }
 
     const supabase = createServiceClient();

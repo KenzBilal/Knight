@@ -8,6 +8,15 @@ export async function POST() {
     secure: process.env.NODE_ENV === "production",
     maxAge: 0,
     path: "/",
+    sameSite: "lax",
+  });
+
+  response.cookies.set("knight_refresh", "", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 0,
+    path: "/",
+    sameSite: "lax",
   });
 
   return response;

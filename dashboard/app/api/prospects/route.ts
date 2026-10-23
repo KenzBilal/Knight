@@ -12,8 +12,10 @@ export async function GET(req: Request) {
     const { org } = await requireAuthFromToken(tokenMatch[1]);
 
     const url = new URL(req.url);
-    const page = Math.max(1, parseInt(url.searchParams.get("page") || "1"));
-    const limit = Math.min(100, Math.max(1, parseInt(url.searchParams.get("limit") || "50")));
+    const requestedPage = Number.parseInt(url.searchParams.get("page") || "1", 10);
+    const requestedLimit = Number.parseInt(url.searchParams.get("limit") || "50", 10);
+    const page = Number.isFinite(requestedPage) ? Math.max(1, requestedPage) : 1;
+    const limit = Number.isFinite(requestedLimit) ? Math.min(100, Math.max(1, requestedLimit)) : 50;
     const offset = (page - 1) * limit;
 
     const supabase = createServiceClient();
@@ -60,6 +62,9 @@ export async function PATCH(req: Request) {
 
     if (!companyId || !status) {
       return NextResponse.json({ error: "Missing companyId or status" }, { status: 400 });
+    }
+    if (!["NEW", "AUDITED", "PITCHED", "REPLIED", "REJECTED", "CLOSED"].includes(status)) {
+      return NextResponse.json({ error: "Invalid prospect status" }, { status: 400 });
     }
 
     const { error } = await supabase

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     // Rate limit check
     const rateLimit = checkRateLimit(`sendReply:${org.id}`, RATE_LIMITS.sendReply);
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     }
 
     // Check email limits
-    const limits = await checkLimits(org.id, "email");
+    const limits = await checkLimits(org.id, "email", user.id);
     if (!limits.allowed) {
       return NextResponse.json(
         { error: limits.reason, usage: limits.usage, limit: limits.limit },

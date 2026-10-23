@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
-import { requireAuthFromToken } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/platform-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,10 @@ export async function GET(
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { user: adminUser } = await requireAuthFromToken(tokenMatch[1]);
+    const adminUser = await getPlatformAdmin(tokenMatch[1]);
+    if (!adminUser) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const supabase = createServiceClient();
     const { userId } = await params;
@@ -91,7 +94,10 @@ export async function PATCH(
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { user: adminUser } = await requireAuthFromToken(tokenMatch[1]);
+    const adminUser = await getPlatformAdmin(tokenMatch[1]);
+    if (!adminUser) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const supabase = createServiceClient();
     const { userId } = await params;

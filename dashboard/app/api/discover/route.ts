@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     // Rate limit check
     const rateLimit = checkRateLimit(`discover:${org.id}`, RATE_LIMITS.discover);
@@ -24,11 +24,11 @@ export async function POST(req: Request) {
     }
 
     // Kill switch check
-    const ksError = await checkKillSwitch("enable-discovery", org.id);
+    const ksError = await checkKillSwitch("enable-discovery", org.id, user.id);
     if (ksError) return ksError;
 
     // Check usage limits
-    const limits = await checkLimits(org.id, "lead");
+    const limits = await checkLimits(org.id, "lead", user.id);
     if (!limits.allowed) {
       return NextResponse.json(
         { error: limits.reason, usage: limits.usage, limit: limits.limit },
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
         org_id: org.id,
         type: "DISCOVER",
         status: "PENDING",
-        payload: { keyword, location },
+        payload: { keyword, location, user_id: user.id },
       })
       .select()
       .single();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
-import { requireAuthFromToken } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/platform-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +12,17 @@ export async function POST(
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    await requireAuthFromToken(tokenMatch[1]);
+    if (!(await getPlatformAdmin(tokenMatch[1]))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const supabase = createServiceClient();
     const { userId } = await params;
     const body = await req.json();
     const { type } = body; // 'leads' or 'emails' or 'all'
+    if (!["leads", "emails", "all"].includes(type)) {
+      return NextResponse.json({ error: "type must be leads, emails, or all" }, { status: 400 });
+    }
 
     // Get person's org
     const { data: person } = await supabase
@@ -30,30 +35,12 @@ export async function POST(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Reset usage by updating the daily stats materialized view
-    // Actually, we need to reset the usage counters in the org_config or usage table
-    // For now, we'll update the user_overrides to reset limits
-    const today = new Date().toISOString().split("T")[0];
-
-    if (type === "leads" || type === "all") {
-      // Reset lead usage for today
-      await supabase
-        .from("analytics_daily_stats")
-        .delete()
-        .eq("org_id", person.org_id)
-        .eq("date", today)
-        .eq("event", "lead_created");
-    }
-
-    if (type === "emails" || type === "all") {
-      // Reset email usage for today
-      await supabase
-        .from("analytics_daily_stats")
-        .delete()
-        .eq("org_id", person.org_id)
-        .eq("date", today)
-        .eq("event", "email_sent");
-    }
+    // Quotas are organization-scoped; reset atomically to avoid racing sends.
+    const { error } = await supabase.rpc("reset_usage", {
+      p_org_id: person.org_id,
+      p_action: type,
+    });
+    if (error) throw error;
 
     return NextResponse.json({ ok: true, type });
   } catch (err: any) {

@@ -70,7 +70,8 @@ export async function GET(req: Request) {
       const scored = (allCompanies || []).map((c) => {
         const emb = typeof c.embedding === "string" ? JSON.parse(c.embedding) : c.embedding;
         const sim = emb ? cosineSimilarity(embedding, emb) : 0;
-        const { embedding: _, ...rest } = c;
+        const { embedding: storedEmbedding, ...rest } = c;
+        void storedEmbedding;
         return { ...rest, similarity: sim };
       });
 

@@ -30,7 +30,8 @@ POST /api/discover
 Content-Type: application/json
 
 {
-  "query": "plumbers in Austin"
+  "keyword": "plumbers",
+  "location": "Austin"
 }
 ```
 
@@ -49,18 +50,21 @@ Each discovered lead includes:
 
 The lead score indicates how much a business needs your services:
 
-- **0-30** - Low need (good website)
-- **30-60** - Medium need (some issues)
-- **60-100** - High need (poor website, great opportunity)
+- **0-39** - Many detected issues; stronger audit signal
+- **40-69** - Mixed audit results
+- **70-100** - Fewer detected issues
+
+The audit score measures detected website issues, not sales likelihood. A low
+score indicates more problems. The worker's automatic email threshold is
+configurable per organization.
 
 ## Limits
 
 | Plan | Leads per month |
 |------|-----------------|
 | Free | 50 |
-| Starter | Unlimited |
-| Pro | Unlimited |
-| Agency | Unlimited |
+| Starter | 1,000 by default; configured plan limits may override |
+| Max | Unlimited by default |
 
 ## Tips
 

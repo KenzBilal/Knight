@@ -116,8 +116,22 @@ export async function requireAuth(): Promise<{ user: User; org: Org }> {
 
   const org = await getOrg(user.id);
   if (!org) throw new Error("No organization found");
+  await assertNotSuspended(user.id, org.id);
 
   return { user, org };
+}
+
+async function assertNotSuspended(userId: string, orgId: string): Promise<void> {
+  const serviceClient = createServiceClient();
+  const { data, error } = await serviceClient
+    .from("user_overrides")
+    .select("is_suspended")
+    .eq("user_id", userId)
+    .eq("org_id", orgId)
+    .maybeSingle();
+
+  if (error) throw new Error("Unable to verify account status");
+  if (data?.is_suspended) throw new Error("Account suspended");
 }
 
 /**
@@ -133,6 +147,7 @@ export async function requireAuthFromToken(token: string): Promise<{ user: User;
   const user: User = { id: authUser.id, email: authUser.email!, name: authUser.user_metadata?.name };
   const org = await getOrg(user.id);
   if (!org) throw new Error("No organization found");
+  await assertNotSuspended(user.id, org.id);
 
   return { user, org };
 }

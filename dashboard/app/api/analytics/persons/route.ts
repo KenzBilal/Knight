@@ -25,12 +25,16 @@ export async function GET(req: NextRequest) {
         .from("analytics_persons")
         .select("*")
         .eq("id", personId)
+        .eq("org_id", org.id)
         .single();
+
+      if (!person) return NextResponse.json({ error: "Person not found" }, { status: 404 });
 
       const { data: events } = await supabase
         .from("analytics_events")
         .select("*")
         .eq("user_id", person?.user_id)
+        .eq("org_id", org.id)
         .order("created_at", { ascending: false })
         .limit(100);
 

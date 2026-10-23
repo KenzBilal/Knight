@@ -39,7 +39,8 @@ export function getPlanLimits(plan: string): { leads: number; emails: number } {
 
 export async function checkLimits(
   orgId: string,
-  action: ActionType
+  action: ActionType,
+  userId?: string
 ): Promise<{ allowed: boolean; reason?: string; usage?: number; limit?: number }> {
   const supabase = createServiceClient();
 
@@ -50,7 +51,17 @@ export async function checkLimits(
     .eq("id", orgId)
     .single();
 
-  const plan = org?.plan || "free";
+  let plan = org?.plan || "free";
+
+  const { data: override } = userId
+    ? await supabase
+        .from("user_overrides")
+        .select("override_plan, override_leads_limit, override_emails_limit")
+        .eq("user_id", userId)
+        .eq("org_id", orgId)
+        .maybeSingle()
+    : { data: null };
+  if (override?.override_plan) plan = override.override_plan;
 
   // Get plan limits from plans table
   const { data: planData } = await supabase
@@ -61,7 +72,8 @@ export async function checkLimits(
 
   const limits = planData || FALLBACK_LIMITS[plan] || FALLBACK_LIMITS.free;
   const limitField = ACTION_TO_FIELD[action] as keyof typeof limits;
-  const limit = limits[limitField] ?? 50;
+  const overrideLimit = action === "lead" ? override?.override_leads_limit : override?.override_emails_limit;
+  const limit = overrideLimit ?? limits[limitField] ?? 50;
 
   // Unlimited
   if (limit === -1) {
@@ -69,9 +81,8 @@ export async function checkLimits(
   }
 
   // Get current usage for this month
-  const periodStart = new Date();
-  periodStart.setDate(1);
-  periodStart.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
   const usageField = ACTION_TO_USAGE_FIELD[action];
   const { data: usage } = await supabase
@@ -106,9 +117,8 @@ export async function incrementUsage(orgId: string, action: ActionType): Promise
 export async function getUsage(orgId: string): Promise<{ leads: number; emails: number }> {
   const supabase = createServiceClient();
 
-  const periodStart = new Date();
-  periodStart.setDate(1);
-  periodStart.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
   const { data: usage } = await supabase
     .from("usage_tracking")

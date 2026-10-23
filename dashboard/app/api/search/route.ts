@@ -82,7 +82,8 @@ export async function GET(req: Request) {
         const emb = typeof c.embedding === "string" ? JSON.parse(c.embedding) : c.embedding;
         if (!emb) return { ...c, similarity: 0 };
         const sim = cosineSimilarity(queryEmbedding, emb);
-        const { embedding: _, ...rest } = c;
+        const { embedding: storedEmbedding, ...rest } = c;
+        void storedEmbedding;
         return { ...rest, similarity: sim };
       });
 

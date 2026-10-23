@@ -1,5 +1,5 @@
 // worker/analytics.js — Supabase-backed analytics + feature flags
-// Custom analytics: Supabase-backed, fail-open, batched events
+// Custom analytics: Supabase-backed feature flags and batched events
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -14,6 +14,14 @@ let flushTimer = null;
 const FLAG_CACHE_TTL = 10_000;  // 10s
 const FLUSH_INTERVAL = 5_000;   // 5s
 const MAX_BUFFER = 50;
+const USER_OVERRIDE_FIELDS = {
+  'enable-discovery': 'override_discovery',
+  'enable-osint': 'override_osint',
+  'enable-ai-pitching': 'override_ai_pitching',
+  'enable-webhooks': 'override_webhooks',
+  'enable-auto-email': 'override_auto_email',
+  'enable-telegram-userbot': 'override_telegram_userbot',
+};
 
 function getClient() {
   if (!supabase && supabaseUrl && supabaseKey) {
@@ -75,16 +83,18 @@ async function flushEvents() {
     }
   } catch (err) {
     console.error(`[Analytics] flush error: ${err.message}`);
+    if (eventBuffer.length < MAX_BUFFER * 2) {
+      eventBuffer.unshift(...batch);
+    }
   }
 }
 
 /**
  * Check if a feature flag is enabled for an org.
- * Uses local cache with 10s TTL.
- * Fail-open: returns true on error.
+ * Fail closed: disabled when the database cannot verify the flag.
  */
-export async function isFeatureEnabled(flagKey, orgId) {
-  const cacheKey = `${flagKey}:${orgId}`;
+export async function isFeatureEnabled(flagKey, orgId, userId) {
+  const cacheKey = `${flagKey}:${orgId}:${userId || 'org'}`;
   const cached = flagCache.get(cacheKey);
 
   // Return cached value if still valid
@@ -93,9 +103,29 @@ export async function isFeatureEnabled(flagKey, orgId) {
   }
 
   const client = getClient();
-  if (!client) return true; // fail-open
+  if (!client) return false;
 
   try {
+    const overrideField = USER_OVERRIDE_FIELDS[flagKey];
+    if (userId && overrideField) {
+      const { data: override, error: overrideError } = await client
+        .from('user_overrides')
+        .select(overrideField)
+        .eq('user_id', userId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+
+      if (overrideError) {
+        console.error(`[Analytics] user override check failed for ${flagKey}: ${overrideError.message}`);
+        return false;
+      }
+      if (override && override[overrideField] !== null) {
+        const enabled = override[overrideField] === true;
+        flagCache.set(cacheKey, { value: enabled, expires: Date.now() + FLAG_CACHE_TTL });
+        return enabled;
+      }
+    }
+
     // Use RPC for deterministic rollout
     const { data, error } = await client
       .rpc('check_feature_flag', {
@@ -105,7 +135,7 @@ export async function isFeatureEnabled(flagKey, orgId) {
 
     if (error) {
       console.error(`[Analytics] flag check failed for ${flagKey}: ${error.message}`);
-      return true; // fail-open
+      return false;
     }
 
     const enabled = data === true;
@@ -119,7 +149,7 @@ export async function isFeatureEnabled(flagKey, orgId) {
     return enabled;
   } catch (err) {
     console.error(`[Analytics] flag check error: ${err.message}`);
-    return true; // fail-open
+    return false;
   }
 }
 

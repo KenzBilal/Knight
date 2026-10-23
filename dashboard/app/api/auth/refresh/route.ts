@@ -32,6 +32,7 @@ export async function POST() {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60, // 1 hour
       path: "/",
+      sameSite: "lax",
     });
 
     response.cookies.set("knight_refresh", data.session.refresh_token, {
@@ -39,6 +40,7 @@ export async function POST() {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
+      sameSite: "lax",
     });
 
     return response;

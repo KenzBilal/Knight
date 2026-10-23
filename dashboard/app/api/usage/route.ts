@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { org } = await requireAuthFromToken(tokenMatch[1]);
+    const { user, org } = await requireAuthFromToken(tokenMatch[1]);
 
     const supabase = createServiceClient();
 
@@ -20,31 +20,36 @@ export async function GET(req: Request) {
       .eq("id", org.id)
       .single();
 
-    const plan = orgData?.plan || "free";
+    const { data: override } = await supabase
+      .from("user_overrides")
+      .select("override_plan, override_leads_limit, override_emails_limit")
+      .eq("user_id", user.id)
+      .eq("org_id", org.id)
+      .maybeSingle();
+    const plan = override?.override_plan || orgData?.plan || "free";
 
     // Get plan limits from plans table
     const { data: planData } = await supabase
       .from("plans")
       .select("lead_limit, email_limit")
       .eq("id", plan)
-      .single();
+      .maybeSingle();
 
     const planLimits = {
-      leads: planData?.lead_limit ?? 50,
-      emails: planData?.email_limit ?? 50,
+      leads: override?.override_leads_limit ?? planData?.lead_limit ?? 50,
+      emails: override?.override_emails_limit ?? planData?.email_limit ?? 50,
     };
 
     // Get current month usage
-    const periodStart = new Date();
-    periodStart.setDate(1);
-    periodStart.setHours(0, 0, 0, 0);
+    const now = new Date();
+    const periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 
     const { data: usage } = await supabase
       .from("usage_tracking")
       .select("leads_searched, emails_sent")
       .eq("org_id", org.id)
       .eq("period_start", periodStart.toISOString().split("T")[0])
-      .single();
+      .maybeSingle();
 
     return NextResponse.json({
       plan,

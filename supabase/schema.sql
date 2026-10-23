@@ -1,10 +1,12 @@
 -- ============================================================
 -- KNIGHT — Multi-Tenant Database Schema
--- Run this in the Supabase SQL editor (or via `supabase db push`).
+-- Run this baseline schema in the Supabase SQL editor for a new project.
 -- Requires: Supabase Auth already enabled.
 -- ============================================================
 
 create extension if not exists "pgcrypto";
+create extension if not exists vector with schema public;
+set search_path to public, extensions;
 
 -- ============================================================
 -- ORGANIZATIONS (tenants)
@@ -13,7 +15,9 @@ create table if not exists public.orgs (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   slug text unique not null,
-  plan text not null default 'free' check (plan in ('free','starter','pro','agency')),
+  plan text not null default 'free',
+  stripe_customer_id text,
+  stripe_subscription_id text,
   lemon_customer_id text unique,
   lemon_subscription_id text unique,
   lemon_subscription_ends_at timestamptz,
@@ -62,14 +66,47 @@ create table if not exists public.org_config (
   auto_send_threshold integer default 60,
   daily_email_limit integer default 90,
   telegram_enabled boolean default false,
-  telegram_mode text,
   telegram_phone text,
   telegram_session text,
   telegram_bot_token text,
   telegram_admin_chat_id text,
+  telegram_welcome_sent boolean not null default false,
+  telegram_session_valid boolean not null default false,
+  use_own_keys boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- ============================================================
+-- OUTBOUND WEBHOOKS AND MCP API KEYS (server-side credentials)
+-- ============================================================
+create table if not exists public.webhooks (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  url text not null,
+  label text not null default 'My Webhook',
+  events text[] not null default array['audit.completed'],
+  is_active boolean not null default true,
+  secret text,
+  last_triggered_at timestamptz,
+  last_status integer,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+create index if not exists webhooks_org_idx on public.webhooks(org_id);
+
+create table if not exists public.mcp_api_keys (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  key_value text not null,
+  label text not null default 'Default',
+  is_active boolean not null default true,
+  last_used_at timestamptz,
+  created_at timestamptz default now()
+);
+create index if not exists mcp_api_keys_org_idx on public.mcp_api_keys(org_id);
+create unique index if not exists mcp_api_keys_key_value_uidx
+  on public.mcp_api_keys(key_value);
 
 -- ============================================================
 -- JOBS (work queue)
@@ -84,6 +121,7 @@ create table if not exists public.jobs (
   error text,
   attempts integer not null default 0,
   max_attempts integer not null default 3,
+  execute_after timestamptz not null default now(),
   created_at timestamptz not null default now(),
   started_at timestamptz,
   completed_at timestamptz
@@ -106,6 +144,8 @@ create table if not exists public.companies (
   status text not null default 'NEW',
   ai_pitch text,
   ai_suggestions text,
+  logo_url text,
+  embedding vector(1024),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -119,7 +159,6 @@ create index if not exists companies_org_id_idx on public.companies(org_id);
 create table if not exists public.contacts (
   id uuid primary key default gen_random_uuid(),
   company_id uuid not null references public.companies(id) on delete cascade,
-  org_id uuid not null references public.orgs(id) on delete cascade,
   email text,
   phone text,
   linkedin_url text,
@@ -128,11 +167,11 @@ create table if not exists public.contacts (
   last_name text,
   full_name text,
   role text,
+  bio text,
   is_primary boolean default false
 );
 
 create index if not exists contacts_company_idx on public.contacts(company_id);
-create index if not exists contacts_org_idx on public.contacts(org_id);
 
 -- ============================================================
 -- AUDITS
@@ -143,7 +182,8 @@ create table if not exists public.audits (
   org_id uuid not null references public.orgs(id) on delete cascade,
   status text not null default 'PENDING',
   total_score integer,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  embedding vector(1024)
 );
 
 create index if not exists audits_company_idx on public.audits(company_id);
@@ -252,14 +292,73 @@ create table if not exists public.engine_control (
 create table if not exists public.usage_tracking (
   id uuid primary key default gen_random_uuid(),
   org_id uuid not null references public.orgs(id) on delete cascade,
-  period_start timestamptz not null,
-  period_end timestamptz not null,
-  emails_sent integer default 0,
-  audits_run integer default 0,
+  period_start date not null,
+  period_end date not null,
+  leads_searched integer not null default 0 check (leads_searched >= 0),
+  emails_sent integer not null default 0 check (emails_sent >= 0),
+  audits_run integer not null default 0 check (audits_run >= 0),
   created_at timestamptz not null default now()
 );
 
 create index if not exists usage_tracking_org_idx on public.usage_tracking(org_id);
+create unique index if not exists usage_tracking_org_period_uidx
+  on public.usage_tracking(org_id, period_start);
+
+create or replace function public.increment_usage(p_org_id uuid, p_action text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_period_start date := date_trunc('month', now() at time zone 'UTC')::date;
+  v_period_end date := (date_trunc('month', now() at time zone 'UTC') + interval '1 month - 1 day')::date;
+begin
+  if p_action is null or p_action not in ('lead', 'email') then
+    raise exception 'Unsupported usage action: %', p_action using errcode = '22023';
+  end if;
+
+  insert into public.usage_tracking (org_id, period_start, period_end, leads_searched, emails_sent)
+  values (p_org_id, v_period_start, v_period_end,
+          case when p_action = 'lead' then 1 else 0 end,
+          case when p_action = 'email' then 1 else 0 end)
+  on conflict (org_id, period_start) do update set
+    leads_searched = public.usage_tracking.leads_searched + excluded.leads_searched,
+    emails_sent = public.usage_tracking.emails_sent + excluded.emails_sent,
+    period_end = excluded.period_end;
+end;
+$$;
+
+revoke all on function public.increment_usage(uuid, text) from public, anon, authenticated;
+grant execute on function public.increment_usage(uuid, text) to service_role;
+
+create or replace function public.reset_usage(p_org_id uuid, p_action text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_period_start date := date_trunc('month', now() at time zone 'UTC')::date;
+  v_period_end date := (date_trunc('month', now() at time zone 'UTC') + interval '1 month - 1 day')::date;
+begin
+  if p_action is null or p_action not in ('leads', 'emails', 'all') then
+    raise exception 'Unsupported usage reset action: %', p_action using errcode = '22023';
+  end if;
+
+  insert into public.usage_tracking (org_id, period_start, period_end)
+  values (p_org_id, v_period_start, v_period_end)
+  on conflict (org_id, period_start) do update set
+    leads_searched = case when p_action in ('leads', 'all') then 0
+                          else public.usage_tracking.leads_searched end,
+    emails_sent = case when p_action in ('emails', 'all') then 0
+                       else public.usage_tracking.emails_sent end,
+    period_end = excluded.period_end;
+end;
+$$;
+
+revoke all on function public.reset_usage(uuid, text) from public, anon, authenticated;
+grant execute on function public.reset_usage(uuid, text) to service_role;
 
 -- ============================================================
 -- EMAIL DOMAINS (custom sender domains)
@@ -291,7 +390,6 @@ create table if not exists public.email_templates (
   subject text not null,
   body text not null,
   is_default boolean default false,
-  variables jsonb default '[]'::jsonb,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -320,13 +418,22 @@ create index if not exists org_invites_token_idx on public.org_invites(token);
 -- PLANS
 -- ============================================================
 create table if not exists public.plans (
-  id uuid primary key default gen_random_uuid(),
-  slug text unique not null,
+  id text primary key,
   name text not null,
-  price_monthly integer not null,
-  email_limit integer not null,
-  features jsonb default '[]'::jsonb,
-  created_at timestamptz not null default now()
+  price integer not null default 0,
+  period text not null default 'month',
+  description text not null default '',
+  features text[] not null default '{}',
+  lead_limit integer not null default 50,
+  email_limit integer not null default 50,
+  telegram_limit integer not null default 0,
+  lemon_product_id text,
+  lemon_variant_id text,
+  sort_order integer not null default 0,
+  highlighted boolean not null default false,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
 );
 
 -- ============================================================
@@ -393,10 +500,8 @@ create index if not exists support_replies_ticket_idx on public.support_replies(
 -- LANDING CONTENT
 -- ============================================================
 create table if not exists public.landing_content (
-  id uuid primary key default gen_random_uuid(),
-  section text unique not null,
+  section text primary key,
   content jsonb not null default '{}'::jsonb,
-  created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
 
@@ -415,8 +520,186 @@ create table if not exists public.contact_submissions (
   current_workflow text,
   contact_method text,
   status text not null default 'new' check (status in ('new','contacted','qualified','converted')),
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- ============================================================
+-- PLATFORM ANALYTICS AND ADMINISTRATION
+-- ============================================================
+create table if not exists public.global_config (
+  id uuid primary key default gen_random_uuid(),
+  key text not null unique,
+  value jsonb not null default 'null'::jsonb,
+  category text not null default 'general',
+  description text,
+  updated_by text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.analytics_events (
+  id bigint generated by default as identity primary key,
+  org_id uuid references public.orgs(id) on delete cascade,
+  user_id uuid,
+  event text not null,
+  properties jsonb not null default '{}'::jsonb,
+  distinct_id text,
+  source text not null default 'dashboard',
+  session_id text,
   created_at timestamptz not null default now()
 );
+create index if not exists analytics_events_org_created_idx
+  on public.analytics_events(org_id, created_at desc);
+create index if not exists analytics_events_user_created_idx
+  on public.analytics_events(user_id, created_at desc);
+
+create table if not exists public.analytics_persons (
+  id bigint generated by default as identity primary key,
+  org_id uuid,
+  user_id uuid unique,
+  email text,
+  name text,
+  properties jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+
+create table if not exists public.analytics_flags (
+  id bigint generated by default as identity primary key,
+  key text not null unique,
+  name text not null,
+  active boolean not null default true,
+  rollout_percentage integer not null default 100 check (rollout_percentage between 0 and 100),
+  rollout_rules jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.analytics_sessions (
+  id bigint generated by default as identity primary key,
+  org_id uuid,
+  user_id uuid,
+  distinct_id text,
+  started_at timestamptz not null default now(),
+  ended_at timestamptz,
+  page_views integer not null default 0,
+  events_count integer not null default 0
+);
+
+create table if not exists public.user_overrides (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique,
+  org_id uuid not null,
+  override_discovery boolean,
+  override_osint boolean,
+  override_ai_pitching boolean,
+  override_webhooks boolean,
+  override_auto_email boolean,
+  override_telegram_userbot boolean,
+  override_plan text,
+  override_leads_limit integer,
+  override_emails_limit integer,
+  is_suspended boolean not null default false,
+  suspension_reason text,
+  overridden_by text,
+  updated_at timestamptz not null default now()
+);
+
+create or replace view public.analytics_daily_stats
+with (security_invoker = true) as
+select org_id,
+       (created_at at time zone 'UTC')::date as date,
+       event,
+       count(*)::bigint as count,
+       count(distinct user_id)::bigint as unique_users
+from public.analytics_events
+where org_id is not null
+group by org_id, (created_at at time zone 'UTC')::date, event;
+
+create or replace view public.analytics_top_events
+with (security_invoker = true) as
+select org_id, event, count(*)::bigint as count, max(created_at) as last_seen
+from public.analytics_events
+where org_id is not null
+group by org_id, event;
+
+create or replace function public.check_feature_flag(flag_key text, org_uuid uuid)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_active boolean;
+  v_rollout integer;
+  v_bucket integer;
+begin
+  select active, rollout_percentage into v_active, v_rollout
+  from public.analytics_flags where key = flag_key;
+
+  if not found then return true; end if;
+  if not v_active then return false; end if;
+  if v_rollout >= 100 then return true; end if;
+  if v_rollout <= 0 then return false; end if;
+
+  v_bucket := abs(pg_catalog.hashtextextended(org_uuid::text || ':' || flag_key, 0) % 100)::integer;
+  return v_bucket < v_rollout;
+end;
+$$;
+
+create or replace function public.search_companies(
+  query_embedding vector,
+  match_count integer,
+  org_id_filter uuid
+)
+returns table (
+  id uuid,
+  name text,
+  website_url text,
+  industry text,
+  lead_score integer,
+  status text,
+  ai_pitch text,
+  created_at timestamptz,
+  similarity double precision
+)
+language sql
+stable
+security invoker
+set search_path = public, extensions, pg_catalog
+as $$
+  select c.id, c.name, c.website_url, c.industry, c.lead_score, c.status,
+         c.ai_pitch, c.created_at,
+         (1 - (c.embedding <=> query_embedding))::double precision as similarity
+  from public.companies c
+  where c.org_id = org_id_filter and c.embedding is not null
+  order by c.embedding <=> query_embedding
+  limit greatest(0, least(match_count, 100));
+$$;
+
+alter table public.global_config enable row level security;
+alter table public.analytics_events enable row level security;
+alter table public.analytics_persons enable row level security;
+alter table public.analytics_flags enable row level security;
+alter table public.analytics_sessions enable row level security;
+alter table public.user_overrides enable row level security;
+
+revoke all on function public.increment_usage(uuid, text) from public, anon, authenticated;
+revoke all on function public.check_feature_flag(text, uuid) from public, anon;
+revoke all on function public.search_companies(vector, integer, uuid) from public, anon, authenticated;
+grant execute on function public.increment_usage(uuid, text) to service_role;
+grant execute on function public.check_feature_flag(text, uuid) to authenticated, service_role;
+grant execute on function public.search_companies(vector, integer, uuid) to service_role;
+grant select on public.analytics_daily_stats, public.analytics_top_events to service_role;
+grant select, insert, update, delete on public.global_config, public.analytics_events,
+  public.analytics_persons, public.analytics_flags, public.analytics_sessions,
+  public.user_overrides, public.email_domains, public.contact_submissions,
+  public.webhooks, public.mcp_api_keys to service_role;
+grant usage, select on all sequences in schema public to service_role;
+revoke all on public.webhooks, public.mcp_api_keys from public, anon, authenticated;
 
 -- ============================================================
 -- ROW LEVEL SECURITY
@@ -440,6 +723,8 @@ alter table public.usage_tracking enable row level security;
 alter table public.email_domains enable row level security;
 alter table public.email_templates enable row level security;
 alter table public.org_invites enable row level security;
+alter table public.webhooks enable row level security;
+alter table public.mcp_api_keys enable row level security;
 alter table public.plans enable row level security;
 alter table public.ai_keys enable row level security;
 alter table public.ai_config enable row level security;
@@ -845,12 +1130,17 @@ create policy "contact_submissions_insert_anon" on public.contact_submissions
 create policy "contact_submissions_select_service" on public.contact_submissions
   for select to service_role using (true);
 
+-- WEBHOOKS AND MCP API KEYS: server-side credentials, inaccessible to clients.
+-- RLS is enabled with no anon/authenticated policies; service_role bypasses RLS.
+
 -- ============================================================
 -- REALTIME
 -- ============================================================
 alter publication supabase_realtime add table public.jobs;
 alter publication supabase_realtime add table public.companies;
 alter publication supabase_realtime add table public.telegram_leads;
+
+notify pgrst, 'reload schema';
 
 -- ============================================================
 -- HELPER FUNCTIONS

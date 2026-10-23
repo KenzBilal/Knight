@@ -69,17 +69,13 @@ Verify your own domain for email sending with custom tracking.
 Connect your Telegram account for AI-powered lead hunting.
 
 ### AI Provider Keys
-Bring your own API keys for OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, or Cerebras.
+Bring your own keys for the providers currently routed by the worker: Cohere, Gemini, Groq, and OpenRouter.
 
 ---
 
 ## Billing & Plans
 
-| Plan | Price | Leads/mo | Emails/mo | Telegram | BYOK |
-|------|-------|----------|-----------|----------|------|
-| Free | $0 | 50 | 50 | - | - |
-| Starter | $49 | Unlimited | Unlimited | - | - |
-| Pro | $149 | Unlimited | Unlimited | Yes | Yes |
+Plan names, prices, limits, and features are configured in the database. See [plan details](billing/plans.md) for current runtime feature gates.
 
 **[Full plan details →](billing/plans.md)**
 

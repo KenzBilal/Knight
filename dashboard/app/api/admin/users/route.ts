@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
-import { requireAuthFromToken } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/platform-admin";
 
 export const dynamic = "force-dynamic";
 
@@ -9,19 +9,11 @@ export async function GET(req: NextRequest) {
     const cookie = req.headers.get("cookie") || "";
     const tokenMatch = cookie.match(/knight_token=([^;]+)/);
     if (!tokenMatch) throw new Error("Unauthorized");
-    const { user } = await requireAuthFromToken(tokenMatch[1]);
-
-    // Only admins/owners can access
-    const supabase = createServiceClient();
-    const { data: membership } = await supabase
-      .from("org_members")
-      .select("role")
-      .eq("user_id", user.id)
-      .single();
-
-    if (!membership || !["owner", "admin"].includes(membership.role)) {
+    if (!(await getPlatformAdmin(tokenMatch[1]))) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    const supabase = createServiceClient();
 
     const url = new URL(req.url);
     const email = url.searchParams.get("email");
@@ -50,10 +42,10 @@ export async function GET(req: NextRequest) {
 
     // Get overrides for each person
     const userIds = (persons || []).map(p => p.user_id);
-    const { data: overrides } = await supabase
+    const { data: overrides } = userIds.length ? await supabase
       .from("user_overrides")
       .select("*")
-      .in("user_id", userIds);
+      .in("user_id", userIds) : { data: [] };
 
     const overrideMap = new Map((overrides || []).map(o => [o.user_id, o]));
 

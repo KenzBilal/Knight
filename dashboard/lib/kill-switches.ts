@@ -1,6 +1,15 @@
 import { NextResponse } from "next/server";
 import { createServiceClient } from "./supabase";
 
+const USER_OVERRIDE_FIELDS: Record<string, string> = {
+  "enable-discovery": "override_discovery",
+  "enable-osint": "override_osint",
+  "enable-ai-pitching": "override_ai_pitching",
+  "enable-webhooks": "override_webhooks",
+  "enable-auto-email": "override_auto_email",
+  "enable-telegram-userbot": "override_telegram_userbot",
+};
+
 /**
  * Check if a feature kill switch is enabled for an org/user.
  * Priority: User override → Org flag → Global default (true)
@@ -15,12 +24,24 @@ export async function checkKillSwitch(
 
   // 1. Check user override first (highest priority)
   if (userId) {
-    const overrideField = `override_${flagKey.replace("enable-", "")}`;
-    const { data: userOverride } = await supabase
+    const overrideField = USER_OVERRIDE_FIELDS[flagKey];
+    if (!overrideField) {
+      return NextResponse.json({ error: "Unknown feature flag" }, { status: 400 });
+    }
+    const { data: userOverride, error: overrideError } = await supabase
       .from("user_overrides")
       .select(overrideField)
       .eq("user_id", userId)
-      .single();
+      .eq("org_id", orgId)
+      .maybeSingle();
+
+    if (overrideError) {
+      console.error(`[KillSwitch] Failed to check user override for ${flagKey}:`, overrideError);
+      return NextResponse.json(
+        { error: "FEATURE_CHECK_UNAVAILABLE", message: "Feature access could not be verified." },
+        { status: 503 }
+      );
+    }
 
     if (userOverride && (userOverride as Record<string, any>)[overrideField] !== null) {
       if (!(userOverride as Record<string, any>)[overrideField]) {
@@ -43,9 +64,11 @@ export async function checkKillSwitch(
   });
 
   if (error) {
-    // Fail-open: if RPC fails, allow the feature
     console.error(`[KillSwitch] Failed to check ${flagKey}:`, error);
-    return null;
+    return NextResponse.json(
+      { error: "FEATURE_CHECK_UNAVAILABLE", message: "Feature access could not be verified." },
+      { status: 503 }
+    );
   }
 
   if (!data) {

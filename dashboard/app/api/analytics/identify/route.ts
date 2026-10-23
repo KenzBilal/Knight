@@ -1,25 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
+import { requireAuthFromToken } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const { user_id, email, name, org_id, properties } = await req.json();
-
-    if (!user_id) {
-      return NextResponse.json({ error: "user_id required" }, { status: 400 });
-    }
+    const token = req.cookies.get("knight_token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const { user, org } = await requireAuthFromToken(token);
+    const { properties } = await req.json();
 
     const supabase = createServiceClient();
 
     const { error } = await supabase.from("analytics_persons").upsert(
       {
-        user_id,
-        email: email || null,
-        name: name || null,
-        org_id: org_id || null,
-        properties: properties || {},
+        user_id: user.id,
+        email: user.email || null,
+        name: user.name || null,
+        org_id: org.id,
+        properties: properties && typeof properties === "object" && !Array.isArray(properties) ? properties : {},
         last_seen_at: new Date().toISOString(),
       },
       { onConflict: "user_id" }

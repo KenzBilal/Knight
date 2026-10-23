@@ -1,16 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase";
 import { cookies } from "next/headers";
-import { requireAuthFromToken } from "@/lib/auth";
+import { getPlatformAdmin } from "@/lib/platform-admin";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(_req: NextRequest) {
+export async function GET() {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get("knight_token")?.value;
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    await requireAuthFromToken(token);
+    if (!(await getPlatformAdmin(token))) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const supabase = createServiceClient();
     const { data, error } = await supabase

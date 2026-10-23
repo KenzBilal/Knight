@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60, // 1 hour — matches Supabase JWT expiry
       path: "/",
+      sameSite: "lax",
     });
 
     // Store refresh_token separately so middleware can silently refresh sessions
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
+      sameSite: "lax",
     });
 
     return response;

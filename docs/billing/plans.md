@@ -1,102 +1,27 @@
 # Plans & Pricing
 
-Knight offers flexible pricing to match your needs.
+Knight's active plans, prices, checkout variants, and displayed features are
+configured in the database and shown on the pricing page.
 
-## Plan Comparison
+## Current application feature gates
 
-| Feature | Free | Starter ($49/mo) | Pro ($149/mo) | Agency ($299/mo) |
-|---------|------|------------------|---------------|------------------|
-| Leads/month | 50 | Unlimited | Unlimited | Unlimited |
-| Emails/month | 50 | Unlimited | Unlimited | Unlimited |
-| Email channel | ✅ | ✅ | ✅ | ✅ |
-| Telegram agent | ❌ | ❌ | ✅ | ✅ |
-| Custom domain | ❌ | ❌ | ✅ | ✅ |
-| BYOK | ❌ | ❌ | ✅ | ✅ |
-| White-label | ❌ | ❌ | ❌ | ✅ |
-| Team seats | 1 | 1 | 3 | 10 |
-| Priority support | ❌ | ❌ | ✅ | ✅ |
+The current runtime recognizes `free`, `starter`, and `max` plan identifiers.
+Fallback monthly quotas are 50 leads and 50 emails for `free`, 1,000 of each
+for `starter`, and unlimited for `max`. Configured plan records can override
+quotas.
 
-## Free Plan
+| Feature gate | Free | Starter | Max |
+|--------------|------|---------|-----|
+| AI pitch, webhooks, templates | No | Yes | Yes |
+| Telegram, BYOK, drip, inbox | No | No | Yes |
 
-Perfect for trying out Knight:
+Check the pricing page for current plan names, prices, and included features.
 
-- 50 leads per month
-- 50 emails per month
-- Basic website audit
-- Dashboard access
+## Managing your subscription
 
-No credit card required.
+1. Open **Billing** in the dashboard.
+2. Choose an available plan and complete checkout through LemonSqueezy.
+3. Use the subscription portal to change or cancel a subscription.
 
-## Starter Plan
-
-For freelancers getting started:
-
-- Unlimited leads
-- Unlimited emails
-- Full website audit (30+ checks)
-- AI pitch generation
-- CRM pipeline
-
-## Pro Plan
-
-For agencies scaling outreach:
-
-- Everything in Starter
-- Telegram agent
-- Drip sequences
-- Smart inbox
-- Custom domain email
-- BYOK (bring your own keys)
-
-## Agency Plan
-
-For teams and white-label:
-
-- Everything in Pro
-- White-label (no Knight branding)
-- Team accounts (10 seats)
-- API access
-- Priority support
-
-## Managing Your Subscription
-
-### Upgrade
-
-1. Go to **Billing** in the sidebar
-2. Select your desired plan
-3. Complete checkout via LemonSqueezy
-
-### Downgrade
-
-1. Go to **Billing**
-2. Click "Manage subscription"
-3. Select a lower plan in the LemonSqueezy portal
-
-### Cancel
-
-1. Go to **Billing**
-2. Click "Manage subscription"
-3. Cancel in the LemonSqueezy portal
-
-You keep access until the end of your billing period.
-
-## Refund Policy
-
-- New subscriptions: Full refund within 7 days
-- Renewals: Non-refundable
-- See [Refund Policy](https://knightagency.tech/refund) for details
-
-## Payment Methods
-
-We accept all major credit cards, debit cards, and other payment methods supported by LemonSqueezy.
-
-## FAQ
-
-**Can I change plans anytime?**
-Yes. Upgrades take effect immediately. Downgrades take effect at the end of your billing period.
-
-**Do you offer annual pricing?**
-Not yet. We're working on it.
-
-**Is there a discount for nonprofits?**
-Contact us at billing@knightagency.tech to discuss nonprofit pricing.
+Plan changes are applied after Knight receives and processes the LemonSqueezy
+webhook.

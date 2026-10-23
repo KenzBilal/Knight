@@ -311,6 +311,12 @@ function renderTemplate(template, variables) {
   return rendered;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
 async function getDefaultTemplate(orgId, type) {
   const { data } = await supabase
     .from('email_templates')
@@ -329,7 +335,7 @@ async function handleDiscover(job) {
   const query = `${keyword} ${location || ''}`.trim();
 
   // Kill Switch: Check if discovery is enabled
-  const discoveryEnabled = await isFeatureEnabled('enable-discovery', job.org_id);
+  const discoveryEnabled = await isFeatureEnabled('enable-discovery', job.org_id, job.payload.user_id);
   if (!discoveryEnabled) {
     console.log(`[Analytics] Discovery disabled via kill switch for org ${job.org_id}`);
     return;
@@ -338,7 +344,7 @@ async function handleDiscover(job) {
   console.log(`[Discover] Searching: "${query}"`);
 
   // Directory sites to exclude
-  const DIR_DOMAINS = ['yelp.com', 'yellowpages.com', 'bbb.org', 'justdaddy.com', 'thumbtack.com', 'angi.com', 'angieslist.com', 'homeadvisor.com', 'thumbtack.com', 'foursquare.com', 'tripadvisor.com', 'clutch.co', 'goodfirms.co', 'sortlist.com', 'upcity.com', 'expertise.com', ' bark.com', 'checkatrade.com', 'trustatrader.com', 'ratedpeople.com', 'mybuilder.com', 'houzz.com', 'porch.com', 'nextdoor.com', 'craigslist.org', 'facebook.com', 'linkedin.com', 'instagram.com', 'twitter.com', 'tiktok.com', 'youtube.com', 'wikipedia.org', 'reddit.com', 'quora.com', 'medium.com', 'substack.com'];
+  const DIR_DOMAINS = ['yelp.com', 'yellowpages.com', 'bbb.org', 'justdaddy.com', 'thumbtack.com', 'angi.com', 'angieslist.com', 'homeadvisor.com', 'foursquare.com', 'tripadvisor.com', 'clutch.co', 'goodfirms.co', 'sortlist.com', 'upcity.com', 'expertise.com', 'bark.com', 'checkatrade.com', 'trustatrader.com', 'ratedpeople.com', 'mybuilder.com', 'houzz.com', 'porch.com', 'nextdoor.com', 'craigslist.org', 'facebook.com', 'linkedin.com', 'instagram.com', 'twitter.com', 'tiktok.com', 'youtube.com', 'wikipedia.org', 'reddit.com', 'quora.com', 'medium.com', 'substack.com'];
   
   // Low-quality builder platforms (already optimized sites)
   const BUILDER_META = ['powered by wix', 'built with squarespace', 'made with weebly', 'created with shopify', 'powered by wordpress.com'];
@@ -385,8 +391,9 @@ async function handleDiscover(job) {
     for (const link of businessLinks) {
       if (queued >= 10) break; // Hard cap at 10 quality leads
 
+      let bizPage;
       try {
-        const bizPage = await browser.newPage();
+        bizPage = await browser.newPage();
         await bizPage.goto(link, { waitUntil: 'networkidle2', timeout: 20000 });
 
         // Extract website URL + check for low-quality signals
@@ -406,28 +413,39 @@ async function handleDiscover(job) {
           return { website, hasBuilderMeta };
         });
 
-        if (!bizData.website) continue;
+        if (!bizData.website) {
+          await bizPage.close();
+          bizPage = null;
+          continue;
+        }
 
         const hostname = new URL(bizData.website).hostname.replace('www.', '');
 
         // Skip directory/social sites
-        if (DIR_DOMAINS.some(d => hostname.includes(d))) {
+        if (DIR_DOMAINS.some(d => hostname === d || hostname.endsWith(`.${d}`))) {
           console.log(`[Discover] Skipping directory: ${hostname}`);
+          await bizPage.close();
+          bizPage = null;
           continue;
         }
 
         // Skip sites built on simple builders (already optimized, low conversion potential)
         if (bizData.hasBuilderMeta) {
           console.log(`[Discover] Skipping builder site: ${hostname}`);
+          await bizPage.close();
+          bizPage = null;
           continue;
         }
 
+        await bizPage.close();
+        bizPage = null;
+
         // Quick check: is the website live?
+        let checkPage;
         try {
-          const checkPage = await browser.newPage();
+          checkPage = await browser.newPage();
           await checkPage.goto(`https://${hostname}`, { waitUntil: 'domcontentloaded', timeout: 10000 });
           const status = await checkPage.evaluate(() => document.title);
-          await checkPage.close();
 
           if (!status || status.toLowerCase().includes('error') || status.toLowerCase().includes('not found')) {
             console.log(`[Discover] Skipping dead site: ${hostname}`);
@@ -436,6 +454,8 @@ async function handleDiscover(job) {
         } catch {
           console.log(`[Discover] Skipping unreachable site: ${hostname}`);
           continue;
+        } finally {
+          if (checkPage) await checkPage.close().catch(() => {});
         }
 
         // Queue for audit
@@ -443,7 +463,7 @@ async function handleDiscover(job) {
           org_id: job.org_id,
           type: 'SCRAPE',
           status: 'PENDING',
-          payload: { target: hostname, source: `discovery:${query}` }
+          payload: { target: hostname, source: `discovery:${query}`, user_id: job.payload.user_id }
         });
 
         if (insertError) {
@@ -452,7 +472,10 @@ async function handleDiscover(job) {
           queued++;
           console.log(`[Discover] Queued (${queued}/10): ${hostname}`);
         }
-      } catch { try { await bizPage.close(); } catch {} }
+      } catch (error) {
+        if (bizPage) await bizPage.close().catch(() => {});
+        console.warn('[Discover] Failed to inspect Maps result:', error.message);
+      }
     }
 
     console.log(`[Discover] Queued ${queued} quality sites for audit`);
@@ -512,70 +535,56 @@ async function findYelp(companyName) {
 async function handleScrape(job) {
   const orgId = job.org_id;
   const target = job.payload.target;
+  const userId = job.payload.user_id;
   const CACHE_HOURS = 24;
 
-  // Check cache: skip if same URL audited within 24h
+  // Resolve the company first so the cache is scoped to the actual target.
   const cutoff = new Date(Date.now() - CACHE_HOURS * 60 * 60 * 1000).toISOString();
-  const { data: cachedAudits } = await supabase
-    .from('audits')
-    .select('id, total_score, created_at, company_id')
-    .eq('org_id', orgId)
-    .gte('created_at', cutoff)
-    .order('created_at', { ascending: false })
-    .limit(1);
+  let existingCompany = null;
+  if (job.payload.company_id) {
+    const { data } = await supabase.from('companies').select('*')
+      .eq('id', job.payload.company_id).eq('org_id', orgId).maybeSingle();
+    existingCompany = data;
+  } else {
+    const { data } = await supabase.from('companies').select('*')
+      .eq('org_id', orgId).eq('website_url', target).maybeSingle();
+    existingCompany = data;
+  }
 
-  if (cachedAudits && cachedAudits.length > 0) {
-    const cached = cachedAudits[0];
-    const existingCompany = await supabase
-      .from('companies')
-      .select('*')
-      .eq('org_id', orgId)
-      .eq('website_url', target)
-      .single();
+  if (existingCompany) {
+    const { data: cached } = await supabase.from('audits')
+      .select('id, total_score, created_at')
+      .eq('org_id', orgId).eq('company_id', existingCompany.id)
+      .gte('created_at', cutoff)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
 
-    if (existingCompany.data) {
-      // Fetch full audit data from audit_results
-      const { data: auditResult } = await supabase
-        .from('audit_results')
-        .select('*')
-        .eq('audit_id', cached.id)
-        .single();
-
-      // Fetch contacts
-      const { data: contacts } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('company_id', existingCompany.data.id);
-
+    if (cached) {
+      const [{ data: auditResult }, { data: contacts }] = await Promise.all([
+        supabase.from('audit_results').select('*').eq('audit_id', cached.id).maybeSingle(),
+        supabase.from('contacts').select('*').eq('company_id', existingCompany.id),
+      ]);
       console.log(`[Scrape] ${target} | CACHED: Last audit ${cached.created_at} (score: ${cached.total_score})`);
-
       return {
         cached: true,
         auditId: cached.id,
         score: cached.total_score,
-        company: existingCompany.data,
+        company: existingCompany,
         auditData: auditResult?.raw_data || null,
-        pitch: auditResult?.issues_found?.pitch || null,
-        suggestions: auditResult?.issues_found?.suggestions || null,
-        issues: auditResult?.issues_found?.issues || [],
-        contacts: contacts || []
+        pitch: auditResult?.raw_data?.pitch || null,
+        suggestions: auditResult?.raw_data?.suggestions || null,
+        issues: auditResult?.issues_found || [],
+        contacts: contacts || [],
       };
     }
   }
 
   const { auditData, contacts } = await runAudit(target, orgId);
 
-  const hasEmail = contacts && contacts.length > 0 && contacts.some(c => c.email);
-  const hasPhone = contacts && contacts.length > 0 && contacts.some(c => c.phone);
-
-  if (!hasEmail && !hasPhone) {
-    console.log(`[Scrape] ${target} | SKIPPED: No contact info`);
-    return;
-  }
+  if (!contacts?.length) console.log(`[Scrape] ${target} | No contact details found; saving audit without outreach`);
 
   // OSINT Enrichment BEFORE AI
   // Kill Switch: Check if OSINT is enabled
-  const osintEnabled = await isFeatureEnabled('enable-osint', orgId);
+  const osintEnabled = await isFeatureEnabled('enable-osint', orgId, userId);
   let linkedinLead, clearbit, crunchbase, glassdoor, yelp;
 
   if (osintEnabled) {
@@ -590,7 +599,6 @@ async function handleScrape(job) {
     ]);
   } else {
     console.log(`[Analytics] OSINT disabled via kill switch for org ${orgId}`);
-    clearbit = await getClearbitData(target.replace('www.', '').split('.')[0]);
   }
 
   if (linkedinLead && contacts.length > 0) {
@@ -616,7 +624,7 @@ async function handleScrape(job) {
   const hasPitch = orgPlan === 'starter' || orgPlan === 'max';
 
   // Kill Switch: Check if AI pitching is enabled for this org
-  const aiPitchingEnabled = await isFeatureEnabled('enable-ai-pitching', orgId);
+  const aiPitchingEnabled = await isFeatureEnabled('enable-ai-pitching', orgId, userId);
 
   let aiAnalysis;
   if (hasPitch && aiPitchingEnabled) {
@@ -632,15 +640,20 @@ async function handleScrape(job) {
 
   const companyName = clearbit?.name || aiAnalysis.companyName || target;
 
-  const { data: company, error: companyError } = await supabase.from('companies').insert({
+  const companyPayload = {
     org_id: orgId,
     name: companyName,
     website_url: target,
     industry: aiAnalysis.industry || 'Unknown',
     lead_score: aiAnalysis.leadScore || 50,
-    status: 'NEW',
-    logo_url: clearbit?.logo || null
-  }).select().single();
+    status: existingCompany?.status || 'NEW',
+    logo_url: clearbit?.logo || null,
+    updated_at: new Date().toISOString(),
+  };
+  const companyQuery = existingCompany
+    ? supabase.from('companies').update(companyPayload).eq('id', existingCompany.id).eq('org_id', orgId)
+    : supabase.from('companies').insert(companyPayload);
+  const { data: company, error: companyError } = await companyQuery.select().single();
 
   if (companyError) {
     throw new Error(`Failed to create company: ${companyError.message}`);
@@ -655,6 +668,14 @@ async function handleScrape(job) {
       }
     })
     .catch(err => console.error(`[Embedding] Failed for ${company.name}:`, err.message));
+
+  if (existingCompany) {
+    const { error: deleteContactsError } = await supabase.from('contacts')
+      .delete().eq('company_id', company.id);
+    if (deleteContactsError) {
+      console.error(`[Scrape] Failed to refresh contacts for ${company.name}:`, deleteContactsError.message);
+    }
+  }
 
   if (contacts.length > 0) {
     const { error: contactsError } = await supabase.from('contacts').insert(
@@ -713,7 +734,7 @@ async function handleScrape(job) {
 
   // Trigger outbound webhooks
   // Kill Switch: Check if webhooks are enabled
-  const webhooksEnabled = await isFeatureEnabled('enable-webhooks', orgId);
+  const webhooksEnabled = await isFeatureEnabled('enable-webhooks', orgId, userId);
   if (!webhooksEnabled) {
     console.log(`[Analytics] Webhooks disabled via kill switch for org ${orgId}`);
   } else {
@@ -766,15 +787,18 @@ async function handleScrape(job) {
 
   // Auto-send if score is low enough
   // Kill Switch: Check if auto-email is enabled
-  const autoEmailEnabled = await isFeatureEnabled('enable-auto-email', orgId);
+  const autoEmailEnabled = await isFeatureEnabled('enable-auto-email', orgId, userId);
   if (!autoEmailEnabled) {
     console.log(`[Analytics] Auto-email disabled via kill switch for org ${orgId}`);
     return { company, audit, auditData, pitch: aiAnalysis.pitch, contacts };
   }
 
-  if (auditData.score <= 60 && contacts.length > 0 && contacts[0].email) {
+  if (contacts.length > 0 && contacts[0].email) {
     const { data: orgConfig } = await supabase.from('org_config').select('*').eq('org_id', orgId).single();
     const dailyLimit = orgConfig?.daily_email_limit || 90;
+    const autoSendThreshold = Number.isFinite(Number(orgConfig?.auto_send_threshold))
+      ? Number(orgConfig.auto_send_threshold)
+      : 60;
 
     const today = new Date().toISOString().split('T')[0];
     const { count } = await supabase.from('emails')
@@ -783,7 +807,7 @@ async function handleScrape(job) {
       .eq('direction', 'outbound')
       .gte('created_at', today + 'T00:00:00Z');
 
-    if ((count || 0) < dailyLimit) {
+    if (auditData.score <= autoSendThreshold && (count || 0) < dailyLimit) {
       const targetEmail = contacts[0].email;
       const senderName = orgConfig?.company_name || 'Knight';
       const rawSenderEmail = orgConfig?.sender_email || process.env.RESEND_SENDER_EMAIL || '';
@@ -804,7 +828,7 @@ async function handleScrape(job) {
           calendly_link: orgConfig?.calendly_link || '',
           industry: company.industry || '',
           audit_score: auditData.score.toString(),
-          issues_summary: auditData.issues?.slice(0, 3).join(', ') || 'several areas for improvement',
+          issues_summary: auditData.issues?.slice(0, 3).map(issue => issue.issue).join(', ') || 'several areas for improvement',
         };
         subject = renderTemplate(template.subject, variables);
         body = renderTemplate(template.body, variables);
@@ -822,11 +846,11 @@ async function handleScrape(job) {
           to: targetEmail,
           subject,
           html: `<div style="font-family: 'Inter', sans-serif; max-width: 600px; line-height: 1.6; color: #111;">
-            <p>${body.replace(/\n/g, '<br>')}</p>
+            <p>${escapeHtml(body).replace(/\n/g, '<br>')}</p>
             <br>
             <hr style="border: none; border-top: 1px solid #eaeaea; margin: 24px 0;">
             <div style="font-size: 12px; color: #666;">
-              <strong>${senderName} Team</strong>
+              <strong>${escapeHtml(senderName)} Team</strong>
             </div>
           </div>`
         });

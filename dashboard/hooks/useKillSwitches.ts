@@ -10,27 +10,30 @@ export interface KillSwitches {
   "enable-telegram-userbot": boolean;
 }
 
-const DEFAULT_FLAGS: KillSwitches = {
-  "enable-discovery": true,
-  "enable-osint": true,
-  "enable-ai-pitching": true,
-  "enable-webhooks": true,
-  "enable-auto-email": true,
-  "enable-telegram-userbot": true,
+const DISABLED_FLAGS: KillSwitches = {
+  "enable-discovery": false,
+  "enable-osint": false,
+  "enable-ai-pitching": false,
+  "enable-webhooks": false,
+  "enable-auto-email": false,
+  "enable-telegram-userbot": false,
 };
 
 export function useKillSwitches() {
-  const [flags, setFlags] = useState<KillSwitches>(DEFAULT_FLAGS);
+  const [flags, setFlags] = useState<KillSwitches>(DISABLED_FLAGS);
   const [loading, setLoading] = useState(true);
 
   const fetchFlags = useCallback(async () => {
     try {
       const res = await fetch("/api/kill-switches");
-      if (!res.ok) return;
+      if (!res.ok) {
+        setFlags(DISABLED_FLAGS);
+        return;
+      }
       const data = await res.json();
-      setFlags(data.flags || DEFAULT_FLAGS);
+      setFlags(data.flags || DISABLED_FLAGS);
     } catch {
-      // Fail-open: keep defaults (all true)
+      setFlags(DISABLED_FLAGS);
     } finally {
       setLoading(false);
     }

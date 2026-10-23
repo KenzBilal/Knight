@@ -6,8 +6,8 @@ Sentry.init({
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
+      maskAllText: true,
+      blockAllMedia: true,
     }),
   ],
 
@@ -20,3 +20,5 @@ Sentry.init({
 
   enabled: process.env.NODE_ENV === "production",
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

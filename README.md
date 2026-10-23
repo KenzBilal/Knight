@@ -44,7 +44,7 @@ Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 - **Dashboard** — Next.js 15 App Router on Vercel with Supabase Auth, cookie-based sessions, team management, billing, support tickets, landing page CMS
 - **Worker** — Independent Node.js process (Docker) polling `jobs` table, concurrent batch processing (max 2 jobs), priority queues, rate limiting, RAM monitoring
 - **Desktop App** — Electron 41 + Vite 6 + React 19 admin panel for managing users, plans, AI providers, website content, support tickets, environment config, worker control
-- **Supabase** — PostgreSQL database with 17+ migrations, RLS policies, Edge Functions for Telegram, real-time subscriptions, file storage
+- **Supabase** — PostgreSQL database with a checked-in schema and incremental SQL changes, RLS policies, realtime subscriptions, and file storage
 
 ---
 
@@ -53,14 +53,14 @@ Built with Next.js 15, Supabase, PostgreSQL, and Electron.
 | Layer | Technology |
 |-------|-----------|
 | Frontend | React 19, Tailwind CSS 4, Next.js 15 App Router |
-| Auth | Supabase Auth, httpOnly cookies (7-day expiry) |
-| Database | PostgreSQL via Supabase, 17+ migrations |
+| Auth | Supabase Auth, httpOnly access and refresh cookies (1-hour access, 30-day refresh) |
+| Database | PostgreSQL via Supabase, checked-in schema and SQL changes |
 | API | Next.js Route Handlers, Edge Functions |
 | Worker | Node.js, cheerio, Google Maps scraping, Puppeteer |
 | Desktop | Electron 41, Vite 6, React 19, electron-updater |
 | Email | Resend API |
 | Payments | LemonSqueezy (subscriptions + usage-based) |
-| AI | OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, Cerebras |
+| AI | Cohere, Gemini, Groq, OpenRouter |
 | Deploy | Vercel (dashboard), Docker (worker), GitHub Releases (desktop) |
 
 ---
@@ -101,11 +101,21 @@ ENCRYPTION_KEY=your-32-char-hex
 
 ### 3. Database
 
-Run all migrations in `supabase/migrations/` in order via the Supabase SQL Editor, or use the Supabase CLI:
+For a new database, run `supabase/schema.sql` first, then apply the versioned migrations in `supabase/migrations/`. The baseline includes the current application schema; the migrations add compatibility updates and reconcile existing deployments. The Knight production project has versions `015`, `018`–`024`, and `20260714212224` applied and recorded. For another existing deployment, check `supabase migration list --linked` and apply only pending versions.
 
-```bash
-supabase db push
+```text
+supabase/migrations/015_add_admin_msg_id.sql
+supabase/migrations/018_add_scheduled_jobs.sql
+supabase/migrations/019_create_usage_tracking.sql
+supabase/migrations/020_email_domains_and_contact_fields.sql
+supabase/migrations/021_analytics_id_defaults.sql
+supabase/migrations/022_enforce_scheduled_job_time.sql
+supabase/migrations/023_create_webhooks_table.sql
+supabase/migrations/024_add_telegram_welcome_sent.sql
+supabase/migrations/20260714212224_add_org_fields.sql
 ```
+
+The live Knight project's migration history matches the checked-in versioned files. Do not run the baseline `schema.sql` against a database that already contains application data.
 
 ### 4. Install
 
@@ -143,9 +153,13 @@ Knight/
 │   └── lib/                    # Auth, Supabase, pricing helpers
 ├── docs/                       # Documentation
 ├── supabase/
-│   └── migrations/             # 17 SQL migrations (001–017)
+│   ├── schema.sql              # Core schema and row-level security
+│   └── migrations/             # Incremental SQL changes
 ├── worker/
-│   ├── index.js                # Concurrent job processor (max 2, priority, RAM guard)
+│   ├── index.js                # Queue, discovery, audits, email, and replies
+│   ├── shared_audit.js         # Browser audits and contact extraction
+│   ├── telegram_*.js           # Telegram lead hunting and conversations
+│   ├── providers/              # AI provider adapters
 │   ├── integrations/           # Scrapers, email, Telegram, webhooks
 │   ├── jobs/                   # Job type handlers
 │   └── utils/                  # Queue, plans, DB helpers
@@ -173,13 +187,12 @@ Automated email sequences via Resend. Custom tracking domains, reply detection, 
 AI-powered Telegram conversations for real-time lead qualification. Runs as part of the Node.js worker with user-level configuration.
 
 ### AI Provider Hub
-Admin-managed AI providers with multiple API keys per provider, automatic rotation, cooldown on failures, usage tracking. Supports OpenAI, Anthropic, Google, DeepSeek, xAI, Groq, and Cerebras.
+Admin-managed Cohere, Gemini, Groq, and OpenRouter configurations with key rotation and cooldown after provider errors.
 
 ### Billing
-LemonSqueezy-powered subscriptions with three tiers:
-- **Free** — 50 leads/mo, 50 emails/mo
-- **Starter ($49/mo)** — Unlimited leads & emails
-- **Pro ($149/mo)** — Telegram agent, drip sequences, custom domains, BYOK
+LemonSqueezy-powered subscriptions. Plan names, prices, checkout variants, and
+displayed features are configured in the database. Runtime feature gates
+currently use `free`, `starter`, and `max`; see [plan notes](docs/billing/plans.md).
 
 ### Support Tickets
 Threaded ticket system with admin replies, status management, real-time polling, unread badge in dashboard top bar and desktop app.
@@ -235,9 +248,9 @@ Uses `electron-updater` with GitHub Releases. Requires a `GH_TOKEN` env var for 
 
 The worker processes jobs concurrently with:
 
-- **Max 2 concurrent jobs** (configurable)
+- **Max 2 concurrent jobs**
 - **Priority queues** — Discovery jobs run first
-- **RAM guard** — Pauses if system memory exceeds 1.5 GB
+- **RAM guard** — Pauses if worker memory exceeds 2 GB
 - **120s timeout** per job
 - **Dedup** — Skips duplicate leads
 
@@ -259,23 +272,13 @@ docker compose up -d worker
 
 ## Database
 
-PostgreSQL via Supabase with 17 migrations covering:
-
-- `001` — Core tables (users, leads, emails, jobs)
-- `002` — API keys schema
-- `003` — Email accounts, domains, templates
-- `004` — Telegram accounts, conversations, messages
-- `005` — Webhooks, audit logs, job queues
-- `006` — Pitch rewrites
-- `007` — Job retry columns, indexes
-- `008` — Pricing & plan limits
-- `009` — Organizations & team management
-- `010` — AI providers, models, keys, routing, task history
-- `011` — Support tickets & replies
-- `012` — Landing page CMS content
-- `013–017` — Additional features
-
-Full schema: `supabase/migrations/`
+The checked-in `supabase/schema.sql` defines the organization, worker,
+analytics, integration, platform administration, billing, and support tables,
+along with their functions, views, grants, and row-level security policies.
+The live Knight project has migrations `015`, `018`–`024`, and
+`20260714212224` applied and recorded. These include monthly usage tracking,
+email domains, analytics identity sequence reconciliation, integration table
+permissions, and scheduled job timing.
 
 ---
 
@@ -309,4 +312,4 @@ GH_TOKEN=your_token npx vite build && npx electron-builder --linux AppImage --pu
 
 ## License
 
-Proprietary. All rights reserved. See [LICENSE](LICENSE) for details.
+MIT. See [LICENSE](LICENSE) for the license terms.

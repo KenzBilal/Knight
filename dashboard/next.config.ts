@@ -37,6 +37,8 @@ export default withSentryConfig(nextConfig, {
   org: "knight-t6",
   project: "knight-dashboard",
   widenClientFileUpload: true,
-  disableLogger: true,
-  automaticVercelMonitors: true,
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    automaticVercelMonitors: true,
+  },
 });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { randomBytes } from "node:crypto";
 import { getUser, getOrg } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
 import { planHasFeature } from "@/lib/limits";
@@ -24,7 +25,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("webhooks")
-    .select("*")
+    .select("id,url,label,events,is_active,last_triggered_at,last_status,created_at,updated_at")
     .eq("org_id", org.id)
     .order("created_at", { ascending: false });
 
@@ -45,24 +46,49 @@ export async function POST(req: Request) {
   const ksError = await checkKillSwitch("enable-webhooks", org.id);
   if (ksError) return ksError;
 
-  const body = await req.json();
-  const { url, label, events } = body;
-
-  if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
-
-  try { new URL(url); } catch {
-    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const secret = `whk_${Array.from({ length: 32 }, () => "abcdefghijklmnopqrstuvwxyz0123456789"[Math.floor(Math.random() * 36)]).join("")}`;
+  const input = body as { url?: unknown; label?: unknown; events?: unknown };
+  const url = typeof input.url === "string" ? input.url.trim() : "";
+  if (!url) return NextResponse.json({ error: "URL is required" }, { status: 400 });
+  if (url.length > 2048) return NextResponse.json({ error: "URL is too long" }, { status: 400 });
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return NextResponse.json({ error: "Invalid URL" }, { status: 400 });
+  }
+  if (!["http:", "https:"].includes(parsedUrl.protocol) || parsedUrl.username || parsedUrl.password) {
+    return NextResponse.json({ error: "Webhook URL must use HTTP or HTTPS without embedded credentials" }, { status: 400 });
+  }
+
+  const events = input.events === undefined ? ["audit.completed"] : input.events;
+  if (!Array.isArray(events) || events.length === 0 || events.some(event => event !== "audit.completed")) {
+    return NextResponse.json({ error: "At least one supported webhook event is required" }, { status: 400 });
+  }
+  if (input.label !== undefined && typeof input.label !== "string") {
+    return NextResponse.json({ error: "Label must be a string" }, { status: 400 });
+  }
+  const label = typeof input.label === "string" ? input.label.trim().slice(0, 120) || "My Webhook" : "My Webhook";
+
+  const secret = `whk_${randomBytes(32).toString("hex")}`;
 
   const { data, error } = await supabase
     .from("webhooks")
     .insert({
       org_id: org.id,
       url,
-      label: label || "My Webhook",
-      events: events || ["audit.completed"],
+      label,
+      events,
       secret,
     })
     .select()
